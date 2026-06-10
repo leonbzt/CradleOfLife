@@ -3,6 +3,8 @@
     "id": "frontal_appendage",
     "name": "Frontal Appendage",
     "slot": "mouthparts",
+    "build_cost": { "material": "biofilm", "base": 60, "growth": 3.0 },
+    "max_tier": 3,
     "flavor": "The business end — grabs, tears, and feeds.",
     "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
   },
@@ -10,6 +12,8 @@
     "id": "calcite_carapace",
     "name": "Calcite Carapace",
     "slot": "integument",
+    "build_cost": { "material": "chitin", "base": 50, "growth": 3.0 },
+    "max_tier": 3,
     "flavor": "A mineralized shell that turns the first strike.",
     "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
   },
@@ -17,6 +21,8 @@
     "id": "swimming_flaps",
     "name": "Swimming Flaps",
     "slot": "locomotion",
+    "build_cost": { "material": "soft_tissue", "base": 50, "growth": 3.0 },
+    "max_tier": 3,
     "flavor": "Lateral lobes that row you through open water.",
     "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
   },
@@ -24,6 +30,8 @@
     "id": "stalked_eyes",
     "name": "Stalked Eyes",
     "slot": "sensory",
+    "build_cost": { "material": "chitin", "base": 80, "growth": 3.0 },
+    "max_tier": 3,
     "flavor": "Raised compound eyes with a wide field of view.",
     "source": "bible/refs/shallow-benthos.md#compound-eyes"
   },
@@ -31,6 +39,8 @@
     "id": "gill_branches",
     "name": "Gill Branches",
     "slot": "metabolic_core",
+    "build_cost": { "material": "soft_tissue", "base": 80, "growth": 3.0 },
+    "max_tier": 3,
     "flavor": "Feathery gills feeding a hungry metabolism.",
     "source": "bible/refs/shallow-benthos.md#gill-surface-area"
   },
@@ -38,6 +48,8 @@
     "id": "nematocyst_gland",
     "name": "Nematocyst Gland",
     "slot": "gland",
+    "build_cost": { "material": "flesh", "base": 60, "growth": 3.0 },
+    "max_tier": 3,
     "flavor": "A reservoir of stinging cells, primed to fire.",
     "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
   }

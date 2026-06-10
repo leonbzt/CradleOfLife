@@ -14,6 +14,7 @@ func _initialize() -> void:
 	print("  affixes:    %d" % (content.tables.get("affixes", []) as Array).size())
 	print("  adaptations:%d" % (content.tables.get("adaptations", []) as Array).size())
 	print("  genes:      %d" % (content.tables.get("genes", []) as Array).size())
+	print("  materials:  %d" % (content.tables.get("materials", []) as Array).size())
 	print("  nodes:      %d" % (content.tables.get("nodes", []) as Array).size())
 
 	if errors.is_empty():

@@ -21,6 +21,9 @@ var inventory_genes: Array[String] = []
 var genes_known: Array[String] = []
 var niches_unlocked: Array[String] = []
 var last_seen_unix: int = 0
+# RNG stream positions (stream_name -> state as String; see Rng.export_state).
+# Saved so a relaunch continues the roll sequence instead of replaying it.
+var rng_streams: Dictionary = {}
 
 
 func lineage_by_id(lineage_id: String) -> Lineage:
@@ -45,6 +48,7 @@ func to_dict() -> Dictionary:
 		"genes_known": genes_known.duplicate(),
 		"niches_unlocked": niches_unlocked.duplicate(),
 		"last_seen_unix": last_seen_unix,
+		"rng_streams": rng_streams.duplicate(),
 	}
 
 
@@ -56,6 +60,7 @@ static func from_dict(d: Dictionary) -> GameState:
 	s.slots_max = int(d.get("slots_max", 2))
 	s.inventory_materials = (d.get("inventory_materials", {}) as Dictionary).duplicate()
 	s.last_seen_unix = int(d.get("last_seen_unix", 0))
+	s.rng_streams = (d.get("rng_streams", {}) as Dictionary).duplicate()
 	for x: Variant in d.get("inventory_genes", []):
 		s.inventory_genes.append(String(x))
 	for x: Variant in d.get("genes_known", []):

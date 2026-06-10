@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="CradleOfLife"
+run/main_scene="res://ui/main.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
@@ -18,6 +19,14 @@ config/icon="res://icon.svg"
 
 Data="*res://data_loader.gd"
 Store="*res://state_store.gd"
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
 
 [physics]
 

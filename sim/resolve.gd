@@ -50,14 +50,20 @@ static func effective_power(lineage: Lineage) -> float:
 	return p
 
 
+## Yield multiplier from the Power-vs-defense margin. Split out because it is
+## the number the player watches move when they equip ("yield ×1.4") — the UI
+## reads THIS, never re-derives the math.
+static func yield_efficiency(lineage: Lineage, node: Dictionary) -> float:
+	var margin: float = effective_power(lineage) - float(node.get("defense", 0.0))
+	return clampf(1.0 + 0.1 * margin, 0.1, 5.0)
+
+
 ## Materials gathered per in-game second: a Power-vs-defense margin scaled by the
 ## lineage's metabolism. Always positive, so even a too-strong node still feeds.
 static func material_rate(lineage: Lineage, node: Dictionary) -> float:
 	var base: float = float(node.get("material_rate", 0.0))
 	var metab: float = float(lineage.attributes.get("metabolism", 1.0))
-	var margin: float = effective_power(lineage) - float(node.get("defense", 0.0))
-	var efficiency: float = clampf(1.0 + 0.1 * margin, 0.1, 5.0)
-	return base * metab * efficiency
+	return base * metab * yield_efficiency(lineage, node)
 
 
 ## Mean genes per in-game second (the Poisson rate). Zero until the build can

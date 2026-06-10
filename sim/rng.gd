@@ -48,6 +48,24 @@ func randi_range(stream_name: String, from: int, to: int) -> int:
 	return stream(stream_name).randi_range(from, to)
 
 
+## Snapshot of every stream's position, for the save file. Without this, each
+## app launch would re-derive streams from the master seed and replay the same
+## upcoming roll sequence. States are stored as Strings: they are 64-bit ints,
+## and JSON round-trips numbers as floats, which would corrupt them.
+func export_state() -> Dictionary:
+	var out: Dictionary = {}
+	for stream_name: String in _streams:
+		out[stream_name] = str((_streams[stream_name] as RandomNumberGenerator).state)
+	return out
+
+
+## Restores stream positions captured by export_state(). Streams not present
+## stay lazily derived from the master seed as usual.
+func import_state(saved: Dictionary) -> void:
+	for stream_name: String in saved:
+		stream(stream_name).state = String(saved[stream_name]).to_int()
+
+
 ## Inter-arrival time for a Poisson process of rate `rate` (events per unit
 ## time), sampled by inverse-CDF: -ln(U)/rate. This is how closed-form accrual
 ## (sim/accrual.gd) walks discrete rare events without frame-ticking elapsed

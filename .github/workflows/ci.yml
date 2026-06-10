@@ -28,5 +28,11 @@ jobs:
       - name: Gate 1 — content validation
         run: godot --headless --script res://tests/validate_data.gd
 
+      - name: Sim commands — forage / metabolize / equip
+        run: godot --headless --script res://tests/sim_test.gd
+
       - name: Economy harness — chase-curve model
         run: godot --headless --script res://tests/economy_test.gd
+
+      - name: Boot smoke — main scene runs headless
+        run: godot --headless --quit-after 20

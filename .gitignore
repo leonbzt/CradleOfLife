@@ -13,3 +13,6 @@ __pycache__/
 
 # OS noise
 .DS_Store
+
+# Personal notes & local test builds (not project canon)
+/leon_docs/

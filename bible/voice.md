@@ -10,6 +10,10 @@ Two dialects, one voice:
 - **TierZoo:** "S-tier," "underrated pick," "this build got nerfed," "the meta."
 - **r/outside & the frame:** "the Devs," "RNG," "grinding," "patch notes."
 
+**The blurb formula:** real name + clade/era → the legible gamer class/one-liner.
+*"Anomalocaris — Radiodont, Cambrian. S-tier apex burst carry."* True biology,
+gamer framing; the joke only lands because it's accurate.
+
 The balancing authority is always **the Devs** (natural selection). They are
 impersonal, balance-obsessed, dry, and not on your side. They never explain and
 never apologise.
@@ -66,5 +70,35 @@ never apologise.
 > **Sea Anemone** — looks AFK. Isn't. The nematocyst proc fires the instant
 > you're in range, and it stacks. Underrated DoT in a meta obsessed with burst.
 
+> **Haikouichthys** — early chordate, Cambrian. Looks like F-tier filler. Is, in
+> fact, your lineage — the unassuming pick that quietly inherits the entire
+> server a few hundred million patches later. Underrated. Do not bully.
+
 *Every blurb above states only real, well-established traits. The biology is the
 joke; keep it true.*
+
+---
+
+## Flavor vocabulary (bio feel → gamer gloss)
+
+The working glossary for patch notes, tooltips, and Dev dispatches. The pairing
+is the product — each entry is real biology wearing its game-mechanics read.
+
+- **Carcinization** — the meta always converges on crab. (Recurring joke.)
+- **Red Queen Hypothesis** — the arms race; you sprint just to hold your tier.
+- **Punctuated Equilibrium** — the patch meta: long calm, then a sudden shakeup.
+  (Frames ages/patches.)
+- **Exaptation** — repurposing a trait off-label; an off-meta tech pick.
+- **Convergent evolution** — different builds, same S-tier solution.
+- **Hypercarnivore** — full glass-cannon, all-in on meat.
+- **Generalist / Specialist** — flex pick vs. one-trick.
+- **Living Fossil** — the build that never got nerfed; still viable after 400M
+  years.
+- **Founder Effect / Bottleneck** — small-sample RNG; your whole lineage rolled
+  off one lucky drop.
+- **Kleptoparasitism** — kill-stealing / loot theft.
+- **Trophic Cascade** — one keystone change reshapes the whole ladder.
+- **Cryptobiosis** — hard-suspend AFK mode: take no damage, earn nothing.
+  (Tardigrade flavor.)
+- **Evolutionary Dead End** — a "bricked build." *Flavor only — we ship no trap
+  builds (VISION.md §11); this is a joke the Devs make, not a mechanic.*

@@ -10,6 +10,7 @@ const FILES: Array[String] = [
 	"affixes",
 	"adaptations",
 	"genes",
+	"materials",
 	"niches",
 	"nodes",
 	"drop_tables",
@@ -31,9 +32,21 @@ static func load_dir(dir_path: String) -> Content:
 
 
 func node(node_id: String) -> Dictionary:
-	for n: Dictionary in tables.get("nodes", []):
-		if n.get("id", "") == node_id:
-			return n
+	return _row("nodes", node_id)
+
+
+func adaptation(adaptation_id: String) -> Dictionary:
+	return _row("adaptations", adaptation_id)
+
+
+func material(material_id: String) -> Dictionary:
+	return _row("materials", material_id)
+
+
+func _row(table: String, row_id: String) -> Dictionary:
+	for r: Dictionary in tables.get(table, []):
+		if r.get("id", "") == row_id:
+			return r
 	return {}
 
 

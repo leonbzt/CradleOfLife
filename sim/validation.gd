@@ -8,12 +8,17 @@ extends RefCounted
 ##
 ## Returns a list of human-readable error strings; empty means pass.
 
-const ROLES: Array[String] = ["dot", "control", "mitigation", "uptime", "find", "penetration"]
+const ROLES: Array[String] = [
+	"dot", "control", "mitigation", "uptime", "find", "penetration", "stealth"
+]
+const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
 
 
 static func validate(content: Content) -> Array[String]:
 	var errors: Array[String] = []
 	errors.append_array(validate_affixes(content.tables.get("affixes", [])))
+	errors.append_array(validate_materials(content.tables.get("materials", [])))
+	errors.append_array(validate_adaptations(content))
 	errors.append_array(validate_node_refs(content))
 	return errors
 
@@ -68,8 +73,64 @@ static func validate_affixes(affixes: Array) -> Array[String]:
 	return errors
 
 
+## Materials are the loot players see every check-in: each must have a unique id
+## and a known rarity colour, capped at "rare" — epic/legendary colours belong to
+## the gene chase (VISION.md §9), and this gate keeps a data row from quietly
+## promoting a crafting mat into jackpot colours.
+static func validate_materials(materials: Array) -> Array[String]:
+	var errors: Array[String] = []
+	var seen_ids: Dictionary = {}
+	for row: Dictionary in materials:
+		var id: String = String(row.get("id", ""))
+		if id == "":
+			errors.append("material row missing 'id': " + JSON.stringify(row))
+			continue
+		if seen_ids.has(id):
+			errors.append("duplicate material id: " + id)
+		seen_ids[id] = true
+		var rarity: String = String(row.get("rarity", ""))
+		if not RARITIES.has(rarity):
+			errors.append("material '%s' has invalid/missing rarity '%s'" % [id, rarity])
+		elif RARITIES.find(rarity) > RARITIES.find("rare"):
+			errors.append("material '%s' rarity '%s' exceeds 'rare' (genes only)" % [id, rarity])
+	return errors
+
+
+## Every adaptation must socket a real doll slot and carry a sane Metabolize
+## cost in a material that exists — a broken cost would strand the player with
+## gear they can never build.
+static func validate_adaptations(content: Content) -> Array[String]:
+	var errors: Array[String] = []
+	var seen_ids: Dictionary = {}
+	for row: Dictionary in content.tables.get("adaptations", []):
+		var id: String = String(row.get("id", ""))
+		if id == "":
+			errors.append("adaptation row missing 'id': " + JSON.stringify(row))
+			continue
+		if seen_ids.has(id):
+			errors.append("duplicate adaptation id: " + id)
+		seen_ids[id] = true
+		if not Lineage.SLOTS.has(String(row.get("slot", ""))):
+			errors.append("adaptation '%s' has unknown slot '%s'" % [id, row.get("slot", "")])
+		var cost: Dictionary = row.get("build_cost", {})
+		if cost.is_empty():
+			errors.append("adaptation '%s' missing build_cost" % id)
+		else:
+			var mat: String = String(cost.get("material", ""))
+			if content.material(mat).is_empty():
+				errors.append("adaptation '%s' build_cost uses unknown material '%s'" % [id, mat])
+			if float(cost.get("base", 0.0)) <= 0.0:
+				errors.append("adaptation '%s' build_cost.base must be > 0" % id)
+			if float(cost.get("growth", 0.0)) < 1.0:
+				errors.append("adaptation '%s' build_cost.growth must be >= 1" % id)
+		if int(row.get("max_tier", 0)) < 1:
+			errors.append("adaptation '%s' max_tier must be >= 1" % id)
+	return errors
+
+
 ## Structural integrity so the loader fails loudly, not the player: nodes point
-## at drop tables that exist, and every gene a table can drop is defined.
+## at drop tables and materials that exist, and every gene a table can drop is
+## defined.
 static func validate_node_refs(content: Content) -> Array[String]:
 	var errors: Array[String] = []
 	var drop_tables: Dictionary = content.tables.get("drop_tables", {})
@@ -82,6 +143,9 @@ static func validate_node_refs(content: Content) -> Array[String]:
 		var table_id: String = String(node.get("drop_table", ""))
 		if table_id != "" and not drop_tables.has(table_id):
 			errors.append("node '%s' references unknown drop_table '%s'" % [node_id, table_id])
+		var mat_id: String = String(node.get("material", ""))
+		if mat_id != "" and content.material(mat_id).is_empty():
+			errors.append("node '%s' yields unknown material '%s'" % [node_id, mat_id])
 
 	for table_id: String in drop_tables:
 		for row: Dictionary in drop_tables[table_id]:

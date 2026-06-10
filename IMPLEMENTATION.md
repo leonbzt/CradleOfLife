@@ -139,7 +139,7 @@ Every affix/creature/adaptation row looks like:
 }
 ```
 
-**Gate 1 — Orthogonality (automated, CI).** `tests/validate_data.gd` rejects any row missing `orthogonal_role` (must be one of `dot`, `control`, `mitigation`, `uptime`, `find`, `penetration`) or `math_term`, and flags two affixes sharing a `math_term` with no distinguishing `params` as suspected synonyms. Keeps "does this change *how I play* or just *the number*?" a build check, not a vibe.
+**Gate 1 — Orthogonality (automated, CI).** `tests/validate_data.gd` rejects any row missing `orthogonal_role` (must be one of `dot`, `control`, `mitigation`, `uptime`, `find`, `penetration`, `stealth`) or `math_term`, and flags two affixes sharing a `math_term` with no distinguishing `params` as suspected synonyms. Keeps "does this change *how I play* or just *the number*?" a build check, not a vibe.
 
 **Gate 2 — Scientific accuracy (human review, sourced).** Every substantive biological claim must be backed by a reference in `bible/refs/`. AI is strong at flavor and unreliable at facts, so a human verifies against sources before merge. The `source` field is mandatory on rows that assert a real capability. This gate is what makes the TierZoo backing real rather than decorative.
 

@@ -253,16 +253,17 @@ Depth from **combinatorics, not authored volume** — the one moat a small team 
 
 One loop × niches × affixes × tiers × genes × stacking = vast apparent content from small authored sets. RuneScape's "hugeness" is one verb in twenty costumes.
 
-But the moat is the *combination of a small set of mechanically orthogonal primitives* — **not** sheer AI-generated volume. A thousand affixes that are really the same five with different nouns is the *opposite* of depth. Target roughly six orthogonal affix roles, each mapping cleanly onto both an RPG archetype and real biology:
+But the moat is the *combination of a small set of mechanically orthogonal primitives* — **not** sheer AI-generated volume. A thousand affixes that are really the same five with different nouns is the *opposite* of depth. Target a small set (~7) of orthogonal affix roles, each mapping cleanly onto both an RPG archetype and real biology:
 
 | Role | RPG | Biology |
 |---|---|---|
 | Damage-over-time | poison stacks | venom, toxin |
 | Control / slow | chill, snare | cold, paralytic |
-| Mitigation | armour, resist | integument, toxin-resistance |
+| Mitigation | armour, resist | integument, toxin-resistance, aposematism |
 | Uptime / speed | haste, regen | metabolism |
 | Find / crit | luck, crit | sensory acuity |
 | Burst / penetration | armour-pen | jaw force, enzymes |
+| Stealth | untargetable, ambush | mimicry, crypsis |
 
 Biology is perfect cover for orthogonality, because real adaptations *are* mechanically distinct — and because the project commits to scientific accuracy (§2), that distinctness is grounded in reality rather than asserted. **AI authors the rows** — names, flavor text, drop-table entries, niche descriptions, patch notes (in the §2a voice). **AI never authors the engine** — mechanical distinctness and the resolution logic are hand-designed and kept small.
 
@@ -318,7 +319,7 @@ These are explicitly open and meant to be tuned in playtest. They do **not** reo
 9. How RPG-explicit Fight gets before it crosses into the deferred encounter layer.
 10. Soft-cap curve shape and the exact graduation milestone payoff.
 11. How heavily the Dev/patch-note voice is dialed up — present everywhere, or saved for dispatches and summit beats.
-12. How much real-creature naming vs. stylized naming the world uses (how far the "mythic" finish departs from textbook labels).
+12. How much real-creature naming vs. stylized naming the world uses — **default decided** (2026-06-10; see DECISIONS.md): real-named creatures appear in their real eras (strict chronology), and invented, clearly stylized creatures may fill gaps — the fossil record is incomplete — so long as they contradict no known biology.
 
 ---
 

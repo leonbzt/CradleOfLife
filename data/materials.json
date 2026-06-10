@@ -1,0 +1,30 @@
+[
+  {
+    "id": "biofilm",
+    "name": "Biofilm",
+    "rarity": "common",
+    "flavor": "Scraped cyanobacterial mat. The free starter resource; the Devs spawn it everywhere.",
+    "source": "bible/refs/shallow-benthos.md#microbial-mats"
+  },
+  {
+    "id": "soft_tissue",
+    "name": "Soft Tissue",
+    "rarity": "common",
+    "flavor": "Cnidarian flesh, minus the stinging parts. Handle with confidence you may not have earned.",
+    "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
+  },
+  {
+    "id": "chitin",
+    "name": "Chitin",
+    "rarity": "uncommon",
+    "flavor": "Mineralized plate cracked off a grazer. The armor meta, available as a crafting mat.",
+    "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
+  },
+  {
+    "id": "flesh",
+    "name": "Apex Flesh",
+    "rarity": "rare",
+    "flavor": "Tissue from something near the top of the ladder. You did not get this for free.",
+    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  }
+]
