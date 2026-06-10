@@ -1,0 +1,52 @@
+[
+  {
+    "id": "gene_nematocyst",
+    "name": "Nematocyst Battery",
+    "unlocks": { "kind": "affix", "id": "venom_minor" },
+    "flavor": "Stinging cells you can fire on contact.",
+    "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
+  },
+  {
+    "id": "gene_sclerite",
+    "name": "Sclerite Mineralization",
+    "unlocks": { "kind": "affix", "id": "plating_minor" },
+    "flavor": "The trick of pulling calcite out of seawater and wearing it.",
+    "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
+  },
+  {
+    "id": "gene_raptorial",
+    "name": "Raptorial Appendage",
+    "unlocks": { "kind": "affix", "id": "grasp_minor" },
+    "flavor": "A grasping limb built for ambush.",
+    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  },
+  {
+    "id": "gene_gill",
+    "name": "Branched Gill",
+    "unlocks": { "kind": "affix", "id": "gill_minor" },
+    "flavor": "Feathered respiratory surface for steadier output.",
+    "source": "bible/refs/shallow-benthos.md#gill-surface-area"
+  },
+  {
+    "id": "gene_compound_eye",
+    "name": "Compound Eye",
+    "unlocks": { "kind": "affix", "id": "eyes_minor" },
+    "flavor": "Hundreds of lenses resolving the murk.",
+    "source": "bible/refs/shallow-benthos.md#compound-eyes"
+  },
+  {
+    "id": "gene_gnathobase",
+    "name": "Gnathobase",
+    "unlocks": { "kind": "affix", "id": "gnathobase_minor" },
+    "flavor": "Crushing tooth-plates at the base of the legs.",
+    "source": "bible/refs/shallow-benthos.md#gnathobases"
+  },
+  {
+    "id": "gene_great_appendage",
+    "name": "Great Appendage",
+    "unlocks": { "kind": "affix", "id": "grasp_minor" },
+    "rarity": "legendary",
+    "flavor": "The launch meta's apex weapon: a grasping arm nothing in the shallows out-reaches.",
+    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  }
+]

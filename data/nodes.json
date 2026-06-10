@@ -1,0 +1,60 @@
+[
+  {
+    "id": "microbial_mat",
+    "name": "Microbial Mat",
+    "niche": "shallow_benthos",
+    "kind": "eat",
+    "defense": 0.0,
+    "material": "biofilm",
+    "material_rate": 1.0,
+    "gene_rate": 0.00015,
+    "drop_table": "benthos_eat",
+    "flavor": "A carpet of cyanobacteria. Doesn't fight back; barely notices you.",
+    "source": "bible/refs/shallow-benthos.md#microbial-mats"
+  },
+  {
+    "id": "sea_anemone",
+    "name": "Sea Anemone",
+    "niche": "shallow_benthos",
+    "kind": "fight",
+    "defense": 2.0,
+    "material": "soft_tissue",
+    "material_rate": 1.2,
+    "gene_rate": 0.00018,
+    "splice_rate": 0.00015,
+    "spliceable": "gene_nematocyst",
+    "drop_table": "benthos_fight",
+    "flavor": "Looks AFK. Isn't. The sting procs the moment you're in range.",
+    "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
+  },
+  {
+    "id": "trilobite_grazer",
+    "name": "Trilobite Grazer",
+    "niche": "shallow_benthos",
+    "kind": "fight",
+    "defense": 4.0,
+    "material": "chitin",
+    "material_rate": 1.5,
+    "gene_rate": 0.0002,
+    "splice_rate": 0.0001,
+    "spliceable": "gene_sclerite",
+    "drop_table": "benthos_fight",
+    "flavor": "The durable mid-tier pick. Rolls into a ball and waits you out.",
+    "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
+  },
+  {
+    "id": "anomalocaris",
+    "name": "Anomalocaris",
+    "niche": "shallow_benthos",
+    "kind": "fight",
+    "defense": 9.0,
+    "material": "flesh",
+    "material_rate": 2.0,
+    "gene_rate": 0.0001,
+    "splice_rate": 0.00005,
+    "spliceable": "gene_great_appendage",
+    "drop_table": "apex_anomalocaris",
+    "flavor": "S-tier apex of the launch meta. Holds the pinnacle drop. Good luck.",
+    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  }
+]

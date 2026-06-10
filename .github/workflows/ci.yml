@@ -1,0 +1,32 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  content-and-economy:
+    runs-on: ubuntu-latest
+    env:
+      # Bump to match project.godot's target. Godot 4.4+ supports --import.
+      GODOT_VERSION: "4.6-stable"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot ${{ env.GODOT_VERSION }} (headless)
+        run: |
+          set -euo pipefail
+          base="Godot_v${GODOT_VERSION}_linux.x86_64"
+          url="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${base}.zip"
+          curl -fL -o godot.zip "$url"
+          unzip -q godot.zip
+          sudo mv "$base" /usr/local/bin/godot
+          chmod +x /usr/local/bin/godot
+          godot --version
+
+      - name: Import project (generates .godot, registers class_names)
+        run: godot --headless --import
+
+      - name: Gate 1 — content validation
+        run: godot --headless --script res://tests/validate_data.gd
+
+      - name: Economy harness — chase-curve model
+        run: godot --headless --script res://tests/economy_test.gd

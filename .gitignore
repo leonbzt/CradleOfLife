@@ -1,0 +1,15 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Exports / builds
+/build/
+/export/
+export_presets.cfg
+
+# Python (tooling only)
+__pycache__/
+*.pyc
+
+# OS noise
+.DS_Store

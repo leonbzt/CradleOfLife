@@ -1,0 +1,44 @@
+[
+  {
+    "id": "frontal_appendage",
+    "name": "Frontal Appendage",
+    "slot": "mouthparts",
+    "flavor": "The business end — grabs, tears, and feeds.",
+    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  },
+  {
+    "id": "calcite_carapace",
+    "name": "Calcite Carapace",
+    "slot": "integument",
+    "flavor": "A mineralized shell that turns the first strike.",
+    "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
+  },
+  {
+    "id": "swimming_flaps",
+    "name": "Swimming Flaps",
+    "slot": "locomotion",
+    "flavor": "Lateral lobes that row you through open water.",
+    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  },
+  {
+    "id": "stalked_eyes",
+    "name": "Stalked Eyes",
+    "slot": "sensory",
+    "flavor": "Raised compound eyes with a wide field of view.",
+    "source": "bible/refs/shallow-benthos.md#compound-eyes"
+  },
+  {
+    "id": "gill_branches",
+    "name": "Gill Branches",
+    "slot": "metabolic_core",
+    "flavor": "Feathery gills feeding a hungry metabolism.",
+    "source": "bible/refs/shallow-benthos.md#gill-surface-area"
+  },
+  {
+    "id": "nematocyst_gland",
+    "name": "Nematocyst Gland",
+    "slot": "gland",
+    "flavor": "A reservoir of stinging cells, primed to fire.",
+    "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
+  }
+]

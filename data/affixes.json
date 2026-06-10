@@ -1,0 +1,56 @@
+[
+  {
+    "id": "venom_minor",
+    "name": "Weak Venom",
+    "orthogonal_role": "dot",
+    "math_term": "dot_stacks",
+    "params": { "stacks": 1, "tick_pct": 0.03 },
+    "flavor": "A thin toxin that keeps working after the bite lands.",
+    "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
+  },
+  {
+    "id": "plating_minor",
+    "name": "Sclerite Plating",
+    "orthogonal_role": "mitigation",
+    "math_term": "flat_mitigation",
+    "params": { "amount": 2 },
+    "flavor": "Hardened mineral platelets shrug off the first hit.",
+    "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
+  },
+  {
+    "id": "grasp_minor",
+    "name": "Raptorial Grasp",
+    "orthogonal_role": "control",
+    "math_term": "control_slow",
+    "params": { "slow_pct": 0.2, "dur": 2 },
+    "flavor": "Spined appendages pin prey before it can flee.",
+    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  },
+  {
+    "id": "gill_minor",
+    "name": "Gill Branching",
+    "orthogonal_role": "uptime",
+    "math_term": "uptime_mult",
+    "params": { "mult": 1.15 },
+    "flavor": "More respiratory surface, more sustained output.",
+    "source": "bible/refs/shallow-benthos.md#gill-surface-area"
+  },
+  {
+    "id": "eyes_minor",
+    "name": "Compound Eyes",
+    "orthogonal_role": "find",
+    "math_term": "find_mult",
+    "params": { "mult": 1.2 },
+    "flavor": "A field of lenses that misses very little.",
+    "source": "bible/refs/shallow-benthos.md#compound-eyes"
+  },
+  {
+    "id": "gnathobase_minor",
+    "name": "Gnathobase",
+    "orthogonal_role": "penetration",
+    "math_term": "pen_flat",
+    "params": { "amount": 2 },
+    "flavor": "Toothed leg-bases that crack a shell open.",
+    "source": "bible/refs/shallow-benthos.md#gnathobases"
+  }
+]

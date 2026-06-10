@@ -1,0 +1,20 @@
+{
+  "benthos_eat": [
+    { "gene": "gene_gill", "weight": 50, "rarity": "common" },
+    { "gene": "gene_compound_eye", "weight": 40, "rarity": "common" },
+    { "gene": "gene_sclerite", "weight": 9, "rarity": "uncommon" },
+    { "gene": "gene_nematocyst", "weight": 1, "rarity": "rare" }
+  ],
+  "benthos_fight": [
+    { "gene": "gene_sclerite", "weight": 40, "rarity": "common" },
+    { "gene": "gene_gnathobase", "weight": 30, "rarity": "uncommon" },
+    { "gene": "gene_nematocyst", "weight": 20, "rarity": "uncommon" },
+    { "gene": "gene_raptorial", "weight": 9, "rarity": "rare" },
+    { "gene": "gene_great_appendage", "weight": 1, "rarity": "legendary" }
+  ],
+  "apex_anomalocaris": [
+    { "gene": "gene_raptorial", "weight": 50, "rarity": "uncommon" },
+    { "gene": "gene_compound_eye", "weight": 30, "rarity": "common" },
+    { "gene": "gene_great_appendage", "weight": 5, "rarity": "legendary" }
+  ]
+}

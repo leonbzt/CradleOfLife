@@ -1,0 +1,10 @@
+[
+  {
+    "id": "shallow_benthos",
+    "name": "The Shallow Benthos",
+    "age": "sea",
+    "affix_keys": [],
+    "flavor": "Sunlit sea floor. Microbial mats, slow grazers, and the first things that learned to bite back.",
+    "source": "bible/world_spine.md#age-i-the-sea"
+  }
+]
