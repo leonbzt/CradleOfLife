@@ -220,19 +220,80 @@ The `leon_docs/bible_seed_sea_age.md` draft is folded into the bible:
 
 ---
 
+## 2026-06-11 — Phase 2 designed and signed; handed off as PHASE2.md
+
+**What.** Phase 2 (splicing + the orthogonal affix set, IMPLEMENTATION.md §4)
+was designed in full and signed by Leon; the executable work order lives in
+`PHASE2.md` (a temporary doc, deleted when the phase closes). Build start waits
+on the Phase 1 gate call. The signed decisions:
+
+### Resolve-math expansion — full 7-term model with a `danger` stat
+
+Each orthogonal role gets its own term in the one resolve function: penetration
+reduces effective defense; dot raises the losing-matchup yield floor on fight
+nodes; control multiplies splice rate; mitigation (with the so-far-unused
+`resilience` attribute) reduces a new fight-node `danger` tax on material rate;
+uptime multiplies material rate; find multiplies gene rate; stealth opens the
+gene/splice gate at a fraction below the power check. **What it replaced:**
+affixes as data with no mechanical existence (Phase 1's resolve() never read
+them) and a single margin lever. This is the "bigger growth moments come from
+new math terms, not bigger margins" plan (2026-06-11 entry above) made real.
+Exact formulas: PHASE2.md §2.
+
+### Splice rolls are now power-gated, like gene rolls
+
+Stealth's ambush fraction opens both. Phase 1 left splice ungated — but also
+never banked the offers, so nothing felt changes. **Drift recorded:** the
+2026-06-10 Phase 1 entry said gene/splice drops were "banked"; in fact only
+genes were — `Commands.forage()` dropped splice offers on the floor, and
+`accrue()` never sampled them offline. Both fixed in Phase 2.
+
+### Gene economy — counts, stack tiers, grafting; dupes are progression
+
+Gene drops and claimed splice offers add copies to `genes_known` (id → count;
+no separate claim step for mutation drops — the graft is the check-in
+decision). Grafting sockets a known affix onto an equipped adaptation for
+materials (`graft_cost` per affix row); copies cap the graft tier, so
+duplicate genes are the cozy stream's meaning (VISION.md §9b stacking), not
+dead drops. Copies are a cap, not a currency — never consumed. Save schema
+goes to v2 (`genes_known` counts, `splice_offers`; `inventory_genes` folded
+in, unused `niches_unlocked` removed) — the Phase 0 migration hook's first
+real step.
+
+### Graft rarity escalation — the chase becomes visible on the doll
+
+A grafted adaptation turns epic; an affix unlocked by a legendary gene turns
+it legendary. **What it replaced:** crafted gear hard-capped at rare
+(2026-06-10). The cap still holds for *pure* crafting; epic/legendary remain
+reachable only via the gene chase, which is the §9 colour reservation's
+intent.
+
+### Two full-size niches, keyed by role
+
+Pelagic (key: `uptime` — sustained swimming demands gill capacity) and Reef
+Edge (key: `stealth` — ambush country; the stealth role's first content),
+4 nodes each, fresh drop tables (§9a breadth), real-Cambrian roster plus two
+invented stylized gap-fillers per the chronology rule. Affix-keys are checked
+against the lineage's **equipped** grafts (the build survives the niche, not
+the codex); keys are role strings for now, taxonomy tags can refine later.
+Anomalocaris stays the age's chase ceiling. Leon chose both-full-size over the
+proposed pelagic-plus-small-reef.
+
+---
+
 ## Open questions (current)
 
 - **Phase 1 validation gate is running.** The web build is with the friend
   cohort (since 2026-06-10). Gather first-equip reactions and an honest
-  pass/fail before Phase 2 work starts.
-- **Yield growth feel.** Accepted for early game (2026-06-11, above); revisit
-  the efficiency slope only if Phase 2's affixes don't supply the bigger growth
-  moments.
-- **Slice copy is placeholder.** "Your Main", section labels, and matchup
-  verdicts ("free farm", "outgeared") need a voice pass against `bible/voice.md`.
-- **Equip choice depth.** If playtesters read Metabolize as a vending machine
-  rather than a build choice, add competing adaptations per slot (data only) —
-  but that needs a second math term (affixes) to avoid synonym gear, i.e.
-  Phase 2.
+  pass/fail — it is the precondition checkbox at the top of `PHASE2.md`.
+- **Yield growth feel.** Accepted for early game (2026-06-11, above); Phase 2's
+  affix terms are the planned answer — re-evaluate at the Phase 2 gate.
+- **Slice copy is placeholder.** Voice pass on all UI strings is folded into
+  Phase 2 (PHASE2.md WP5); Leon reviews as gate 3.
+- **Equip choice depth.** Phase 2's grafting is the planned answer (real
+  alternatives per slot via affixes); re-evaluate at the Phase 2 gate.
+- **Graft slot freedom.** Any affix may be grafted onto any doll slot (stated
+  assumption in PHASE2.md §3.3). If venom-on-flaps reads wrong in playtest,
+  add slot affinities as data.
 - **Clock-tampering** is accepted for now (2026-06-10, above); must be revisited
   before offline accrual ships to players.

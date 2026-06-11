@@ -168,7 +168,7 @@ One **defended** node, Power-vs-defense roll, a rarity-coloured loot pop with ju
 
 ### Phase 2 — Splicing + the orthogonal affix set (3–4 weeks)
 
-Gene drop stream, splicing ("eat the venom-toad → roll to gain Venom"), the ~6 orthogonal affixes behind all three gates (§3), affix-key gating on one or two new niches.
+Gene drop stream, splicing ("eat the venom-toad → roll to gain Venom"), all seven orthogonal roles made mechanically real behind all three gates (§3), affix-key gating on two new niches (pelagic, reef edge). The signed, formula-exact work order for this phase is `PHASE2.md` (temporary; deleted when the phase closes — decisions recorded in DECISIONS.md 2026-06-11).
 
 **Validation gate:** *Does "what should I fight" become a build decision players talk about?* The bar is the player story — "I spliced frost off the deep thing and now my grazer one-shots the tundra." If players aren't narrating splices, splicing isn't carrying its weight.
 
