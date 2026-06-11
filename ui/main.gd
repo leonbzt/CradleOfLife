@@ -20,14 +20,15 @@ var _active_niche: String = "shallow_benthos"
 
 # Widgets
 var _power_value: Label
-var _niche_buttons: Dictionary = {}   # niche_id -> Button
-var _cards: Dictionary = {}           # node_id -> {card, name_lbl, matchup_lbl, danger_lbl}
-var _doll_slot_labels: Dictionary = {} # slot -> {name_lbl, graft_lbl}
-var _mat_labels: Dictionary = {}      # material_id -> Label
-var _gene_rows: Dictionary = {}       # gene_id -> {row, count_lbl}
+var _niche_buttons: Dictionary = {}  # niche_id -> Button
+var _cards: Dictionary = {}  # node_id -> {card, name_lbl, matchup_lbl, danger_lbl}
+var _doll_slot_labels: Dictionary = {}  # slot -> {name_lbl, graft_lbl}
+var _mat_labels: Dictionary = {}  # material_id -> Label
+var _gene_rows: Dictionary = {}  # gene_id -> {row, count_lbl}
 var _splice_list: VBoxContainer
 var _pop_layer: Control
 var _graft_sheet: Control  # modal sheet
+var _graft_slot: String = ""
 
 
 func _ready() -> void:
@@ -155,7 +156,9 @@ func _build_node_cards(col: VBoxContainer) -> void:
 	for node: Dictionary in Data.content.tables.get("nodes", []):
 		var node_id := String(node.get("id", ""))
 		var card := Button.new()
-		card.custom_minimum_size = Vector2(0, 96)
+		card.custom_minimum_size = Vector2(0, 80)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.clip_contents = true
 		card.pressed.connect(func() -> void: Store.assign_node(_lineage().id, node_id))
 
 		var pad := MarginContainer.new()
@@ -199,6 +202,8 @@ func _build_node_cards(col: VBoxContainer) -> void:
 		flavor_lbl.add_theme_color_override("font_color", DIM)
 		flavor_lbl.add_theme_font_size_override("font_size", 14)
 		flavor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		flavor_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		flavor_lbl.custom_minimum_size = Vector2(1, 0)
 		box.add_child(flavor_lbl)
 
 		_cards[node_id] = {
@@ -258,7 +263,9 @@ func _build_gene_codex(col: VBoxContainer) -> void:
 		var name_lbl := Label.new()
 		name_lbl.text = String(gene.get("name", gene_id))
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_lbl.add_theme_color_override("font_color", RarityColors.of(String(gene.get("rarity", "common"))))
+		name_lbl.add_theme_color_override(
+			"font_color", RarityColors.of(String(gene.get("rarity", "common")))
+		)
 		row.add_child(name_lbl)
 
 		var count_lbl := Label.new()
@@ -356,11 +363,27 @@ func _refresh() -> void:
 		if not card.visible:
 			continue
 
+		var niche_locked := not Commands.meets_niche_keys(l, content, node_niche)
+		card.disabled = niche_locked
+		if niche_locked:
+			var niche_row := content.niche(node_niche)
+			var keys: Array = niche_row.get("affix_keys", [])
+			card.tooltip_text = (
+				"Locked — equip a %s adaptation to enter this niche." % String(keys[0]).capitalize()
+				if not keys.is_empty()
+				else ""
+			)
+		else:
+			card.tooltip_text = ""
+
 		var active := l.assigned_node == node_id
 		(refs["name_lbl"] as Label).text = (
 			String(node.get("name", node_id)) + (" · working" if active else "")
 		)
-		card.modulate = Color.WHITE if active else Color(1, 1, 1, 0.72)
+		if niche_locked:
+			card.modulate = Color(1, 1, 1, 0.45)
+		else:
+			card.modulate = Color.WHITE if active else Color(1, 1, 1, 0.72)
 
 		var danger := float(node.get("danger", 0.0))
 		var danger_lbl := refs["danger_lbl"] as Label
@@ -383,7 +406,9 @@ func _refresh() -> void:
 			verdict = "even matchup"
 			color = DIM
 		var matchup_lbl := refs["matchup_lbl"] as Label
-		matchup_lbl.text = "%s · yield ×%.1f" % [verdict, Resolve.yield_efficiency(l, node, content)]
+		matchup_lbl.text = (
+			"%s · yield ×%.1f" % [verdict, Resolve.yield_efficiency(l, node, content)]
+		)
 		matchup_lbl.add_theme_color_override("font_color", color)
 
 	# Doll — all 6 slots
@@ -486,23 +511,27 @@ func _refresh_splice_offers() -> void:
 		row.add_theme_constant_override("separation", 10)
 		_splice_list.add_child(row)
 
+		var current_copies := int(Store.state.genes_known.get(gene_id, 0))
 		var lbl := Label.new()
-		lbl.text = "Splice offer: %s  ·  source: %s" % [gene_name, node_name]
+		lbl.text = "%s  ·  from %s  (have ×%d)" % [gene_name, node_name, current_copies]
 		lbl.add_theme_color_override("font_color", RarityColors.of(rarity))
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl.custom_minimum_size = Vector2(1, 0)
 		row.add_child(lbl)
 
 		var idx := i  # capture for closure
 		var claim_btn := Button.new()
-		claim_btn.text = "Claim"
+		claim_btn.text = "Claim (+1 copy)"
+		claim_btn.tooltip_text = (
+			"Adds 1 copy of this gene to your codex.\n"
+			+ "Gene copies unlock affixes — tap a doll slot to graft them."
+		)
 		claim_btn.pressed.connect(func() -> void: _on_claim_splice(idx))
 		row.add_child(claim_btn)
 
 
 # -- graft sheet --------------------------------------------------------------
-
-
-var _graft_slot: String = ""
 
 
 func _open_graft_sheet(slot: String) -> void:
@@ -545,9 +574,9 @@ func _open_graft_sheet(slot: String) -> void:
 
 		var gc: Dictionary = affix.get("graft_cost", {})
 		var mat := String(gc.get("material", ""))
-		var cost_qty := int(roundf(
-			float(gc.get("base", 0.0)) * pow(float(gc.get("growth", 1.0)), target_tier - 1)
-		))
+		var cost_qty := int(
+			roundf(float(gc.get("base", 0.0)) * pow(float(gc.get("growth", 1.0)), target_tier - 1))
+		)
 		var have_mat := int(Store.state.inventory_materials.get(mat, 0.0))
 		var mat_name := String(content.material(mat).get("name", mat))
 
@@ -558,9 +587,17 @@ func _open_graft_sheet(slot: String) -> void:
 		list.add_child(row)
 		var info_lbl := Label.new()
 		var tier_str := "T%d→T%d" % [current_tier, target_tier] if current_tier > 0 else "→T1"
-		info_lbl.text = "%s  %s  (%d/%d copies · %d %s)" % [
-			String(affix.get("name", affix_id)), tier_str, copies, target_tier, cost_qty, mat_name
-		]
+		info_lbl.text = (
+			"%s  %s  (%d/%d copies · %d %s)"
+			% [
+				String(affix.get("name", affix_id)),
+				tier_str,
+				copies,
+				target_tier,
+				cost_qty,
+				mat_name
+			]
+		)
 		info_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if not can_afford:
 			info_lbl.add_theme_color_override("font_color", DIM)
@@ -701,9 +738,14 @@ func _section_label(caption: String) -> Label:
 
 func _roman(n: int) -> String:
 	match n:
-		1: return "I"
-		2: return "II"
-		3: return "III"
-		4: return "IV"
-		5: return "V"
+		1:
+			return "I"
+		2:
+			return "II"
+		3:
+			return "III"
+		4:
+			return "IV"
+		5:
+			return "V"
 	return str(n)
