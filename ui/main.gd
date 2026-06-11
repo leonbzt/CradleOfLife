@@ -70,14 +70,13 @@ func _build_ui() -> void:
 	add_child(scroll)
 
 	var margin := MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.size_flags_horizontal = Control.SIZE_FILL
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		margin.add_theme_constant_override(side, 20)
 	scroll.add_child(margin)
 
 	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.size_flags_horizontal = Control.SIZE_FILL
 	col.add_theme_constant_override("separation", 14)
 	margin.add_child(col)
 
@@ -91,6 +90,7 @@ func _build_ui() -> void:
 	_build_metabolize_buttons(col)
 	col.add_child(_section_label("SPLICE OFFERS"))
 	_splice_list = VBoxContainer.new()
+	_splice_list.size_flags_horizontal = Control.SIZE_FILL
 	_splice_list.add_theme_constant_override("separation", 6)
 	col.add_child(_splice_list)
 	col.add_child(_section_label("GENE CODEX"))
@@ -156,9 +156,7 @@ func _build_node_cards(col: VBoxContainer) -> void:
 	for node: Dictionary in Data.content.tables.get("nodes", []):
 		var node_id := String(node.get("id", ""))
 		var card := Button.new()
-		card.custom_minimum_size = Vector2(0, 80)
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.clip_contents = true
+		card.size_flags_horizontal = Control.SIZE_FILL
 		card.pressed.connect(func() -> void: Store.assign_node(_lineage().id, node_id))
 
 		var pad := MarginContainer.new()
@@ -169,6 +167,8 @@ func _build_node_cards(col: VBoxContainer) -> void:
 		for side in ["margin_top", "margin_bottom"]:
 			pad.add_theme_constant_override(side, 8)
 		card.add_child(pad)
+		var pad_ref := pad
+		card.resized.connect(func() -> void: pad_ref.size = card.size)
 
 		var box := VBoxContainer.new()
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -218,6 +218,7 @@ func _build_node_cards(col: VBoxContainer) -> void:
 func _build_doll(col: VBoxContainer) -> void:
 	for slot: String in Lineage.SLOTS:
 		var row := HBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_FILL
 		row.custom_minimum_size = Vector2(0, 52)
 		col.add_child(row)
 
@@ -244,7 +245,8 @@ func _build_metabolize_buttons(col: VBoxContainer) -> void:
 	for def: Dictionary in Data.content.tables.get("adaptations", []):
 		var adaptation_id := String(def.get("id", ""))
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(0, 56)
+		btn.size_flags_horizontal = Control.SIZE_FILL
+		btn.custom_minimum_size = Vector2(0, 52)
 		btn.pressed.connect(func() -> void: _on_metabolize_pressed(adaptation_id))
 		col.add_child(btn)
 		# Store reference by slot+id for refresh
@@ -276,15 +278,19 @@ func _build_gene_codex(col: VBoxContainer) -> void:
 
 
 func _build_stash_row() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 22)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_FILL
+	grid.add_theme_constant_override("h_separation", 18)
+	grid.add_theme_constant_override("v_separation", 6)
 	for mat: Dictionary in Data.content.tables.get("materials", []):
 		var mat_id := String(mat.get("id", ""))
 		var l := Label.new()
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		l.add_theme_color_override("font_color", RarityColors.of(String(mat.get("rarity", ""))))
-		row.add_child(l)
+		grid.add_child(l)
 		_mat_labels[mat_id] = l
-	return row
+	return grid
 
 
 func _build_graft_sheet() -> Control:
@@ -508,6 +514,7 @@ func _refresh_splice_offers() -> void:
 		var node_name := String(node_row.get("name", node_id))
 
 		var row := HBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_FILL
 		row.add_theme_constant_override("separation", 10)
 		_splice_list.add_child(row)
 
@@ -683,7 +690,7 @@ func _on_loot(_lineage_id: String, loot: Dictionary) -> void:
 	var card := refs["card"] as Button
 	if not card.visible:
 		return
-	var at := card.global_position + Vector2(card.size.x * 0.66, 16.0)
+	var at := Vector2(48.0, card.global_position.y + 16.0)
 
 	var mats: Dictionary = loot["materials"]
 	for mat_id: String in mats:
