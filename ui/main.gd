@@ -70,13 +70,13 @@ func _build_ui() -> void:
 	add_child(scroll)
 
 	var margin := MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_FILL
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		margin.add_theme_constant_override(side, 20)
 	scroll.add_child(margin)
 
 	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_FILL
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 14)
 	margin.add_child(col)
 
@@ -90,7 +90,7 @@ func _build_ui() -> void:
 	_build_metabolize_buttons(col)
 	col.add_child(_section_label("SPLICE OFFERS"))
 	_splice_list = VBoxContainer.new()
-	_splice_list.size_flags_horizontal = Control.SIZE_FILL
+	_splice_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_splice_list.add_theme_constant_override("separation", 6)
 	col.add_child(_splice_list)
 	col.add_child(_section_label("GENE CODEX"))
@@ -153,38 +153,34 @@ func _build_niche_selector(col: VBoxContainer) -> void:
 
 
 func _build_node_cards(col: VBoxContainer) -> void:
+	var empty_style := StyleBoxEmpty.new()
 	for node: Dictionary in Data.content.tables.get("nodes", []):
 		var node_id := String(node.get("id", ""))
-		var card := Button.new()
-		card.size_flags_horizontal = Control.SIZE_FILL
-		card.pressed.connect(func() -> void: Store.assign_node(_lineage().id, node_id))
+
+		# PanelContainer is a real Container — auto-sizes to content, correct width.
+		var card_frame := PanelContainer.new()
+		card_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_child(card_frame)
 
 		var pad := MarginContainer.new()
-		pad.set_anchors_preset(Control.PRESET_FULL_RECT)
-		pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		for side in ["margin_left", "margin_right"]:
 			pad.add_theme_constant_override(side, 14)
 		for side in ["margin_top", "margin_bottom"]:
 			pad.add_theme_constant_override(side, 8)
-		card.add_child(pad)
-		var pad_ref := pad
-		card.resized.connect(func() -> void: pad_ref.size = card.size)
+		card_frame.add_child(pad)
 
 		var box := VBoxContainer.new()
-		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_theme_constant_override("separation", 2)
 		pad.add_child(box)
 
 		var top := HBoxContainer.new()
-		top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(top)
 		var name_lbl := Label.new()
-		name_lbl.text = String(node.get("name", node_id))
 		name_lbl.add_theme_font_size_override("font_size", 21)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		top.add_child(name_lbl)
 
 		var stats := HBoxContainer.new()
-		stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		top.add_child(stats)
 		var def_lbl := Label.new()
 		def_lbl.text = "DEF %d" % int(node.get("defense", 0))
@@ -202,17 +198,25 @@ func _build_node_cards(col: VBoxContainer) -> void:
 		flavor_lbl.add_theme_color_override("font_color", DIM)
 		flavor_lbl.add_theme_font_size_override("font_size", 14)
 		flavor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		flavor_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		flavor_lbl.custom_minimum_size = Vector2(1, 0)
 		box.add_child(flavor_lbl)
 
+		# Transparent full-rect Button overlay — handles clicks and disabled state.
+		var click_btn := Button.new()
+		click_btn.flat = true
+		click_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+		for style in ["normal", "hover", "pressed", "disabled", "focus"]:
+			click_btn.add_theme_stylebox_override(style, empty_style)
+		click_btn.pressed.connect(func() -> void: Store.assign_node(_lineage().id, node_id))
+		card_frame.add_child(click_btn)
+
 		_cards[node_id] = {
-			"card": card,
+			"card": card_frame,
+			"btn": click_btn,
 			"name_lbl": name_lbl,
 			"matchup_lbl": matchup_lbl,
 			"danger_lbl": danger_lbl,
 		}
-		col.add_child(card)
 
 
 func _build_doll(col: VBoxContainer) -> void:
@@ -362,7 +366,8 @@ func _refresh() -> void:
 	for node_id: String in _cards:
 		var node := content.node(node_id)
 		var refs: Dictionary = _cards[node_id]
-		var card := refs["card"] as Button
+		var card: Control = refs["card"]
+		var click_btn := refs["btn"] as Button
 		var node_niche := String(node.get("niche", ""))
 		card.visible = node_niche == _active_niche
 
@@ -370,7 +375,7 @@ func _refresh() -> void:
 			continue
 
 		var niche_locked := not Commands.meets_niche_keys(l, content, node_niche)
-		card.disabled = niche_locked
+		click_btn.disabled = niche_locked
 		if niche_locked:
 			var niche_row := content.niche(node_niche)
 			var keys: Array = niche_row.get("affix_keys", [])
@@ -687,7 +692,7 @@ func _on_loot(_lineage_id: String, loot: Dictionary) -> void:
 	var refs: Dictionary = _cards.get(_lineage().assigned_node, {})
 	if refs.is_empty():
 		return
-	var card := refs["card"] as Button
+	var card: Control = refs["card"]
 	if not card.visible:
 		return
 	var at := Vector2(48.0, card.global_position.y + 16.0)
