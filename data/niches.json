@@ -6,5 +6,21 @@
     "affix_keys": [],
     "flavor": "Sunlit sea floor. Microbial mats, slow grazers, and the first things that learned to bite back.",
     "source": "bible/world_spine.md#age-i-the-sea"
+  },
+  {
+    "id": "pelagic",
+    "name": "The Open Water",
+    "age": "sea",
+    "affix_keys": ["uptime"],
+    "flavor": "The column above the floor — fast, exposed, nowhere to hide. Sustained gill capacity is not optional.",
+    "source": "bible/refs/pelagic.md#the-open-water"
+  },
+  {
+    "id": "reef_edge",
+    "name": "The Reef Edge",
+    "age": "sea",
+    "affix_keys": ["stealth"],
+    "flavor": "Structure and shelter; ambush country. You do not walk in without crypsis.",
+    "source": "bible/refs/reef-edge.md#the-reef-edge"
   }
 ]

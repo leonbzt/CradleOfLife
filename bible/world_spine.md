@@ -32,16 +32,16 @@ built well before any other is promised.
 
 ### Niches
 
-| Niche | id | What it is | Status |
-|---|---|---|---|
-| The Shallow Benthos | `shallow_benthos` | Sunlit sea floor: microbial mats, slow grazers, and the first predators. | **v1** |
-| The Open Water | `pelagic` | The column above the floor — fast, exposed, nowhere to hide. | future |
-| The Reef Edge | `reef_edge` | Structure and shelter; ambush country. | future |
+| Niche | id | What it is | Key | Status |
+|---|---|---|---|---|
+| The Shallow Benthos | `shallow_benthos` | Sunlit sea floor: microbial mats, slow grazers, and the first predators. | none | **v1** |
+| The Open Water | `pelagic` | The column above the floor — fast, exposed, nowhere to hide. | `uptime` | **v1** |
+| The Reef Edge | `reef_edge` | Structure and shelter; ambush country. | `stealth` | **v1** |
 
-The Shallow Benthos is the **starter niche** and the only one authored in v1. A
-fresh lineage grazes the microbial mats (a passive Eat node it can already beat),
-then gears up to take on things that hit back — the anemone, the trilobite — and
-eventually the apex of the launch meta.
+The Shallow Benthos is the **starter niche**; The Open Water and The Reef Edge
+are Phase 2 niches gated by affix-key builds. A fresh lineage grazes the microbial
+mats, gears up, and eventually progresses to the new niches once the right affix
+build is in place.
 
 ### The apex of the launch meta
 

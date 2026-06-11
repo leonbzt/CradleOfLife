@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "master_seed": 7,
+  "lineages": [
+    {
+      "id": "main",
+      "display_name": "Your Main",
+      "kingdom": "animal",
+      "attributes": {
+        "vitality": 1.0,
+        "power": 1.0,
+        "resilience": 1.0,
+        "metabolism": 1.0,
+        "instinct": 1.0
+      },
+      "doll": {},
+      "skills": {},
+      "class_node": "generalist",
+      "assigned_node": "microbial_mat",
+      "graduated": false
+    }
+  ],
+  "slots_active": 2,
+  "slots_max": 2,
+  "inventory_materials": { "biofilm": 120.0 },
+  "inventory_genes": ["gene_gill"],
+  "genes_known": ["gene_sclerite"],
+  "niches_unlocked": ["shallow_benthos"],
+  "last_seen_unix": 0,
+  "rng_streams": {}
+}

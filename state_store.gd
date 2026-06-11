@@ -7,13 +7,9 @@ extends Node
 ##
 ## The save carries a schema_version so a save written by an old client still
 ## loads in a new one — the Tree never resets across years of patches
-## (VISION.md §14). The migration hook below is intentionally a near-passthrough:
-## real migration steps land here when the first breaking schema change actually
-## arrives, not before (YAGNI, CLAUDE.md §2.6).
+## (VISION.md §14). Migration is handled by GameState.migrate_and_load().
 
-## Something about the save changed; UI should refresh from `state`.
 signal state_changed
-## A foraging action landed loot (the rarity-coloured pop hangs off this).
 signal loot_dropped(lineage_id: String, loot: Dictionary)
 
 const SAVE_PATH: String = "user://save.json"
@@ -61,6 +57,22 @@ func assign_node(lineage_id: String, node_id: String) -> void:
 		state_changed.emit()
 
 
+func claim_splice(index: int) -> Dictionary:
+	var result := Commands.claim_splice(state, index)
+	if result["ok"]:
+		save_state()
+		state_changed.emit()
+	return result
+
+
+func graft(lineage_id: String, slot: String, affix_id: String) -> Dictionary:
+	var result := Commands.graft(state, Data.content, lineage_id, slot, affix_id)
+	if result["ok"]:
+		save_state()
+		state_changed.emit()
+	return result
+
+
 func save_state() -> void:
 	if state == null:
 		return
@@ -85,19 +97,9 @@ func load_state() -> GameState:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_error("Store: save file is corrupt; ignoring.")
 		return null
-	return _migrate_and_load(parsed)
+	return GameState.migrate_and_load(parsed as Dictionary)
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_APPLICATION_PAUSED:
 		save_state()
-
-
-func _migrate_and_load(d: Dictionary) -> GameState:
-	var v: int = int(d.get("schema_version", 1))
-	if v > GameState.SCHEMA_VERSION:
-		push_warning(
-			"Store: save is from a newer client (%d > %d)." % [v, GameState.SCHEMA_VERSION]
-		)
-	# Migration steps (v1 -> v2 -> ...) land here as the schema evolves.
-	return GameState.from_dict(d)

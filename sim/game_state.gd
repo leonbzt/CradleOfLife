@@ -8,26 +8,24 @@ extends RefCounted
 
 ## Bumped whenever the save layout changes. A save written by an old client must
 ## still load in a new one — the Tree never resets across years of patches
-## (VISION.md §14). Migration logic lives in state_store.gd when first needed.
-const SCHEMA_VERSION: int = 1
+## (VISION.md §14). Migration logic lives in migrate_and_load() below.
+const SCHEMA_VERSION: int = 2
 
 var schema_version: int = SCHEMA_VERSION
-var master_seed: int = 0  # seeds every Rng stream; stored so accrual is replayable
+var master_seed: int = 0
 var lineages: Array[Lineage] = []
 var slots_active: int = 2
 var slots_max: int = 2
-var inventory_materials: Dictionary = {}  # material_id -> qty (float)
-var inventory_genes: Array[String] = []
-var genes_known: Array[String] = []
-var niches_unlocked: Array[String] = []
+var inventory_materials: Dictionary = {}   # material_id -> qty (float)
+var genes_known: Dictionary = {}           # gene_id -> int copy count
+var splice_offers: Array[Dictionary] = []  # [{gene: String, node: String}]
 var last_seen_unix: int = 0
 # RNG stream positions (stream_name -> state as String; see Rng.export_state).
-# Saved so a relaunch continues the roll sequence instead of replaying it.
 var rng_streams: Dictionary = {}
 
 
 func lineage_by_id(lineage_id: String) -> Lineage:
-	for l in lineages:
+	for l: Lineage in lineages:
 		if l.id == lineage_id:
 			return l
 	return null
@@ -35,7 +33,7 @@ func lineage_by_id(lineage_id: String) -> Lineage:
 
 func to_dict() -> Dictionary:
 	var lineages_out: Array = []
-	for l in lineages:
+	for l: Lineage in lineages:
 		lineages_out.append(l.to_dict())
 	return {
 		"schema_version": schema_version,
@@ -44,9 +42,8 @@ func to_dict() -> Dictionary:
 		"slots_active": slots_active,
 		"slots_max": slots_max,
 		"inventory_materials": inventory_materials.duplicate(),
-		"inventory_genes": inventory_genes.duplicate(),
 		"genes_known": genes_known.duplicate(),
-		"niches_unlocked": niches_unlocked.duplicate(),
+		"splice_offers": splice_offers.duplicate(true),
 		"last_seen_unix": last_seen_unix,
 		"rng_streams": rng_streams.duplicate(),
 	}
@@ -61,12 +58,40 @@ static func from_dict(d: Dictionary) -> GameState:
 	s.inventory_materials = (d.get("inventory_materials", {}) as Dictionary).duplicate()
 	s.last_seen_unix = int(d.get("last_seen_unix", 0))
 	s.rng_streams = (d.get("rng_streams", {}) as Dictionary).duplicate()
-	for x: Variant in d.get("inventory_genes", []):
-		s.inventory_genes.append(String(x))
-	for x: Variant in d.get("genes_known", []):
-		s.genes_known.append(String(x))
-	for x: Variant in d.get("niches_unlocked", []):
-		s.niches_unlocked.append(String(x))
+	for k: Variant in d.get("genes_known", {}):
+		s.genes_known[String(k)] = int((d["genes_known"] as Dictionary).get(k, 0))
+	for offer: Variant in d.get("splice_offers", []):
+		if offer is Dictionary:
+			s.splice_offers.append((offer as Dictionary).duplicate())
 	for ld: Variant in d.get("lineages", []):
-		s.lineages.append(Lineage.from_dict(ld))
+		s.lineages.append(Lineage.from_dict(ld as Dictionary))
 	return s
+
+
+## Applies schema migrations then constructs the GameState. Called by
+## state_store.gd so the UI load path always passes through here.
+static func migrate_and_load(d: Dictionary) -> GameState:
+	var v := int(d.get("schema_version", 1))
+	if v == 1:
+		d = _migrate_v1_to_v2(d)
+	return from_dict(d)
+
+
+static func _migrate_v1_to_v2(d: Dictionary) -> Dictionary:
+	var out := d.duplicate(true)
+	out["schema_version"] = 2
+
+	# Fold old inventory_genes + genes_known (both were Array[String]) into
+	# the new genes_known dict of id -> count.
+	var counts: Dictionary = {}
+	for g: Variant in d.get("inventory_genes", []):
+		var id := String(g)
+		counts[id] = int(counts.get(id, 0)) + 1
+	for g: Variant in d.get("genes_known", []):
+		var id := String(g)
+		counts[id] = int(counts.get(id, 0)) + 1
+	out["genes_known"] = counts
+	out.erase("inventory_genes")
+	out.erase("niches_unlocked")
+	out["splice_offers"] = []
+	return out

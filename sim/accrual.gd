@@ -4,10 +4,9 @@ extends RefCounted
 ## Closed-form offline accrual (VISION.md §12; arch invariant, IMPLEMENTATION.md
 ## §1). NEVER frame-ticks elapsed time. Materials integrate in closed form;
 ## rare gene events are sampled as a Poisson process via exponential
-## inter-arrivals from a per-lineage RNG stream. Cost is O(number of events),
-## not O(number of ticks over the gap.)
+## inter-arrivals from a per-lineage RNG stream — O(events), not O(ticks).
 ##
-## Two properties this buys us, both load-bearing:
+## Two load-bearing properties:
 ##  - Reproducible: re-running the same gap with the same seed yields the same
 ##    events, so what an offline batch grants matches what a notification
 ##    predicted (VISION.md §16).
@@ -15,42 +14,61 @@ extends RefCounted
 ##    when the NEXT notable event lands and schedule a local notification for it
 ##    with no server (deferred to Phase 4 — not built here).
 ##
-## Uses the SAME rate helpers as Resolve, so there is no second economy.
+## Phase 2: splice offers are sampled as a second Poisson stream per lineage.
+## Events carry a `kind` field: "gene" or "splice". Application of splice offers
+## to the save (claim_splice) is Phase 2 commands; application of the batch to
+## the save state is Phase 4 (offline catch-up UI). The harness counts both.
+##
+## Uses the SAME rate helpers as Resolve — no second economy.
 
 
 ## Accrue `dt` seconds of offline time for every working lineage in `state`.
 ## Returns { "materials": {id->qty}, "events": Array[Dictionary] } where each
-## event is {t, lineage, node, gene, rarity}, sorted by time.
+## event is {kind, t, lineage, node, gene, rarity?}, sorted by time.
 static func accrue(state: GameState, content: Content, dt: float, rng: Rng) -> Dictionary:
 	var materials: Dictionary = {}
 	var events: Array[Dictionary] = []
 
-	for lineage in state.lineages:
+	for lineage: Lineage in state.lineages:
 		if lineage.graduated or lineage.assigned_node == "":
 			continue
-		var node: Dictionary = content.node(lineage.assigned_node)
+		var node := content.node(lineage.assigned_node)
 		if node.is_empty():
 			continue
 
-		var mat_id: String = String(node.get("material", ""))
+		var mat_id := String(node.get("material", ""))
 		if mat_id != "":
-			var gained: float = Resolve.material_rate(lineage, node) * dt
+			var gained := Resolve.material_rate(lineage, node, content) * dt
 			materials[mat_id] = float(materials.get(mat_id, 0.0)) + gained
 
-		var rate: float = Resolve.gene_rate(lineage, node)
-		var stream_name: String = "gene_accrue:" + lineage.id
-		var t: float = rng.exp_interval(stream_name, rate)
+		var gene_rate := Resolve.gene_rate(lineage, node, content)
+		var gene_stream := "gene_accrue:" + lineage.id
+		var t := rng.exp_interval(gene_stream, gene_rate)
 		while t < dt:
-			var g: Dictionary = Resolve.roll_gene(node, rng)
-			var event: Dictionary = {
+			var g := Resolve.roll_gene(node, rng)
+			events.append({
+				"kind": "gene",
 				"t": t,
 				"lineage": lineage.id,
 				"node": String(node.get("id", "")),
 				"gene": String(g.get("id", "")),
 				"rarity": String(g.get("rarity", "common")),
-			}
-			events.append(event)
-			t += rng.exp_interval(stream_name, rate)
+			})
+			t += rng.exp_interval(gene_stream, gene_rate)
+
+		var splice_rate := Resolve.splice_rate_eff(lineage, node, content)
+		if splice_rate > 0.0:
+			var splice_stream := "splice_accrue:" + lineage.id
+			var ts := rng.exp_interval(splice_stream, splice_rate)
+			while ts < dt:
+				events.append({
+					"kind": "splice",
+					"t": ts,
+					"lineage": lineage.id,
+					"node": String(node.get("id", "")),
+					"gene": String(node.get("spliceable", "")),
+				})
+				ts += rng.exp_interval(splice_stream, splice_rate)
 
 	events.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["t"] < b["t"])
 	return {"materials": materials, "events": events}

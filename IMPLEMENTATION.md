@@ -79,23 +79,24 @@ res://
 `GameState` is a `RefCounted` (not a `Node`) — pure data, serializes to JSON in `user://save.json`. UI is a pure function of it; all mutations go through named commands in `state_store.gd` so every change is replayable and testable.
 
 ```gdscript
-# sim/game_state.gd
+# sim/game_state.gd  (SCHEMA_VERSION 2)
 class_name GameState extends RefCounted
 
-var lineages: Array          # Array[Lineage]
+var lineages: Array[Lineage]
 var slots_active: int = 2
 var slots_max: int = 2
-var inventory_materials: Dictionary = {}   # material_id -> qty
-var inventory_genes: Array = []
-var genes_known: Array = []
-var niches_unlocked: Array = []
+var inventory_materials: Dictionary = {}   # material_id -> qty (float)
+var genes_known: Dictionary = {}           # gene_id -> int copy count
+var splice_offers: Array[Dictionary] = []  # [{gene: String, node: String}]
 var last_seen_unix: int = 0
 
 # Lineage (own RefCounted): id, display_name, kingdom ("animal" in v1),
 #   attributes {vitality, power, resilience, metabolism, instinct},
 #   doll {slot_id -> AdaptationInstance}, skills {skill_id -> xp},
 #   class_node, assigned_node, graduated.
-# AdaptationInstance: {def_id, tier, affixes, rarity}
+# AdaptationInstance: {def_id, tier, affixes: [{id, tier}], rarity}
+#   affix graft_tier(affix_id) -> int; rarity escalates to epic/legendary
+#   when grafts are present (Commands._compute_rarity).
 ```
 
 ### One resolve function

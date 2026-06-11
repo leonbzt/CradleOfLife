@@ -1,28 +1,8 @@
 [
   {
-    "id": "gene_nematocyst",
-    "name": "Nematocyst Battery",
-    "unlocks": { "kind": "affix", "id": "venom_minor" },
-    "flavor": "Stinging cells you can fire on contact.",
-    "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
-  },
-  {
-    "id": "gene_sclerite",
-    "name": "Sclerite Mineralization",
-    "unlocks": { "kind": "affix", "id": "plating_minor" },
-    "flavor": "The trick of pulling calcite out of seawater and wearing it.",
-    "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
-  },
-  {
-    "id": "gene_raptorial",
-    "name": "Raptorial Appendage",
-    "unlocks": { "kind": "affix", "id": "grasp_minor" },
-    "flavor": "A grasping limb built for ambush.",
-    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
-  },
-  {
     "id": "gene_gill",
     "name": "Branched Gill",
+    "rarity": "common",
     "unlocks": { "kind": "affix", "id": "gill_minor" },
     "flavor": "Feathered respiratory surface for steadier output.",
     "source": "bible/refs/shallow-benthos.md#gill-surface-area"
@@ -30,23 +10,97 @@
   {
     "id": "gene_compound_eye",
     "name": "Compound Eye",
+    "rarity": "common",
     "unlocks": { "kind": "affix", "id": "eyes_minor" },
     "flavor": "Hundreds of lenses resolving the murk.",
     "source": "bible/refs/shallow-benthos.md#compound-eyes"
   },
   {
+    "id": "gene_sclerite",
+    "name": "Sclerite Mineralization",
+    "rarity": "uncommon",
+    "unlocks": { "kind": "affix", "id": "plating_minor" },
+    "flavor": "The trick of pulling calcite out of seawater and wearing it.",
+    "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
+  },
+  {
     "id": "gene_gnathobase",
     "name": "Gnathobase",
+    "rarity": "uncommon",
     "unlocks": { "kind": "affix", "id": "gnathobase_minor" },
     "flavor": "Crushing tooth-plates at the base of the legs.",
     "source": "bible/refs/shallow-benthos.md#gnathobases"
   },
   {
+    "id": "gene_nematocyst",
+    "name": "Nematocyst Battery",
+    "rarity": "rare",
+    "unlocks": { "kind": "affix", "id": "venom_minor" },
+    "flavor": "Stinging cells you can fire on contact.",
+    "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
+  },
+  {
+    "id": "gene_raptorial",
+    "name": "Raptorial Appendage",
+    "rarity": "rare",
+    "unlocks": { "kind": "affix", "id": "grasp_minor" },
+    "flavor": "A grasping limb built for ambush.",
+    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  },
+  {
     "id": "gene_great_appendage",
     "name": "Great Appendage",
-    "unlocks": { "kind": "affix", "id": "grasp_minor" },
     "rarity": "legendary",
+    "unlocks": { "kind": "affix", "id": "great_appendage" },
     "flavor": "The launch meta's apex weapon: a grasping arm nothing in the shallows out-reaches.",
     "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  },
+  {
+    "id": "gene_notochord",
+    "name": "Notochord",
+    "rarity": "common",
+    "unlocks": { "kind": "affix", "id": "notochord_flick" },
+    "flavor": "A stiff internal rod — the earliest version of a spine. Haikouichthys ran this build on day one.",
+    "source": "bible/refs/pelagic.md#notochord"
+  },
+  {
+    "id": "gene_filter_combs",
+    "name": "Filter Combs",
+    "rarity": "uncommon",
+    "unlocks": { "kind": "affix", "id": "filter_combs" },
+    "flavor": "Tamisiocaris's frontal appendages repurposed as plankton sieves. Pure uptime in open water.",
+    "source": "bible/refs/pelagic.md#filter-feeding"
+  },
+  {
+    "id": "gene_proboscis",
+    "name": "Eversible Proboscis",
+    "rarity": "uncommon",
+    "unlocks": { "kind": "affix", "id": "eversible_proboscis" },
+    "flavor": "Ottoia's throat can turn itself inside out to grab. The Devs did not intend for this to be harvested.",
+    "source": "bible/refs/reef-edge.md#proboscis"
+  },
+  {
+    "id": "gene_spine_rows",
+    "name": "Spine Rows",
+    "rarity": "uncommon",
+    "unlocks": { "kind": "affix", "id": "spine_rows" },
+    "flavor": "Wiwaxia's sclerite fence, repurposed as a danger-tax guard.",
+    "source": "bible/refs/reef-edge.md#spiny-armor"
+  },
+  {
+    "id": "gene_glassy_tissue",
+    "name": "Glassy Tissue",
+    "rarity": "rare",
+    "unlocks": { "kind": "affix", "id": "glassy_tissue" },
+    "flavor": "Near-total transparency in open water — the stealth roll that costs nothing but density.",
+    "source": "bible/refs/pelagic.md#transparency-crypsis"
+  },
+  {
+    "id": "gene_ambush_instinct",
+    "name": "Ambush Instinct",
+    "rarity": "epic",
+    "unlocks": { "kind": "affix", "id": "ambush_instinct" },
+    "flavor": "The reef lurker's stillness is not patience — it is calculated exploitation of the ambush window.",
+    "source": "bible/refs/reef-edge.md#ambush-lurking"
   }
 ]

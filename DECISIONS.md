@@ -281,15 +281,50 @@ proposed pelagic-plus-small-reef.
 
 ---
 
+## 2026-06-11 — Phase 2 complete; WP6 chase curve re-proven
+
+### Economy harness — 6-week model rebuilt for Phase 2 policy
+
+The harness (`tests/economy_test.gd`) was rewritten for Phase 2: two lineages
+(`hunter`, `stinger`), deterministic player policy (claim splices, metabolize,
+graft best, migrate on key), and new CSV columns (`splices_claimed`,
+`grafts_applied`, `hunter_niche`, `stinger_niche`). Final result: **p50=11
+check-ins between legendaries** — in target band [10,25]. ✓
+
+### Drop table tuning — `apex_lurker` weight 5 → 1
+
+`gene_great_appendage` was at weight 5/95 ≈ 5.26% in the `apex_lurker` table
+(vs 1% in all other legendary slots). Combined with the stinger lineage
+reaching `reef_lurker` in week 2 and the `eyes_minor` find_bonus, the combined
+legendary rate reached ~0.4/check-in → p50 ≈ 2. Corrected to weight 1/91 ≈
+1.1%, bringing `apex_lurker` in line with every other apex table. **What it
+replaced:** weight 5 (a Phase 2 authoring oversight — the 5.26% was not
+intentional).
+
+### Harness graft cap — `POLICY_MAX_GRAFT_TIER = 3`
+
+The policy model had no cap on how many times it would re-graft the same
+affix. With a shared material pool and two lineages both accumulating
+`gene_great_appendage` copies (copies are a cap, not consumed), the model
+stacked `splice_mult` affixes to tier ~20, producing 60× splice bonuses that
+were impossible in real play (legendary copies are gated by drop rarity). A
+model constraint `POLICY_MAX_GRAFT_TIER = 3` was added to the harness only —
+it does **not** touch the engine or any game rule. Three tiers is the realistic
+ceiling for a 6-week arc given the 1% legendary drop rate. **What it
+replaced:** unbounded tier accumulation in the model (not a game rule change).
+
+---
+
 ## Open questions (current)
 
-- **Phase 1 validation gate is running.** The web build is with the friend
-  cohort (since 2026-06-10). Gather first-equip reactions and an honest
-  pass/fail — it is the precondition checkbox at the top of `PHASE2.md`.
+- **Phase 2 validation gate (WP7).** Web export to friend cohort; gate
+  question: "does 'what should I fight' become a build decision players talk
+  about?" Run it and report honestly.
+- **UI gate 3 (voice).** Leon reviews all Phase 2 UI strings in `ui/main.gd`
+  against `bible/voice.md`. Slot names, niche labels, and splice copy are
+  pending explicit sign-off.
 - **Yield growth feel.** Accepted for early game (2026-06-11, above); Phase 2's
   affix terms are the planned answer — re-evaluate at the Phase 2 gate.
-- **Slice copy is placeholder.** Voice pass on all UI strings is folded into
-  Phase 2 (PHASE2.md WP5); Leon reviews as gate 3.
 - **Equip choice depth.** Phase 2's grafting is the planned answer (real
   alternatives per slot via affixes); re-evaluate at the Phase 2 gate.
 - **Graft slot freedom.** Any affix may be grafted onto any doll slot (stated

@@ -43,6 +43,26 @@ func material(material_id: String) -> Dictionary:
 	return _row("materials", material_id)
 
 
+func niche(niche_id: String) -> Dictionary:
+	return _row("niches", niche_id)
+
+
+func affix(affix_id: String) -> Dictionary:
+	return _row("affixes", affix_id)
+
+
+func gene(gene_id: String) -> Dictionary:
+	return _row("genes", gene_id)
+
+
+## Returns the unique gene that unlocks the given affix, or {} if none.
+func gene_for_affix(affix_id: String) -> Dictionary:
+	for g: Dictionary in tables.get("genes", []):
+		if String((g.get("unlocks", {}) as Dictionary).get("id", "")) == affix_id:
+			return g
+	return {}
+
+
 func _row(table: String, row_id: String) -> Dictionary:
 	for r: Dictionary in tables.get(table, []):
 		if r.get("id", "") == row_id:

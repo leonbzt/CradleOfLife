@@ -3,27 +3,30 @@
     "id": "venom_minor",
     "name": "Weak Venom",
     "orthogonal_role": "dot",
-    "math_term": "dot_stacks",
-    "params": { "stacks": 1, "tick_pct": 0.03 },
-    "flavor": "A thin toxin that keeps working after the bite lands.",
+    "math_term": "dot_floor",
+    "params": { "tick_pct": 0.15 },
+    "graft_cost": { "material": "soft_tissue", "base": 40, "growth": 2.5 },
+    "flavor": "A thin toxin that keeps working after the bite lands — even outgeared prey bleeds.",
     "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
   },
   {
     "id": "plating_minor",
     "name": "Sclerite Plating",
     "orthogonal_role": "mitigation",
-    "math_term": "flat_mitigation",
+    "math_term": "danger_guard",
     "params": { "amount": 2 },
-    "flavor": "Hardened mineral platelets shrug off the first hit.",
+    "graft_cost": { "material": "chitin", "base": 40, "growth": 2.5 },
+    "flavor": "Hardened mineral platelets shrug off retaliation — the tax the Devs put on fighting back.",
     "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
   },
   {
     "id": "grasp_minor",
     "name": "Raptorial Grasp",
     "orthogonal_role": "control",
-    "math_term": "control_slow",
-    "params": { "slow_pct": 0.2, "dur": 2 },
-    "flavor": "Spined appendages pin prey before it can flee.",
+    "math_term": "splice_mult",
+    "params": { "mult": 1.5 },
+    "graft_cost": { "material": "chitin", "base": 40, "growth": 2.5 },
+    "flavor": "Spined appendages pin prey long enough to take a copy of what makes it dangerous.",
     "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
   },
   {
@@ -32,7 +35,8 @@
     "orthogonal_role": "uptime",
     "math_term": "uptime_mult",
     "params": { "mult": 1.15 },
-    "flavor": "More respiratory surface, more sustained output.",
+    "graft_cost": { "material": "biofilm", "base": 40, "growth": 2.5 },
+    "flavor": "More respiratory surface, more sustained output. The efficient build's bread and butter.",
     "source": "bible/refs/shallow-benthos.md#gill-surface-area"
   },
   {
@@ -41,7 +45,8 @@
     "orthogonal_role": "find",
     "math_term": "find_mult",
     "params": { "mult": 1.2 },
-    "flavor": "A field of lenses that misses very little.",
+    "graft_cost": { "material": "biofilm", "base": 40, "growth": 2.5 },
+    "flavor": "A field of lenses that misses very little. The chase opens faster.",
     "source": "bible/refs/shallow-benthos.md#compound-eyes"
   },
   {
@@ -50,7 +55,78 @@
     "orthogonal_role": "penetration",
     "math_term": "pen_flat",
     "params": { "amount": 2 },
-    "flavor": "Toothed leg-bases that crack a shell open.",
+    "graft_cost": { "material": "chitin", "base": 40, "growth": 2.5 },
+    "flavor": "Toothed leg-bases that crack a shell open. Defense values are advisory.",
     "source": "bible/refs/shallow-benthos.md#gnathobases"
+  },
+  {
+    "id": "glassy_tissue",
+    "name": "Glassy Tissue",
+    "orthogonal_role": "stealth",
+    "math_term": "ambush_frac",
+    "params": { "frac": 0.25 },
+    "graft_cost": { "material": "lucent_flesh", "base": 80, "growth": 2.5 },
+    "flavor": "Near-transparent body wall. The gene chase runs even when you are outmatched — at a fraction of the open rate.",
+    "source": "bible/refs/pelagic.md#transparency-crypsis"
+  },
+  {
+    "id": "ambush_instinct",
+    "name": "Ambush Instinct",
+    "orthogonal_role": "stealth",
+    "math_term": "ambush_frac",
+    "params": { "frac": 0.4 },
+    "graft_cost": { "material": "flesh", "base": 80, "growth": 2.5 },
+    "flavor": "The reef lurker's read on everything that moves: settle, wait, commit. Ambush fraction doubles the gate.",
+    "source": "bible/refs/reef-edge.md#ambush-lurking"
+  },
+  {
+    "id": "filter_combs",
+    "name": "Filter Combs",
+    "orthogonal_role": "uptime",
+    "math_term": "uptime_mult",
+    "params": { "mult": 1.35 },
+    "graft_cost": { "material": "soft_tissue", "base": 40, "growth": 2.5 },
+    "flavor": "The open water's passive income build. Tamisiocaris farmed plankton at industrial scale — now you can too.",
+    "source": "bible/refs/pelagic.md#filter-feeding"
+  },
+  {
+    "id": "notochord_flick",
+    "name": "Notochord Flick",
+    "orthogonal_role": "mitigation",
+    "math_term": "danger_guard",
+    "params": { "amount": 1 },
+    "graft_cost": { "material": "soft_tissue", "base": 40, "growth": 2.5 },
+    "flavor": "A stiff rod absorbs the first retaliation. Entry-level mitigation from the lineage that inherits the server.",
+    "source": "bible/refs/pelagic.md#notochord"
+  },
+  {
+    "id": "spine_rows",
+    "name": "Spine Rows",
+    "orthogonal_role": "mitigation",
+    "math_term": "danger_guard",
+    "params": { "amount": 3 },
+    "graft_cost": { "material": "chitin", "base": 40, "growth": 2.5 },
+    "flavor": "Wiwaxia's sclerite rows redirected outward. The Devs intended them as armor; the build community found other uses.",
+    "source": "bible/refs/reef-edge.md#spiny-armor"
+  },
+  {
+    "id": "eversible_proboscis",
+    "name": "Eversible Proboscis",
+    "orthogonal_role": "control",
+    "math_term": "splice_mult",
+    "params": { "mult": 2.0 },
+    "graft_cost": { "material": "soft_tissue", "base": 40, "growth": 2.5 },
+    "flavor": "Ottoia's inside-out throat deployed as a pinning tool. The splice window stays open longer.",
+    "source": "bible/refs/reef-edge.md#proboscis"
+  },
+  {
+    "id": "great_appendage",
+    "name": "Great Appendage",
+    "orthogonal_role": "control",
+    "math_term": "splice_mult",
+    "params": { "mult": 2.5 },
+    "graft_cost": { "material": "flesh", "base": 80, "growth": 2.5 },
+    "flavor": "The launch meta's apex weapon. Anomalocaris held this for a reason. Nothing in the shallows out-reaches it.",
+    "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
   }
 ]
