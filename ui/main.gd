@@ -301,13 +301,21 @@ func _build_stash_row() -> Control:
 func _build_graft_sheet() -> Control:
 	var sheet := PanelContainer.new()
 	sheet.visible = false
-	sheet.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	sheet.size_flags_vertical = Control.SIZE_SHRINK_END
-	sheet.custom_minimum_size = Vector2(0, 400)
+	# anchor_top = 1, offset_top = -400 → top is 400px above parent bottom.
+	# anchor_bottom = 1, offset_bottom = 0 → bottom is flush with parent bottom.
+	sheet.set_anchor_and_offset(SIDE_LEFT, 0.0, 0.0)
+	sheet.set_anchor_and_offset(SIDE_RIGHT, 1.0, 0.0)
+	sheet.set_anchor_and_offset(SIDE_TOP, 1.0, -400.0)
+	sheet.set_anchor_and_offset(SIDE_BOTTOM, 1.0, 0.0)
+
+	var pad := MarginContainer.new()
+	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+		pad.add_theme_constant_override(side, 16)
+	sheet.add_child(pad)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
-	sheet.add_child(vbox)
+	pad.add_child(vbox)
 
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
@@ -321,9 +329,16 @@ func _build_graft_sheet() -> Control:
 	close_btn.pressed.connect(func() -> void: sheet.visible = false)
 	header.add_child(close_btn)
 
+	var list_scroll := ScrollContainer.new()
+	list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(list_scroll)
+
 	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.add_theme_constant_override("separation", 6)
-	vbox.add_child(list)
+	list_scroll.add_child(list)
+
 	sheet.set_meta("title_lbl", title_lbl)
 	sheet.set_meta("list", list)
 	return sheet
