@@ -315,6 +315,123 @@ replaced:** unbounded tier accumulation in the model (not a game rule change).
 
 ---
 
+## 2026-06-11 — Notifications demoted to optional; equipment-swap & naming pass opened
+
+### Notifications are an optional convenience, not a re-engagement engine
+
+**Decision (Leon).** Notifications drop from "the primary re-engagement engine,
+as load-bearing as the loot loop" to an **optional, opt-in convenience** the game
+never depends on. The re-engagement pillar is the chase + climb + idle accrual
+(VISION §5, §9a); the game must be complete and retainable for a player who never
+enables notifications.
+
+**Why.** A notification-driven re-engagement *engine* sits one step from the
+loss-aversion / babysitting anti-patterns this design bans (VISION §12, §18).
+Making notifications non-load-bearing removes the temptation and keeps the no-nag
+ethic honest. **What it replaced:** VISION §16's "primary re-engagement engine"
+stance and the "Dev-voice notifications as product shape" lock line. Canonized in
+VISION §16, §19 table, "What's locked"; IMPLEMENTATION §4, §5, §7.
+
+**Honest caveat (assistant).** Opt-in notifications have low adoption on mobile,
+so this is a retention bet — re-engagement now leans entirely on the chase and the
+player's own habit. Measurable at soft launch (D1/D7) and reversible (an opt-in
+prompt can be added later). The closed-form-accrual / event-prediction work keeps
+its independent justification (no battery drain, reproducibility, offline
+correctness); only its notification payoff is now an optional bonus.
+
+### Equipment swapping + mechanically-distinct slots — direction set, build deferred
+
+**Direction (Leon).** The equipment doll should become a real RPG surface, two
+ways, both built **later** (not this phase):
+
+- **Distinct slots (Option A).** Each doll slot gains its own mechanical identity
+  — potentially via attribute subsystems (e.g. integument→resilience,
+  metabolic_core→metabolism, sensory→instinct) — so *which organ you invest in* is
+  a build choice, not a uniform +Power. Today every slot adds +1 Power/tier
+  identically (`Resolve.effective_power`); differentiation lives only in grafts.
+- **Competing adaptations (Option B).** More than one candidate adaptation per
+  slot, so equipping is a pick-between-items swap (VISION §7's "swapping
+  adaptations *is* the build"), not just investment order.
+
+The **metabolize → graft** pipeline with **genes as a bank** is confirmed clear
+and stays. Equipment swapping layers on top, after the voice/naming pass. VISION
+§7's equipment dial is **not** rewritten yet — the decision isn't finalized.
+
+### Voice & naming pass — opened (terms under review, no canonization yet)
+
+A naming/voice pass is underway. Player-facing labels may change; internal
+`orthogonal_role` ids and math terms stay fixed (renaming them would touch
+`sim/validation.gd`, `affixes.json`, the gate, and the docs — avoided). Terms
+Leon flagged:
+
+- **splice** — clear enough for "eat a creature, copy its trait"?
+- **graft** vs **express** — Leon prefers "graft"; the "expressing a gene" framing
+  is dropped from player-facing copy.
+- affix **role labels** — `mitigation` / `uptime` / `find` unclear as player labels.
+- **metabolic_core** — "core" may get a better in-voice name; acceptable as-is.
+
+Resolved calls get canonized in VISION §17 (role table) and the UI strings as
+Leon signs off.
+
+---
+
+## 2026-06-11 — Naming pass resolved: Express chosen; role labels + ids canonized & aligned
+
+Closes the voice/naming pass opened above. Leon's calls:
+
+### Express (not Graft) for the gene-expression action
+
+**Decision (Leon).** The player-facing verb for socketing a banked gene onto an
+organ is **Express**. The signature pair is **Splice** (acquire foreign genetic
+material from prey → gene bank) → **Express** (switch a banked gene on as a trait
+on an organ) — the biologically correct acquisition→expression story.
+
+**What it replaced.** The 2026-06-11 naming-pass entry's lean toward "Graft" (and
+its note dropping "express"). Reversed: as a biologist Leon prefers the accurate
+term, and the TierZoo brand (VISION §2) rewards true terminology used as game
+balance. The small legibility cost is paid in UI (the action reads "Express Venom
+→ Mouthparts"; the gene visibly snaps onto the organ). The internal command stays
+`Commands.graft()` for now — engine name, not player-facing — renamable later.
+
+### Affix role labels + ids canonized and aligned
+
+**Decision (Leon).** The seven orthogonal roles get clear player labels, and the
+internal `orthogonal_role` **ids are renamed to match** — done now, before content
+multiplies, to kill the translation tax (Leon's call; cheap at 13 affixes).
+
+| label = id | was | hosts |
+|---|---|---|
+| **Affliction** | `dot` | venom, bleed, disease, parasitism |
+| **Control** | `control` (unchanged) | grip/pin now; slow/taunt/lure later |
+| **Guard** | `mitigation` | plating, spines, toxin-resistance, aposematism |
+| **Sustain** | `uptime` | gills, filter combs |
+| **Perception** | `find` | eyes, lateral line |
+| **Penetration** | `penetration` (unchanged) | gnathobase, enzymes |
+| **Stealth** | `stealth` (unchanged) | crypsis, transparency, ambush |
+
+**Scope (behaviour-neutral).** Renamed: `ROLES` + the *values* of `CANONICAL_TERMS`
+in `sim/validation.gd`, `orthogonal_role` in `data/affixes.json`, `affix_keys` in
+`data/niches.json`, and role references in VISION §17, IMPLEMENTATION §3, and the
+bible. **Deliberately unchanged:** the `math_term` lever names (`dot_floor`,
+`uptime_mult`, `find_mult`, `danger_guard`) and **`sim/resolve.gd` entirely** —
+`resolve()` matches on `math_term`, so the economy math is provably identical and
+the gate's term→role registry keeps the layers linked. `resolve.gd`'s internal
+accumulator names (`dot`, `uptime_bonus`, `find_bonus`), the `sim_test.gd` /
+`economy_test.gd` `_check` label strings, and the throwaway `PHASE2.md` still carry
+old tokens — cosmetic, left for a pass where the headless sim tests are run.
+
+### Roles vs affixes — the two-layer growth rule (canonized in VISION §17)
+
+**Decision (Leon, confirmed).** Roles are the **fixed** orthogonal axis (~7, the
+moat); affixes are the **open, growing** set within them. Add affixes freely; add
+roles almost never (a new role = a new `resolve()` term, rare and expensive).
+Within a role, magnitude-only variants are a legitimate power ladder; genuinely
+distinct *play* needs a distinguishing param — Gate 1's synonym check enforces it.
+Answers Leon's "big set vs strong core" question: **strong core of roles, big open
+set of affixes.** Written into VISION §17.
+
+---
+
 ## Open questions (current)
 
 - **Phase 2 validation gate (WP7).** Web export to friend cohort; gate
@@ -332,3 +449,12 @@ replaced:** unbounded tier accumulation in the model (not a game rule change).
   add slot affinities as data.
 - **Clock-tampering** is accepted for now (2026-06-10, above); must be revisited
   before offline accrual ships to players.
+- **Equipment swapping + distinct slots.** Direction set (2026-06-11, above):
+  Option A (mechanically distinct slots) + Option B (competing adaptations per
+  slot), both deferred until after the voice/naming pass. Metabolize→graft with
+  genes-as-bank stays.
+- **Voice & naming pass — resolved** 2026-06-11 (above): Express chosen; role
+  labels + ids canonized and aligned (Affliction / Control / Guard / Sustain /
+  Perception / Penetration / Stealth). Low-priority polish still open: a nicer
+  in-voice name for `metabolic_core`, and clearer wording for `integument` —
+  both fine as-is for now.

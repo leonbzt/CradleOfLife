@@ -238,12 +238,15 @@ This is a phone game first, and that shapes the design as much as the loot loop 
 
 **The real product is the check-in session:** a 2–5 minute, one-handed, vertical-format loop. You open the app, read a **Dev dispatch** ("while you were away" → patch-note voice), make a handful of decisions, spend your drops, maybe branch or splice, and close it. The equipment doll is the screen you live on *during* that session. The lived-in desktop-MMO screen is not the product; the tight check-in is.
 
-**Notifications are the primary re-engagement engine** — for a mobile idle game, this is roughly as load-bearing as the loot loop, so it gets a real spec, not a wave. They speak in the Dev voice (§2a):
+**Re-engagement is the chase, not a nag.** What brings a player back is what carries the whole game: idle accrual ran while they were away, the chase ticked forward, and there's a rarer gene one roll out (§5, §9a). The game *earns* the return; it does not manufacture it. We deliberately do **not** build a re-engagement engine out of notifications — that path runs straight into the loss-aversion and babysitting anti-patterns this design bans (§12, §18).
 
-- **Triggers (good-news only):** a rare/legendary gene dropped while you were away; an adaptation finished building; a niche cleared; a splice offer is waiting to be claimed; the chase ticked past a visible threshold.
-- **Anti-nag throttle:** a hard daily cap; never two within a short window; suppress entirely if the app was opened in the last N hours; never use a "you're losing progress" framing — that's the loss-aversion anti-pattern §12 bans. The Devs don't spam; they dispatch.
-- **Honesty constraint:** "the chase ticked closer" may only fire if §9a's curve makes it statistically true and felt. A notification that overpromises trains players to ignore notifications, which kills the whole engine.
-- **Free win from closed-form accrual:** because offline earnings are computed as a function of elapsed time (not simulated tick-by-tick), the game can *predict* when the next notable event will land and schedule a **local** notification for it — no server required for most triggers.
+**Notifications are an optional convenience, never core.** They are opt-in, fully disablable, and the game must be complete and retainable for a player who never turns them on. When enabled they speak in the Dev voice (§2a) and carry good news only:
+
+- **Triggers (good-news only):** a rare/legendary gene dropped while you were away; an adaptation finished building; a niche cleared; a splice offer is waiting to be claimed.
+- **Anti-nag, always:** a hard daily cap; never two in a short window; suppress entirely if the app was opened recently; never a "you're losing progress" framing — the §12 anti-pattern. The Devs don't spam; they dispatch, and only if you asked them to.
+- **Honesty constraint:** a trigger fires only if it's actually true and felt. Because notifications are not load-bearing here, a player who mutes them loses nothing the design relies on.
+
+Because offline earnings are closed-form (computed from elapsed time, not tick-by-tick), the game *can* predict when the next notable event lands and schedule a **local** notification with no server — which is what makes the optional feature cheap to offer. It stays optional: a nicety on top of a game that already retains on its own merits.
 
 **Touch-first UI grammar.** RuneScape's tabs (stats / equipment / skills / bank), XP-drop pops, and rarity colours translate well — but hover tooltips do not exist on touch. Inspect is tap-to-open, not hover. The retro-pixel RuneScape *vibe* is as much the interface grammar as the pixels; build it for thumbs. The art identity is **retro pixel** — on-theme, the most feasible style for a small team, and the one AI tooling assists best.
 
@@ -255,15 +258,17 @@ One loop × niches × affixes × tiers × genes × stacking = vast apparent cont
 
 But the moat is the *combination of a small set of mechanically orthogonal primitives* — **not** sheer AI-generated volume. A thousand affixes that are really the same five with different nouns is the *opposite* of depth. Target a small set (~7) of orthogonal affix roles, each mapping cleanly onto both an RPG archetype and real biology:
 
-| Role | RPG | Biology |
+| Role (`id`) | RPG | Biology |
 |---|---|---|
-| Damage-over-time | poison stacks | venom, toxin |
-| Control / slow | chill, snare | cold, paralytic |
-| Mitigation | armour, resist | integument, toxin-resistance, aposematism |
-| Uptime / speed | haste, regen | metabolism |
-| Find / crit | luck, crit | sensory acuity |
-| Burst / penetration | armour-pen | jaw force, enzymes |
-| Stealth | untargetable, ambush | mimicry, crypsis |
+| **Affliction** (`affliction`) | poison stacks, bleed | venom, toxin, parasitism, disease |
+| **Control** (`control`) | chill, snare, taunt | cold, paralytic, grip |
+| **Guard** (`guard`) | armour, resist | integument, toxin-resistance, aposematism |
+| **Sustain** (`sustain`) | haste, regen | metabolism, throughput |
+| **Perception** (`perception`) | luck, crit | sensory acuity |
+| **Penetration** (`penetration`) | armour-pen | jaw force, enzymes |
+| **Stealth** (`stealth`) | untargetable, ambush | mimicry, crypsis |
+
+**Two layers, opposite growth rules.** The *roles* are the fixed orthogonal axis — the moat — and the count stays small (~7); adding one means a genuinely new mechanical term in `resolve()`, which is rare and expensive. The *affixes* are the open, growing set *within* those roles: venom, bleed, disease and parasitism are all `affliction` affixes, distinguished by params (and flavour), never by a new role. Grow affixes freely; grow roles almost never. Within a role, magnitude-only variants are a legitimate power ladder; genuinely distinct *play* within a role requires a distinguishing parameter — which Gate 1's synonym check enforces.
 
 Biology is perfect cover for orthogonality, because real adaptations *are* mechanically distinct — and because the project commits to scientific accuracy (§2), that distinctness is grounded in reality rather than asserted. **AI authors the rows** — names, flavor text, drop-table entries, niche descriptions, patch notes (in the §2a voice). **AI never authors the engine** — mechanical distinctness and the resolution logic are hand-designed and kept small.
 
@@ -300,7 +305,7 @@ Name the deferred depth so the vision stays whole, but **build no scaffolding, h
 | Skills + offline accrual | |
 | Soft cap + player-chosen graduation | |
 | Idle-earns / attention-spends | |
-| Mobile check-in + notifications (Dev voice) | |
+| Mobile check-in + Dev-voice dispatches (notifications optional, §16) | |
 
 Notes on the deferred set: **history-overgrows-the-world** makes "your past selves populate the world" literal, with niche-local, diminishing lift so it speeds the re-climb without flattening challenge. The **real-stakes ecosystem sim** (predator-prey with actual loss among your own lineages) is a switch flipped much later, if ever.
 
@@ -325,4 +330,4 @@ These are explicitly open and meant to be tuned in playtest. They do **not** reo
 
 ## What's locked
 
-The frame: **the Game of Life, literally** — you're a Player, the **Devs are natural selection**, content is **Patch Notes**, the world is **mythic Earth with rigorous TierZoo-accurate biology**, the tone is **wry & knowing** (§2). Idle · RPG · growth, in that order. The Tree, with lineages-as-RPG-characters. Monotonic growth, **no prestige reset and no completion endpoint** — growth is endless, with shape from soft cap + breadth. One loop (forage → metabolize), RPG-resolved (Power vs defense → loot). Equipment doll of phenotype slots with tier / affix / rarity. Class tree (online after the core loop). OSRS-style skills. Two drop streams (materials + genes). **The two-tier chase curve as the load-bearing engine of tension, locked as a never-flat shape (§5, §9a).** Splicing as the signature gene source. Power treadmill + affix-keys + light affinity, no hard triangle. No trap builds, synergies celebrated. Roster of parallel lineages, all top-tier-capable, **animals only in v1**. **Idle earns, attention spends — and decisions are never throttled as artificial scarcity.** Soft cap + player-chosen graduation, lineage persists as a named fixture. Breadth-led endless growth; milestones come from the open-ended age-climb, not completion. Authored-baseline wild. Ages as expansion patches. Mobile check-in + Dev-voice notifications as the product shape. Retro-pixel art identity. **AI authors content data, never the engine; every row passes three gates — orthogonality, scientific accuracy, voice.** F2P, ethically monetized, light optional non-power buys deferred to post-validation; built as a professional indie product for long-term live operation, growing one patch at a time. The §19 core/deferred split.
+The frame: **the Game of Life, literally** — you're a Player, the **Devs are natural selection**, content is **Patch Notes**, the world is **mythic Earth with rigorous TierZoo-accurate biology**, the tone is **wry & knowing** (§2). Idle · RPG · growth, in that order. The Tree, with lineages-as-RPG-characters. Monotonic growth, **no prestige reset and no completion endpoint** — growth is endless, with shape from soft cap + breadth. One loop (forage → metabolize), RPG-resolved (Power vs defense → loot). Equipment doll of phenotype slots with tier / affix / rarity. Class tree (online after the core loop). OSRS-style skills. Two drop streams (materials + genes). **The two-tier chase curve as the load-bearing engine of tension, locked as a never-flat shape (§5, §9a).** Splicing as the signature gene source. Power treadmill + affix-keys + light affinity, no hard triangle. No trap builds, synergies celebrated. Roster of parallel lineages, all top-tier-capable, **animals only in v1**. **Idle earns, attention spends — and decisions are never throttled as artificial scarcity.** Soft cap + player-chosen graduation, lineage persists as a named fixture. Breadth-led endless growth; milestones come from the open-ended age-climb, not completion. Authored-baseline wild. Ages as expansion patches. Mobile check-in + Dev-voice dispatches as the product shape; notifications optional, never a re-engagement engine. Retro-pixel art identity. **AI authors content data, never the engine; every row passes three gates — orthogonality, scientific accuracy, voice.** F2P, ethically monetized, light optional non-power buys deferred to post-validation; built as a professional indie product for long-term live operation, growing one patch at a time. The §19 core/deferred split.

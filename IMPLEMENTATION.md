@@ -132,15 +132,15 @@ Every affix/creature/adaptation row looks like:
 {
   "id": "venom_minor",
   "name": "Weak Venom",
-  "orthogonal_role": "dot",
-  "math_term": "dot_stacks",
+  "orthogonal_role": "affliction",
+  "math_term": "dot_floor",
   "params": { "stacks": 1, "tick_pct": 0.03 },
   "flavor": "A thin toxin that lingers in the wound.",
   "source": "bible/refs/venom.md#delivery-vs-potency"
 }
 ```
 
-**Gate 1 — Orthogonality (automated, CI).** `tests/validate_data.gd` rejects any row missing `orthogonal_role` (must be one of `dot`, `control`, `mitigation`, `uptime`, `find`, `penetration`, `stealth`) or `math_term`, and flags two affixes sharing a `math_term` with no distinguishing `params` as suspected synonyms. Keeps "does this change *how I play* or just *the number*?" a build check, not a vibe.
+**Gate 1 — Orthogonality (automated, CI).** `tests/validate_data.gd` rejects any row missing `orthogonal_role` (must be one of `affliction`, `control`, `guard`, `sustain`, `perception`, `penetration`, `stealth`) or `math_term`, and flags two affixes sharing a `math_term` with no distinguishing `params` as suspected synonyms. Keeps "does this change *how I play* or just *the number*?" a build check, not a vibe.
 
 **Gate 2 — Scientific accuracy (human review, sourced).** Every substantive biological claim must be backed by a reference in `bible/refs/`. AI is strong at flavor and unreliable at facts, so a human verifies against sources before merge. The `source` field is mandatory on rows that assert a real capability. This gate is what makes the TierZoo backing real rather than decorative.
 
@@ -181,7 +181,7 @@ Class/spec tree (now it comes online), cladogenesis-as-respec, a 2-slot roster, 
 
 ### Phase 4 — The mobile product (5–7 weeks)
 
-Closed-form offline accrual, the **Dev-dispatch** while-you-were-away summary, notifications (§5), and the **land-fall summit** beat (vision §15 calls it make-or-break — over-build it). Add telemetry.
+Closed-form offline accrual, the **Dev-dispatch** while-you-were-away summary, optional local notifications (§5), and the **land-fall summit** beat (vision §15 calls it make-or-break — over-build it). Add telemetry.
 
 **Validation gate:** *Do players return the next day without being nagged?* Measure D1/D7 on the cohort. This is the only retention test that counts pre-launch.
 
@@ -197,7 +197,7 @@ Post-launch, the roadmap *is* the fiction: each new age ships as a Dev expansion
 
 ## 5. Notifications in Godot (Phase 4)
 
-The one place Godot needs help — no built-in mobile notification API.
+Notifications are an **optional, opt-in convenience — never a re-engagement engine** (vision §16): build the game to retain without them, then layer these on. The one place Godot needs help — no built-in mobile notification API.
 
 - **Local scheduled notifications** cover the common case. Because accrual is closed-form, you can compute when the next notable event lands and schedule a local notification for it. Use a maintained community local-notification addon (Android + iOS) or a thin GDExtension/JNI bridge. Bounded, known work — flag it early so Phase 4 doesn't surprise you.
 - **Server push** is *not needed in v1*: nearly every honest trigger is locally predictable. Don't stand up a backend until something genuinely requires it.
@@ -216,7 +216,7 @@ The one place Godot needs help — no built-in mobile notification API.
 
 ## 7. Definition of the vertical slice (first releasable build)
 
-**Phase 1 + 2 + 3 + offline accrual + Dev-dispatch summary + notifications**, animals only, sea age only, ~6 affixes, ~15–25 nodes, 2 roster slots, a placeholder soft cap, all content through the three gates, and a chase curve that survived Phase 0. That is a complete, retainable idle RPG suitable for soft launch. Everything past it — ages, graduation polish, kingdoms, deferred depth — is live-ops expansion on a proven base.
+**Phase 1 + 2 + 3 + offline accrual + Dev-dispatch summary + optional notifications**, animals only, sea age only, ~6 affixes, ~15–25 nodes, 2 roster slots, a placeholder soft cap, all content through the three gates, and a chase curve that survived Phase 0. That is a complete, retainable idle RPG suitable for soft launch. Everything past it — ages, graduation polish, kingdoms, deferred depth — is live-ops expansion on a proven base.
 
 ---
 

@@ -17,7 +17,7 @@ locomotion versus benthic life (Schmidt-Nielsen 1972, *How Animals Work*; Videle
 1993, *Fish Swimming*). Cambrian-era animals capable of mid-water locomotion
 include Cambrian radiodonts such as Tamisiocaris (Vinther et al., 2014).
 
-**Game mechanic:** Pelagic niche requires an `uptime` affix key (gill capacity)
+**Game mechanic:** Pelagic niche requires a `sustain` affix key (gill capacity)
 to enter — representing the sustained aerobic throughput needed for open-water life.
 
 ---

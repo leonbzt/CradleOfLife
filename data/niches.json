@@ -11,7 +11,7 @@
     "id": "pelagic",
     "name": "The Open Water",
     "age": "sea",
-    "affix_keys": ["uptime"],
+    "affix_keys": ["sustain"],
     "flavor": "The column above the floor — fast, exposed, nowhere to hide. Sustained gill capacity is not optional.",
     "source": "bible/refs/pelagic.md#the-open-water"
   },

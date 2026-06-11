@@ -13,7 +13,7 @@ extends RefCounted
 ## Returns a list of human-readable error strings; empty means pass.
 
 const ROLES: Array[String] = [
-	"dot", "control", "mitigation", "uptime", "find", "penetration", "stealth"
+	"affliction", "control", "guard", "sustain", "perception", "penetration", "stealth"
 ]
 const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
 
@@ -21,11 +21,11 @@ const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendar
 ## a new term in data must fail loudly (PHASE2.md §3, WP3).
 const CANONICAL_TERMS: Dictionary = {
 	"pen_flat": "penetration",
-	"dot_floor": "dot",
-	"danger_guard": "mitigation",
+	"dot_floor": "affliction",
+	"danger_guard": "guard",
 	"splice_mult": "control",
-	"uptime_mult": "uptime",
-	"find_mult": "find",
+	"uptime_mult": "sustain",
+	"find_mult": "perception",
 	"ambush_frac": "stealth",
 }
 

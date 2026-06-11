@@ -58,8 +58,8 @@ there is already a full role spread). Authored creatures should map onto these.
 |---|---|---|---|
 | **Apex Predator** | Burst DPS carry, high upkeep | offense | yes |
 | **Generalist / Mesopredator** | Flex pick, the Generalist class root | adaptable | yes |
-| **Armored Grazer** | The tank / bruiser, eats everything safely | mitigation | yes |
-| **Filter Feeder** | The efficient passive farmer; great idle uptime | support/uptime | yes |
+| **Armored Grazer** | The tank / bruiser, eats everything safely | guard | yes |
+| **Filter Feeder** | The efficient passive farmer; great idle sustain | support/sustain | yes |
 | Ecosystem Engineer | Reshapes the biome | utility | defer (world-reshaping) |
 | Eusocial Colony | Unit-spawning swarm economy | — | defer (second-engine risk) |
 
@@ -72,25 +72,25 @@ chronology rule above).
 | Creature | Clade / era | Class one-liner | Role | Splice candidate |
 |---|---|---|---|---|
 | **Anomalocaris** | Radiodont, Cambrian | S-tier apex burst carry | offense | Grasping Strike |
-| **Trilobite** | Arthropod, Cambrian+ | The everyman tank; armored, never gets nerfed | mitigation | Mineralized Carapace |
+| **Trilobite** | Arthropod, Cambrian+ | The everyman tank; armored, never gets nerfed | guard | Mineralized Carapace |
 | **Orthocone nautiloid** (e.g. Cameroceras) | Cephalopod, Ordovician | Jet-propelled ranged apex; the kraken of its day | offense/mobility | Jet Dash |
 | **Eurypterid** (sea scorpion) | Chelicerate, Ordovician–Silurian | Heavy bruiser duelist | offense/control | Pincer Grip |
 | **Haikouichthys / Pikaia** | Early chordate, Cambrian | F-tier underdog that inherits the server | utility/scaling | Notochord |
-| **Tamisiocaris** | Filter-feeding radiodont, Cambrian | AFK farmer; turns plankton into pure uptime | support/uptime | Filter Combs |
+| **Tamisiocaris** | Filter-feeding radiodont, Cambrian | AFK farmer; turns plankton into pure sustain | support/sustain | Filter Combs |
 
 ### Trait → affix-role map (gate-1 ground truth)
 
 Where sea-age traits land in the orthogonal role set (VISION.md §17; enforced by
-`sim/validation.gd`). Decided 2026-06-10: **aposematism is mitigation-flavor**
+`sim/validation.gd`). Decided 2026-06-10: **aposematism is guard-flavor**
 (deterrence reduces incoming pressure; no 7th-role-by-accident), and
 **mimicry/crypsis is the `stealth` role** — a real term of its own.
 
-- Neurotoxin / venom → `dot`
+- Neurotoxin / venom → `affliction`
 - Crushing bite / shell-cracker → `penetration`
-- Mineralized carapace, **aposematism** → `mitigation`
+- Mineralized carapace, **aposematism** → `guard`
 - Abyssal torpor (cold, paralytic) → `control`
-- Filter-feeding efficiency → `uptime`
-- Acute lateral line, compound eyes → `find`
+- Filter-feeding efficiency → `sustain`
+- Acute lateral line, compound eyes → `perception`
 - **Mimicry / crypsis** → `stealth`
 
 ---

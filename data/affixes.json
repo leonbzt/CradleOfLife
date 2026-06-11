@@ -2,7 +2,7 @@
   {
     "id": "venom_minor",
     "name": "Weak Venom",
-    "orthogonal_role": "dot",
+    "orthogonal_role": "affliction",
     "math_term": "dot_floor",
     "params": { "tick_pct": 0.15 },
     "graft_cost": { "material": "soft_tissue", "base": 40, "growth": 2.5 },
@@ -12,7 +12,7 @@
   {
     "id": "plating_minor",
     "name": "Sclerite Plating",
-    "orthogonal_role": "mitigation",
+    "orthogonal_role": "guard",
     "math_term": "danger_guard",
     "params": { "amount": 2 },
     "graft_cost": { "material": "chitin", "base": 40, "growth": 2.5 },
@@ -32,7 +32,7 @@
   {
     "id": "gill_minor",
     "name": "Gill Branching",
-    "orthogonal_role": "uptime",
+    "orthogonal_role": "sustain",
     "math_term": "uptime_mult",
     "params": { "mult": 1.15 },
     "graft_cost": { "material": "biofilm", "base": 40, "growth": 2.5 },
@@ -42,7 +42,7 @@
   {
     "id": "eyes_minor",
     "name": "Compound Eyes",
-    "orthogonal_role": "find",
+    "orthogonal_role": "perception",
     "math_term": "find_mult",
     "params": { "mult": 1.2 },
     "graft_cost": { "material": "biofilm", "base": 40, "growth": 2.5 },
@@ -82,7 +82,7 @@
   {
     "id": "filter_combs",
     "name": "Filter Combs",
-    "orthogonal_role": "uptime",
+    "orthogonal_role": "sustain",
     "math_term": "uptime_mult",
     "params": { "mult": 1.35 },
     "graft_cost": { "material": "soft_tissue", "base": 40, "growth": 2.5 },
@@ -92,7 +92,7 @@
   {
     "id": "notochord_flick",
     "name": "Notochord Flick",
-    "orthogonal_role": "mitigation",
+    "orthogonal_role": "guard",
     "math_term": "danger_guard",
     "params": { "amount": 1 },
     "graft_cost": { "material": "soft_tissue", "base": 40, "growth": 2.5 },
@@ -102,7 +102,7 @@
   {
     "id": "spine_rows",
     "name": "Spine Rows",
-    "orthogonal_role": "mitigation",
+    "orthogonal_role": "guard",
     "math_term": "danger_guard",
     "params": { "amount": 3 },
     "graft_cost": { "material": "chitin", "base": 40, "growth": 2.5 },

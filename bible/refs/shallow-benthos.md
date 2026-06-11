@@ -22,7 +22,7 @@ ecology.*
 
 ## Cnidarian nematocysts
 
-**Role:** `dot` (damage-over-time). **Used by:** Venom affix, Sea Anemone.
+**Role:** `affliction` (damage-over-time). **Used by:** Venom affix, Sea Anemone.
 Cnidarians (anemones, jellyfish, hydroids) carry nematocysts — explosive stinging
 cells that inject venom on contact. Venom is a real, ancient delivery mechanism
 and a clean DoT in game terms: it keeps working after contact rather than
@@ -31,7 +31,7 @@ function.*
 
 ## Biomineralized exoskeletons
 
-**Role:** `mitigation`. **Used by:** Sclerite Plating affix, Trilobite Grazer.
+**Role:** `guard`. **Used by:** Sclerite Plating affix, Trilobite Grazer.
 The Cambrian saw the widespread arrival of biomineralized hard parts — trilobites
 built calcite (calcium carbonate) exoskeletons. Hard armour reduces incoming
 damage: a flat mitigation term, distinct from dodge or regen. *Verify: source on
@@ -48,7 +48,7 @@ radiodont frontal appendage morphology & function.*
 
 ## Gill surface area
 
-**Role:** `uptime` (sustained throughput). **Used by:** Gill Branching affix.
+**Role:** `sustain` (sustained throughput). **Used by:** Gill Branching affix.
 Respiratory gas exchange scales with respiratory surface area; branched/feathered
 gills increase that surface and so support a higher sustained metabolic rate. In
 game terms this is an uptime/throughput multiplier, not burst. *Verify: source on
@@ -56,7 +56,7 @@ gill surface-area scaling and aquatic respiration.*
 
 ## Compound eyes
 
-**Role:** `find` (rare-find / acuity). **Used by:** Compound Eyes affix, stalked
+**Role:** `perception` (rare-find / acuity). **Used by:** Compound Eyes affix, stalked
 eyes, Anomalocaris.
 Trilobites had mineralised (calcitic) compound eyes; radiodonts including
 *Anomalocaris* had large compound eyes with many lenses (described from
