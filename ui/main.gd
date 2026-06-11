@@ -84,7 +84,7 @@ func _build_ui() -> void:
 	_build_niche_selector(col)
 	col.add_child(_section_label("THE WILD"))
 	_build_node_cards(col)
-	col.add_child(_section_label("THE BUILD"))
+	col.add_child(_section_label("THE BUILD  ·  tap a slot to graft genes"))
 	_build_doll(col)
 	col.add_child(_section_label("METABOLIZE"))
 	_build_metabolize_buttons(col)
@@ -93,7 +93,7 @@ func _build_ui() -> void:
 	_splice_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_splice_list.add_theme_constant_override("separation", 6)
 	col.add_child(_splice_list)
-	col.add_child(_section_label("GENE CODEX"))
+	col.add_child(_section_label("GENE CODEX  ·  copies unlock graft tiers"))
 	_build_gene_codex(col)
 	col.add_child(_section_label("STASH"))
 	col.add_child(_build_stash_row())
@@ -228,6 +228,7 @@ func _build_doll(col: VBoxContainer) -> void:
 
 		var slot_btn := Button.new()
 		slot_btn.text = slot.replace("_", " ").capitalize()
+		slot_btn.tooltip_text = "Tap to graft a gene onto this slot."
 		slot_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		slot_btn.pressed.connect(func() -> void: _open_graft_sheet(slot))
 		row.add_child(slot_btn)
