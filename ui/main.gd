@@ -301,12 +301,7 @@ func _build_stash_row() -> Control:
 func _build_graft_sheet() -> Control:
 	var sheet := PanelContainer.new()
 	sheet.visible = false
-	# anchor_top = 1, offset_top = -400 → top is 400px above parent bottom.
-	# anchor_bottom = 1, offset_bottom = 0 → bottom is flush with parent bottom.
-	sheet.set_anchor_and_offset(SIDE_LEFT, 0.0, 0.0)
-	sheet.set_anchor_and_offset(SIDE_RIGHT, 1.0, 0.0)
-	sheet.set_anchor_and_offset(SIDE_TOP, 1.0, -400.0)
-	sheet.set_anchor_and_offset(SIDE_BOTTOM, 1.0, 0.0)
+	sheet.z_index = 10
 
 	var pad := MarginContainer.new()
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -565,6 +560,11 @@ func _refresh_splice_offers() -> void:
 func _open_graft_sheet(slot: String) -> void:
 	_graft_slot = slot
 	var sheet := _graft_sheet
+	# Position at build-time is unreliable in web export (parent size may be 0).
+	# Set size and position here where size is always known.
+	var sheet_h := 400.0
+	sheet.size = Vector2(size.x, sheet_h)
+	sheet.position = Vector2(0.0, size.y - sheet_h)
 	var list := sheet.get_meta("list") as VBoxContainer
 	var title_lbl := sheet.get_meta("title_lbl") as Label
 
