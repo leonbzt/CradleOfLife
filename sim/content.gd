@@ -9,6 +9,7 @@ extends RefCounted
 const FILES: Array[String] = [
 	"affixes",
 	"adaptations",
+	"class_tree",
 	"genes",
 	"materials",
 	"niches",
@@ -53,6 +54,31 @@ func affix(affix_id: String) -> Dictionary:
 
 func gene(gene_id: String) -> Dictionary:
 	return _row("genes", gene_id)
+
+
+## Returns the class_tree row for `class_id`, or {} if unknown / not yet loaded.
+## {} is the identity case: effective_attributes treats it as no modifiers.
+func class_node(class_id: String) -> Dictionary:
+	return _row("class_tree", class_id)
+
+
+## The set of gear categories a lineage may build: "generalist" plus every
+## category unlocked along the lineage's committed class path (root → class_node).
+## Always returns at least {"generalist": true}. Used by metabolize/graft for
+## eligibility and by the UI for greying (PHASE3.md §3.1).
+func allowed_categories(lineage: Lineage) -> Dictionary:
+	var cats: Dictionary = {"generalist": true}
+	var visited: Dictionary = {}
+	var cid := lineage.class_node
+	while cid != "" and not visited.has(cid):
+		visited[cid] = true
+		var row := class_node(cid)
+		if row.is_empty():
+			break
+		for cat: Variant in row.get("unlocks_categories", []):
+			cats[String(cat)] = true
+		cid = String(row.get("parent", ""))
+	return cats
 
 
 ## Returns the unique gene that unlocks the given affix, or {} if none.

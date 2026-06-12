@@ -102,5 +102,29 @@
     "unlocks": { "kind": "affix", "id": "ambush_instinct" },
     "flavor": "The reef lurker's stillness is not patience — it is calculated exploitation of the ambush window.",
     "source": "bible/refs/reef-edge.md#ambush-lurking"
+  },
+  {
+    "id": "gene_strike_momentum",
+    "name": "Strike Momentum",
+    "rarity": "rare",
+    "unlocks": { "kind": "affix", "id": "strike_momentum" },
+    "flavor": "The raptorial arm's kinetic carry-through: a strike geometry that does not decelerate at the target.",
+    "source": "bible/refs/classes.md#predator"
+  },
+  {
+    "id": "gene_mineralized_spine",
+    "name": "Mineralized Spine",
+    "rarity": "rare",
+    "unlocks": { "kind": "affix", "id": "mineralized_spine" },
+    "flavor": "Calcite deposition along dorsal spines — the biological signature of a lineage that has stopped running and started billing for the hit.",
+    "source": "bible/refs/classes.md#armored_grazer"
+  },
+  {
+    "id": "gene_laminar_current",
+    "name": "Laminar Current",
+    "rarity": "rare",
+    "unlocks": { "kind": "affix", "id": "laminar_current" },
+    "flavor": "Ciliary coordination that smooths flow across the fan — a hydrodynamic refinement evolution has rediscovered in every filter-feeding lineage that has ever lived.",
+    "source": "bible/refs/classes.md#filter_feeder"
   }
 ]

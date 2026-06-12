@@ -43,6 +43,17 @@ func forage(lineage_id: String, dt: float) -> void:
 	state_changed.emit()
 
 
+func forage_all(dt: float) -> void:
+	for lin: Lineage in state.lineages:
+		if lin.graduated:
+			continue
+		var loot := Commands.forage(state, Data.content, lin.id, dt, rng)
+		if not loot.is_empty():
+			loot_dropped.emit(lin.id, loot)
+	save_state()
+	state_changed.emit()
+
+
 func metabolize(lineage_id: String, adaptation_id: String) -> Dictionary:
 	var result := Commands.metabolize(state, Data.content, lineage_id, adaptation_id)
 	if result["ok"]:
@@ -59,6 +70,22 @@ func assign_node(lineage_id: String, node_id: String) -> void:
 
 func claim_splice(index: int) -> Dictionary:
 	var result := Commands.claim_splice(state, index)
+	if result["ok"]:
+		save_state()
+		state_changed.emit()
+	return result
+
+
+func pick_class(lineage_id: String, class_id: String) -> Dictionary:
+	var result := Commands.pick_class(state, Data.content, lineage_id, class_id)
+	if result["ok"]:
+		save_state()
+		state_changed.emit()
+	return result
+
+
+func branch_lineage(display_name: String) -> Dictionary:
+	var result := Commands.branch_lineage(state, Data.content, "", display_name)
 	if result["ok"]:
 		save_state()
 		state_changed.emit()

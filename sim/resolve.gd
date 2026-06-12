@@ -9,19 +9,91 @@ extends RefCounted
 ## the rate helpers below; long offline gaps are integrated by sim/accrual.gd
 ## using these SAME rates — so there is exactly one economy, evaluated two ways.
 ##
-## Phase 2: all seven orthogonal affix roles are mechanically real. affix_totals()
-## reads every grafted affix from the equipped doll and sums its contribution
-## per math_term. Penetration reduces effective defense; dot raises the losing-
-## matchup yield floor; danger taxes material rate (mitigation guards against it);
-## uptime multiplies material rate; find and stealth each gate-extend the chase.
+## Phase 2: all seven orthogonal affix roles are mechanically real.
+##
+## Phase 3 (WP1): Option A — each doll slot feeds a specific attribute rather
+## than uniform +Power. Class stat_mods multiply attributes after slot
+## contributions. effective_power() soft-caps the result. niche_mult() applies
+## a material/gene buff when the lineage works inside its class's home niches
+## (buff at home, ×1.0 elsewhere — never a penalty, VISION.md §12).
 
-const TIER_POWER: float = 1.0
+## Option A: which attribute each doll slot's tier feeds. gland is the affix
+## host and feeds no base attribute; vitality is unused this phase (PHASE3.md §1.3).
+## NOTE (flagged in PHASE3.md §2.1): locomotion→power keeps two power slots so
+## the margin engine stays healthy. WP6 may flip it to metabolism.
+const SLOT_ATTRIBUTE: Dictionary = {
+	"mouthparts": "power",
+	"locomotion": "power",
+	"integument": "resilience",
+	"metabolic_core": "metabolism",
+	"sensory": "instinct",
+	"gland": "",
+}
+const SLOT_TIER_WEIGHT: float = 1.0
+
+## Soft-cap constants — placeholders, WP6 tunes and Leon signs the numbers.
+## Knee must sit above the Age-I beat threshold (Anomalocaris DEF 9).
+const SOFT_CAP_KNEE: float = 12.0
+const SOFT_CAP_K: float = 0.15
+
 const MARGIN_SLOPE: float = 0.1
 const EFF_FLOOR: float = 0.1
 const EFF_CAP: float = 5.0
 const DANGER_TAX_K: float = 0.15
 const DANGER_FACTOR_FLOOR: float = 0.2
 const AMBUSH_CAP: float = 0.75
+
+
+## The lineage's five attributes after Option A slot contributions and class
+## stat_mods. Every rate helper reads THIS — never lineage.attributes directly.
+static func effective_attributes(lineage: Lineage, content: Content) -> Dictionary:
+	var attrs := lineage.attributes.duplicate()
+	for slot: String in lineage.doll:
+		var a: String = String(SLOT_ATTRIBUTE.get(slot, ""))
+		if a != "":
+			attrs[a] = (
+				float(attrs.get(a, 0.0))
+				+ SLOT_TIER_WEIGHT * float((lineage.doll[slot] as AdaptationInstance).tier)
+			)
+	var cls := content.class_node(lineage.class_node)
+	var stat_mods: Dictionary = cls.get("stat_mods", {})
+	for stat: Variant in stat_mods:
+		var key := String(stat)
+		attrs[key] = float(attrs.get(key, 0.0)) * float(stat_mods.get(stat, 1.0))
+	return attrs
+
+
+## Diminishing returns on Power above SOFT_CAP_KNEE.
+## Asymptote ≈ KNEE + 1/SOFT_CAP_K. Below the knee: identity.
+static func soft_cap(p: float) -> float:
+	if p <= SOFT_CAP_KNEE:
+		return p
+	var over := p - SOFT_CAP_KNEE
+	return SOFT_CAP_KNEE + over / (1.0 + SOFT_CAP_K * over)
+
+
+## Effective Power: Option A slot contributions + class mods + soft cap.
+## content is required — no default arg so the compiler catches every call site.
+static func effective_power(lineage: Lineage, content: Content) -> float:
+	return soft_cap(float(effective_attributes(lineage, content).get("power", 1.0)))
+
+
+## {material, gene} multipliers from the lineage's class, applied only when the
+## worked node sits in one of the class's home_niches. Buff at home, ×1.0 away.
+## If no class_tree row exists yet (WP3+), returns identity.
+static func niche_mult(lineage: Lineage, node: Dictionary, content: Content) -> Dictionary:
+	var cls := content.class_node(lineage.class_node)
+	var home_niches: Array = cls.get("home_niches", [])
+	if home_niches.is_empty():
+		return {"material": 1.0, "gene": 1.0}
+	var node_niche := String(node.get("niche", ""))
+	if node_niche != "" and home_niches.has(node_niche):
+		var nm: Dictionary = cls.get("niche_mult", {})
+		return {
+			"material": float(nm.get("material", 1.0)),
+			"gene": float(nm.get("gene", 1.0)),
+		}
+	return {"material": 1.0, "gene": 1.0}
 
 
 ## Sums every grafted affix's contribution per math_term. Returns all keys
@@ -72,7 +144,7 @@ static func affix_totals(lineage: Lineage, content: Content) -> Dictionary:
 
 
 ## Effective defense after penetration. Pen reduces D before every other
-## calculation — it is the only place penetration enters (PHASE2.md §2.2).
+## calculation — it is the only place penetration enters.
 static func effective_defense(node: Dictionary, totals: Dictionary) -> float:
 	return maxf(0.0, float(node.get("defense", 0.0)) - float(totals.get("pen", 0.0)))
 
@@ -85,24 +157,38 @@ static func resolve(
 ) -> Dictionary:
 	var loot: Dictionary = {"materials": {}, "gene": {}, "splice_offer": ""}
 	var totals := affix_totals(lineage, content)
+	var eff_attrs := effective_attributes(lineage, content)
+	var nm := niche_mult(lineage, node, content)
 
 	var mat_id := String(node.get("material", ""))
 	if mat_id != "":
-		loot["materials"][mat_id] = _material_rate_inner(lineage, node, totals) * dt
+		loot["materials"][mat_id] = (
+			_material_rate_inner(lineage, node, totals, content, eff_attrs, nm) * dt
+		)
 
-	var gate := _gate(lineage, node, totals)
+	var gate := _gate(lineage, node, totals, content)
 	var base_gene := float(node.get("gene_rate", 0.0))
-	var instinct := float(lineage.attributes.get("instinct", 1.0))
-	var p_gene := 1.0 - exp(
-		-base_gene * instinct * (1.0 + float(totals.get("find_bonus", 0.0))) * gate * dt
+	var instinct := float(eff_attrs.get("instinct", 1.0))
+	var p_gene := (
+		1.0
+		- exp(
+			(
+				-base_gene
+				* instinct
+				* (1.0 + float(totals.get("find_bonus", 0.0)))
+				* gate
+				* nm.gene
+				* dt
+			)
+		)
 	)
 	if rng.chance("gene", p_gene):
 		loot["gene"] = roll_gene(node, rng)
 
 	if String(node.get("kind", "eat")) == "fight":
 		var base_splice := float(node.get("splice_rate", 0.0))
-		var p_splice := 1.0 - exp(
-			-base_splice * (1.0 + float(totals.get("splice_bonus", 0.0))) * gate * dt
+		var p_splice := (
+			1.0 - exp(-base_splice * (1.0 + float(totals.get("splice_bonus", 0.0))) * gate * dt)
 		)
 		if rng.chance("splice", p_splice):
 			loot["splice_offer"] = String(node.get("spliceable", ""))
@@ -110,45 +196,46 @@ static func resolve(
 	return loot
 
 
-## Effective Power: base attribute plus the tiers of everything equipped.
-## Equipping a higher-tier adaptation measurably raises this — the whole point
-## of having a defended node to test it against (VISION.md §8).
-static func effective_power(lineage: Lineage) -> float:
-	var p: float = float(lineage.attributes.get("power", 1.0))
-	for slot: String in lineage.doll:
-		p += TIER_POWER * float((lineage.doll[slot] as AdaptationInstance).tier)
-	return p
-
-
-## Yield multiplier from Power-vs-effective-defense margin. Penetration reduces
-## D_eff before this calculation. The UI reads THIS to show "yield ×N" — it
-## never re-derives the formula.
+## Yield multiplier from Power-vs-effective-defense margin.
+## The UI reads THIS to show "yield ×N" — it never re-derives the formula.
 static func yield_efficiency(lineage: Lineage, node: Dictionary, content: Content) -> float:
-	return _eff(lineage, node, affix_totals(lineage, content))
+	return _eff(lineage, node, affix_totals(lineage, content), content)
 
 
-## Materials gathered per second: margin efficiency, uptime bonus, and danger
-## tax all fold in. Always positive — even a losing matchup still feeds.
+## Materials gathered per second: margin efficiency, uptime bonus, danger tax,
+## and in-niche class multiplier all fold in. Always positive.
 static func material_rate(lineage: Lineage, node: Dictionary, content: Content) -> float:
-	return _material_rate_inner(lineage, node, affix_totals(lineage, content))
+	var totals := affix_totals(lineage, content)
+	var eff_attrs := effective_attributes(lineage, content)
+	var nm := niche_mult(lineage, node, content)
+	return _material_rate_inner(lineage, node, totals, content, eff_attrs, nm)
 
 
 ## Mean gene drops per second (the Poisson rate). Zero until power clears the
 ## effective defense — unless stealth's ambush fraction cracks the gate open.
+## Includes the in-niche class multiplier.
 static func gene_rate(lineage: Lineage, node: Dictionary, content: Content) -> float:
 	var totals := affix_totals(lineage, content)
-	var gate := _gate(lineage, node, totals)
+	var gate := _gate(lineage, node, totals, content)
 	if is_zero_approx(gate):
 		return 0.0
+	var eff_attrs := effective_attributes(lineage, content)
 	var base := float(node.get("gene_rate", 0.0))
-	var instinct := float(lineage.attributes.get("instinct", 1.0))
-	return base * instinct * (1.0 + float(totals.get("find_bonus", 0.0))) * gate
+	var instinct := float(eff_attrs.get("instinct", 1.0))
+	return (
+		base
+		* instinct
+		* (1.0 + float(totals.get("find_bonus", 0.0)))
+		* gate
+		* niche_mult(lineage, node, content).gene
+	)
 
 
 ## Mean splice offers per second. Gated like genes; control affix multiplies it.
+## splice_rate_eff is unchanged by the niche multiplier (PHASE3.md §2.3).
 static func splice_rate_eff(lineage: Lineage, node: Dictionary, content: Content) -> float:
 	var totals := affix_totals(lineage, content)
-	var gate := _gate(lineage, node, totals)
+	var gate := _gate(lineage, node, totals, content)
 	if is_zero_approx(gate):
 		return 0.0
 	var base := float(node.get("splice_rate", 0.0))
@@ -170,7 +257,9 @@ static func roll_gene(node: Dictionary, rng: Rng) -> Dictionary:
 	for row: Dictionary in table:
 		acc += float(row.get("weight", 0.0))
 		if pick <= acc:
-			return {"id": String(row.get("gene", "")), "rarity": String(row.get("rarity", "common"))}
+			return {
+				"id": String(row.get("gene", "")), "rarity": String(row.get("rarity", "common"))
+			}
 	var last: Dictionary = table[-1]
 	return {"id": String(last.get("gene", "")), "rarity": String(last.get("rarity", "common"))}
 
@@ -178,40 +267,57 @@ static func roll_gene(node: Dictionary, rng: Rng) -> Dictionary:
 # -- private helpers -----------------------------------------------------------
 
 
-static func _eff(lineage: Lineage, node: Dictionary, totals: Dictionary) -> float:
+static func _eff(lineage: Lineage, node: Dictionary, totals: Dictionary, content: Content) -> float:
 	var d_eff := effective_defense(node, totals)
-	var margin := effective_power(lineage) - d_eff
+	var margin := effective_power(lineage, content) - d_eff
 	var floor := EFF_FLOOR
 	if String(node.get("kind", "eat")) == "fight":
 		floor = minf(EFF_FLOOR + float(totals.get("dot", 0.0)), 1.0)
 	return clampf(1.0 + MARGIN_SLOPE * margin, floor, EFF_CAP)
 
 
-static func _danger_factor(lineage: Lineage, node: Dictionary, totals: Dictionary) -> float:
+static func _danger_factor(
+	lineage: Lineage, node: Dictionary, totals: Dictionary, content: Content
+) -> float:
 	if String(node.get("kind", "eat")) != "fight":
 		return 1.0
-	var tax := DANGER_TAX_K * maxf(
-		0.0,
-		float(node.get("danger", 0.0))
-			- float(lineage.attributes.get("resilience", 1.0))
-			- float(totals.get("guard", 0.0))
+	var eff_attrs := effective_attributes(lineage, content)
+	var tax := (
+		DANGER_TAX_K
+		* maxf(
+			0.0,
+			(
+				float(node.get("danger", 0.0))
+				- float(eff_attrs.get("resilience", 1.0))
+				- float(totals.get("guard", 0.0))
+			)
+		)
 	)
 	return clampf(1.0 - tax, DANGER_FACTOR_FLOOR, 1.0)
 
 
-static func _gate(lineage: Lineage, node: Dictionary, totals: Dictionary) -> float:
+static func _gate(
+	lineage: Lineage, node: Dictionary, totals: Dictionary, content: Content
+) -> float:
 	return (
 		1.0
-		if effective_power(lineage) > effective_defense(node, totals)
+		if effective_power(lineage, content) > effective_defense(node, totals)
 		else float(totals.get("ambush", 0.0))
 	)
 
 
 static func _material_rate_inner(
-	lineage: Lineage, node: Dictionary, totals: Dictionary
+	lineage: Lineage,
+	node: Dictionary,
+	totals: Dictionary,
+	content: Content,
+	eff_attrs: Dictionary,
+	nm: Dictionary,
 ) -> float:
 	var base := float(node.get("material_rate", 0.0))
-	var metab := float(lineage.attributes.get("metabolism", 1.0))
-	var eff := _eff(lineage, node, totals)
-	var danger := _danger_factor(lineage, node, totals)
-	return base * metab * eff * (1.0 + float(totals.get("uptime_bonus", 0.0))) * danger
+	var metab := float(eff_attrs.get("metabolism", 1.0))
+	var eff := _eff(lineage, node, totals, content)
+	var danger := _danger_factor(lineage, node, totals, content)
+	return (
+		base * metab * eff * (1.0 + float(totals.get("uptime_bonus", 0.0))) * danger * nm.material
+	)

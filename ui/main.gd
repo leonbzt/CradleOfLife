@@ -1,33 +1,39 @@
 extends Control
 
-## Phase 2 vertical slice UI. Portrait screen (720×1280, canvas_items stretch).
+## Phase 3 UI. Portrait screen (720×1280, canvas_items stretch).
 ## All layout is code-built from content data; no hand-authored scenes to drift.
 ## Pure observer of Store — every label is re-read from GameState on
 ## state_changed; nothing here mutates state except through Store's named
 ## commands.
 
-## Seconds between foraging actions while the app is open.
 const ACTION_PERIOD: float = 2.5
 
 const BG_COLOR := Color("0b1d2a")
 const DIM := Color("8b9aa7")
 const GOOD := Color("5fd97a")
 const BAD := Color("ff7b72")
-const LOCKED_COLOR := Color("44546a")
+
+# Active lineage and pending class-commit state
+var _active_lineage_idx: int = 0
+var _pending_class_id: String = ""
 
 # Niche state
 var _active_niche: String = "shallow_benthos"
 
 # Widgets
+var _roster_chips: Array[Button] = []
+var _branch_btn: Button
+var _header_name_label: Label
 var _power_value: Label
 var _niche_buttons: Dictionary = {}  # niche_id -> Button
-var _cards: Dictionary = {}  # node_id -> {card, name_lbl, matchup_lbl, danger_lbl}
-var _doll_slot_labels: Dictionary = {}  # slot -> {name_lbl, graft_lbl}
+var _cards: Dictionary = {}  # node_id -> {card, btn, name_lbl, matchup_lbl, danger_lbl}
+var _doll_slot_labels: Dictionary = {}  # slot -> {name_lbl, graft_lbl}; also "_btn_<id>" -> {btn, def}
+var _class_panel_list: VBoxContainer
 var _mat_labels: Dictionary = {}  # material_id -> Label
 var _gene_rows: Dictionary = {}  # gene_id -> {row, count_lbl}
 var _splice_list: VBoxContainer
 var _pop_layer: Control
-var _graft_sheet: Control  # modal sheet
+var _graft_sheet: Control
 var _graft_slot: String = ""
 
 
@@ -41,14 +47,21 @@ func _ready() -> void:
 	var timer := Timer.new()
 	timer.wait_time = ACTION_PERIOD
 	timer.autostart = true
-	timer.timeout.connect(func() -> void: Store.forage(_lineage().id, ACTION_PERIOD))
+	timer.timeout.connect(func() -> void: Store.forage_all(ACTION_PERIOD))
 	add_child(timer)
 
 	_refresh()
 
 
 func _lineage() -> Lineage:
-	return Store.state.lineages[0]
+	var lineages: Array = Store.state.lineages
+	return lineages[clampi(_active_lineage_idx, 0, lineages.size() - 1)]
+
+
+func _switch_lineage(idx: int) -> void:
+	_active_lineage_idx = idx
+	_pending_class_id = ""
+	_refresh()
 
 
 # -- build (once) -------------------------------------------------------------
@@ -80,12 +93,15 @@ func _build_ui() -> void:
 	col.add_theme_constant_override("separation", 14)
 	margin.add_child(col)
 
+	_build_roster_bar(col)
 	_build_header(col)
 	_build_niche_selector(col)
 	col.add_child(_section_label("THE WILD"))
 	_build_node_cards(col)
 	col.add_child(_section_label("THE BUILD  ·  tap a slot to graft genes"))
 	_build_doll(col)
+	col.add_child(_section_label("CLASS"))
+	_build_class_panel_container(col)
 	col.add_child(_section_label("METABOLIZE"))
 	_build_metabolize_buttons(col)
 	col.add_child(_section_label("SPLICE OFFERS"))
@@ -107,6 +123,23 @@ func _build_ui() -> void:
 	add_child(_graft_sheet)
 
 
+func _build_roster_bar(col: VBoxContainer) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	col.add_child(row)
+	for i in range(2):
+		var chip := Button.new()
+		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var idx := i
+		chip.pressed.connect(func() -> void: _switch_lineage(idx))
+		row.add_child(chip)
+		_roster_chips.append(chip)
+	_branch_btn = Button.new()
+	_branch_btn.text = "Branch"
+	_branch_btn.pressed.connect(_on_branch_pressed)
+	row.add_child(_branch_btn)
+
+
 func _build_header(col: VBoxContainer) -> void:
 	var row := HBoxContainer.new()
 	col.add_child(row)
@@ -114,10 +147,9 @@ func _build_header(col: VBoxContainer) -> void:
 	var who := VBoxContainer.new()
 	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(who)
-	var name_label := Label.new()
-	name_label.text = _lineage().display_name
-	name_label.add_theme_font_size_override("font_size", 30)
-	who.add_child(name_label)
+	_header_name_label = Label.new()
+	_header_name_label.add_theme_font_size_override("font_size", 30)
+	who.add_child(_header_name_label)
 	var age_label := Label.new()
 	age_label.text = "Age I: The Sea  ·  Cambrian meta"
 	age_label.add_theme_color_override("font_color", DIM)
@@ -157,7 +189,6 @@ func _build_node_cards(col: VBoxContainer) -> void:
 	for node: Dictionary in Data.content.tables.get("nodes", []):
 		var node_id := String(node.get("id", ""))
 
-		# PanelContainer is a real Container — auto-sizes to content, correct width.
 		var card_frame := PanelContainer.new()
 		card_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col.add_child(card_frame)
@@ -201,7 +232,6 @@ func _build_node_cards(col: VBoxContainer) -> void:
 		flavor_lbl.custom_minimum_size = Vector2(1, 0)
 		box.add_child(flavor_lbl)
 
-		# Transparent full-rect Button overlay — handles clicks and disabled state.
 		var click_btn := Button.new()
 		click_btn.flat = true
 		click_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -226,8 +256,10 @@ func _build_doll(col: VBoxContainer) -> void:
 		row.custom_minimum_size = Vector2(0, 52)
 		col.add_child(row)
 
+		var attr := String(Resolve.SLOT_ATTRIBUTE.get(slot, ""))
+		var attr_hint := ("  [%s]" % attr) if attr != "" else "  [—]"
 		var slot_btn := Button.new()
-		slot_btn.text = slot.replace("_", " ").capitalize()
+		slot_btn.text = slot.replace("_", " ").capitalize() + attr_hint
 		slot_btn.tooltip_text = "Tap to graft a gene onto this slot."
 		slot_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		slot_btn.pressed.connect(func() -> void: _open_graft_sheet(slot))
@@ -246,6 +278,13 @@ func _build_doll(col: VBoxContainer) -> void:
 		_doll_slot_labels[slot] = {"name_lbl": name_lbl, "graft_lbl": graft_lbl}
 
 
+func _build_class_panel_container(col: VBoxContainer) -> void:
+	_class_panel_list = VBoxContainer.new()
+	_class_panel_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_class_panel_list.add_theme_constant_override("separation", 8)
+	col.add_child(_class_panel_list)
+
+
 func _build_metabolize_buttons(col: VBoxContainer) -> void:
 	for def: Dictionary in Data.content.tables.get("adaptations", []):
 		var adaptation_id := String(def.get("id", ""))
@@ -254,8 +293,6 @@ func _build_metabolize_buttons(col: VBoxContainer) -> void:
 		btn.custom_minimum_size = Vector2(0, 52)
 		btn.pressed.connect(func() -> void: _on_metabolize_pressed(adaptation_id))
 		col.add_child(btn)
-		# Store reference by slot+id for refresh
-		var slot := String(def.get("slot", ""))
 		if not _doll_slot_labels.has("_btn_" + adaptation_id):
 			_doll_slot_labels["_btn_" + adaptation_id] = {"btn": btn, "def": def}
 
@@ -339,7 +376,7 @@ func _build_graft_sheet() -> Control:
 	return sheet
 
 
-# -- niche selection ----------------------------------------------------------
+# -- niche / lineage selection ------------------------------------------------
 
 
 func _select_niche(niche_id: String) -> void:
@@ -353,9 +390,26 @@ func _select_niche(niche_id: String) -> void:
 func _refresh() -> void:
 	var l := _lineage()
 	var content := Data.content
-	_power_value.text = "%.0f" % Resolve.effective_power(l)
 
-	# Niche selector buttons
+	# Header
+	_header_name_label.text = l.display_name
+
+	# Power readout — show soft-cap cue when raw power exceeds the knee
+	var raw_power := float(Resolve.effective_attributes(l, content).get("power", 0.0))
+	var eff_power := Resolve.effective_power(l, content)
+	if raw_power > Resolve.SOFT_CAP_KNEE:
+		_power_value.text = "~%.0f" % eff_power
+		_power_value.tooltip_text = (
+			"Near soft cap — raw %.1f, effective %.1f" % [raw_power, eff_power]
+		)
+	else:
+		_power_value.text = "%.0f" % eff_power
+		_power_value.tooltip_text = ""
+
+	# Roster
+	_refresh_roster_bar()
+
+	# Niche selector
 	for niche_id: String in _niche_buttons:
 		var btn := _niche_buttons[niche_id] as Button
 		var is_active := niche_id == _active_niche
@@ -402,10 +456,11 @@ func _refresh() -> void:
 		(refs["name_lbl"] as Label).text = (
 			String(node.get("name", node_id)) + (" · working" if active else "")
 		)
-		if niche_locked:
-			card.modulate = Color(1, 1, 1, 0.45)
-		else:
-			card.modulate = Color.WHITE if active else Color(1, 1, 1, 0.72)
+		card.modulate = (
+			Color(1, 1, 1, 0.45)
+			if niche_locked
+			else (Color.WHITE if active else Color(1, 1, 1, 0.72))
+		)
 
 		var danger := float(node.get("danger", 0.0))
 		var danger_lbl := refs["danger_lbl"] as Label
@@ -415,7 +470,7 @@ func _refresh() -> void:
 		else:
 			danger_lbl.visible = false
 
-		var margin := Resolve.effective_power(l) - float(node.get("defense", 0.0))
+		var margin := Resolve.effective_power(l, content) - float(node.get("defense", 0.0))
 		var verdict := "outgeared"
 		var color := BAD
 		if margin > 2.0:
@@ -449,7 +504,6 @@ func _refresh() -> void:
 			var def := content.adaptation(inst.def_id)
 			name_lbl.text = "%s · T%d" % [String(def.get("name", inst.def_id)), inst.tier]
 			name_lbl.add_theme_color_override("font_color", RarityColors.of(inst.rarity))
-			# Graft chips: "Name I  Name II"
 			var graft_parts: Array[String] = []
 			for graft: Dictionary in inst.affixes:
 				var ar := content.affix(String(graft.get("id", "")))
@@ -457,14 +511,15 @@ func _refresh() -> void:
 				graft_parts.append("%s %s" % [String(ar.get("name", "")), roman])
 			graft_lbl.text = "  ".join(graft_parts)
 
+	# Class panel
+	_refresh_class_panel()
+
 	# Metabolize buttons
 	for key: String in _doll_slot_labels:
 		if not key.begins_with("_btn_"):
 			continue
 		var refs: Dictionary = _doll_slot_labels[key]
-		var btn := refs["btn"] as Button
-		var def: Dictionary = refs["def"]
-		_refresh_metabolize_button(btn, def)
+		_refresh_metabolize_button(refs["btn"] as Button, refs["def"] as Dictionary)
 
 	# Splice offers
 	_refresh_splice_offers()
@@ -489,10 +544,241 @@ func _refresh() -> void:
 		(_mat_labels[mat_id] as Label).text = "%s %d" % [String(mat.get("name", mat_id)), qty]
 
 
+func _refresh_roster_bar() -> void:
+	var lineages: Array = Store.state.lineages
+	for i in range(_roster_chips.size()):
+		var chip := _roster_chips[i]
+		if i < lineages.size():
+			var lin := lineages[i] as Lineage
+			if lin.graduated:
+				chip.text = "%s · graduated" % lin.display_name
+				chip.disabled = true
+				chip.modulate = Color(1, 1, 1, 0.35)
+			else:
+				var cls_row := Data.content.class_node(lin.class_node)
+				var cls_name := String(cls_row.get("name", lin.class_node))
+				chip.text = "%s · %s" % [lin.display_name, cls_name]
+				chip.disabled = false
+				chip.modulate = Color.WHITE if i == _active_lineage_idx else Color(1, 1, 1, 0.65)
+		else:
+			chip.text = "— empty slot —"
+			chip.disabled = true
+			chip.modulate = Color(1, 1, 1, 0.3)
+
+	var active_count := 0
+	for lin: Lineage in Store.state.lineages:
+		if not lin.graduated:
+			active_count += 1
+	var can_branch := active_count < Store.state.slots_active
+	_branch_btn.disabled = not can_branch
+	if can_branch:
+		_branch_btn.tooltip_text = ""
+		_branch_btn.modulate = Color.WHITE
+	else:
+		_branch_btn.tooltip_text = "Roster full."
+		_branch_btn.modulate = Color(1, 1, 1, 0.45)
+
+
+func _refresh_class_panel() -> void:
+	for child in _class_panel_list.get_children():
+		child.queue_free()
+
+	var l := _lineage()
+	var content := Data.content
+	var cls_row := content.class_node(l.class_node)
+	var cls_name := String(cls_row.get("name", l.class_node))
+
+	# Current class summary line
+	var stat_mods: Dictionary = cls_row.get("stat_mods", {})
+	var mods_parts: Array[String] = []
+	for stat: Variant in stat_mods:
+		mods_parts.append("%s ×%.2f" % [String(stat).capitalize(), float(stat_mods[stat])])
+	var home_niches: Array = cls_row.get("home_niches", [])
+	var home_str := ""
+	if not home_niches.is_empty():
+		var niche_row := content.niche(String(home_niches[0]))
+		var nm: Dictionary = cls_row.get("niche_mult", {})
+		var mat_buff := float(nm.get("material", 1.0))
+		home_str = (
+			"  ·  Home: %s +%.0f%%"
+			% [
+				String(niche_row.get("name", home_niches[0])),
+				(mat_buff - 1.0) * 100.0,
+			]
+		)
+	var cur_lbl := Label.new()
+	var mods_str := ("  ·  " + "  ".join(mods_parts)) if not mods_parts.is_empty() else ""
+	cur_lbl.text = "Current: %s%s%s" % [cls_name, mods_str, home_str]
+	cur_lbl.add_theme_color_override("font_color", GOOD)
+	_class_panel_list.add_child(cur_lbl)
+
+	var unlocks: Array = cls_row.get("unlocks_categories", [])
+	if not unlocks.is_empty():
+		var cat_lbl := Label.new()
+		cat_lbl.text = "Unlocks: %s gear" % String(unlocks[0]).replace("_", " ").capitalize()
+		cat_lbl.add_theme_color_override("font_color", DIM)
+		cat_lbl.add_theme_font_size_override("font_size", 15)
+		_class_panel_list.add_child(cat_lbl)
+
+	# Find pickable children
+	var children: Array = []
+	for row: Dictionary in content.tables.get("class_tree", []):
+		if String(row.get("parent", "")) == l.class_node:
+			children.append(row)
+
+	if children.is_empty():
+		var leaf_lbl := Label.new()
+		leaf_lbl.text = "Leaf class — branch a new lineage to try a different path."
+		leaf_lbl.add_theme_color_override("font_color", DIM)
+		leaf_lbl.add_theme_font_size_override("font_size", 15)
+		leaf_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		leaf_lbl.custom_minimum_size = Vector2(1, 0)
+		_class_panel_list.add_child(leaf_lbl)
+		return
+
+	for child_row: Dictionary in children:
+		var child_id := String(child_row.get("id", ""))
+		var child_name := String(child_row.get("name", child_id))
+
+		var card := PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_class_panel_list.add_child(card)
+
+		var pad := MarginContainer.new()
+		for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+			pad.add_theme_constant_override(side, 10)
+		card.add_child(pad)
+
+		var vbox := VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 6)
+		pad.add_child(vbox)
+
+		# Class name + stat mods
+		var name_row := HBoxContainer.new()
+		vbox.add_child(name_row)
+		var child_name_lbl := Label.new()
+		child_name_lbl.text = child_name
+		child_name_lbl.add_theme_font_size_override("font_size", 20)
+		child_name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_row.add_child(child_name_lbl)
+
+		var child_mods: Dictionary = child_row.get("stat_mods", {})
+		var cm_parts: Array[String] = []
+		for stat: Variant in child_mods:
+			cm_parts.append("%s ×%.2f" % [String(stat).capitalize(), float(child_mods[stat])])
+		if not cm_parts.is_empty():
+			var mods_lbl := Label.new()
+			mods_lbl.text = "  ".join(cm_parts)
+			mods_lbl.add_theme_color_override("font_color", DIM)
+			mods_lbl.add_theme_font_size_override("font_size", 14)
+			name_row.add_child(mods_lbl)
+
+		# Home niche + category unlocked
+		var child_home: Array = child_row.get("home_niches", [])
+		var child_unlocks: Array = child_row.get("unlocks_categories", [])
+		if not child_home.is_empty() or not child_unlocks.is_empty():
+			var detail_parts: Array[String] = []
+			if not child_home.is_empty():
+				var niche_row := content.niche(String(child_home[0]))
+				detail_parts.append("Home: %s" % String(niche_row.get("name", child_home[0])))
+			if not child_unlocks.is_empty():
+				detail_parts.append(
+					"Unlocks: %s" % String(child_unlocks[0]).replace("_", " ").capitalize()
+				)
+			var detail_lbl := Label.new()
+			detail_lbl.text = "  ·  ".join(detail_parts)
+			detail_lbl.add_theme_color_override("font_color", DIM)
+			detail_lbl.add_theme_font_size_override("font_size", 14)
+			vbox.add_child(detail_lbl)
+
+		# Requirements
+		var reqs: Dictionary = child_row.get("requires", {})
+		var reqs_met := true
+		var req_parts: Array[String] = []
+		for key: Variant in reqs.get("affix_keys", []):
+			var role := String(key)
+			var has_role := false
+			for slot: String in l.doll:
+				var inst: AdaptationInstance = l.doll[slot]
+				for gd: Dictionary in inst.affixes:
+					var ar := content.affix(String(gd.get("id", "")))
+					if String(ar.get("orthogonal_role", "")) == role:
+						has_role = true
+						break
+				if has_role:
+					break
+			if has_role:
+				req_parts.append("✓ %s" % role.capitalize())
+			else:
+				req_parts.append("✗ %s (missing)" % role.capitalize())
+				reqs_met = false
+		for gid: Variant in reqs.get("genes", []):
+			var gname := String(content.gene(String(gid)).get("name", String(gid)))
+			if int(Store.state.genes_known.get(String(gid), 0)) > 0:
+				req_parts.append("✓ %s" % gname)
+			else:
+				req_parts.append("✗ %s (missing)" % gname)
+				reqs_met = false
+		if not req_parts.is_empty():
+			var req_lbl := Label.new()
+			req_lbl.text = "Requires: " + "  ".join(req_parts)
+			req_lbl.add_theme_font_size_override("font_size", 14)
+			req_lbl.add_theme_color_override("font_color", GOOD if reqs_met else BAD)
+			vbox.add_child(req_lbl)
+
+		# Commit or confirm buttons
+		if _pending_class_id == child_id:
+			var warn_lbl := Label.new()
+			warn_lbl.text = "⚠ Classes are sticky — cannot be undone for this lineage."
+			warn_lbl.add_theme_color_override("font_color", BAD)
+			warn_lbl.add_theme_font_size_override("font_size", 14)
+			warn_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			warn_lbl.custom_minimum_size = Vector2(1, 0)
+			vbox.add_child(warn_lbl)
+			var confirm_row := HBoxContainer.new()
+			confirm_row.add_theme_constant_override("separation", 8)
+			vbox.add_child(confirm_row)
+			var confirm_btn := Button.new()
+			confirm_btn.text = "Commit to %s" % child_name
+			confirm_btn.disabled = not reqs_met
+			confirm_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var cid := child_id
+			confirm_btn.pressed.connect(func() -> void: _on_class_confirm_pressed(cid))
+			confirm_row.add_child(confirm_btn)
+			var cancel_btn := Button.new()
+			cancel_btn.text = "Cancel"
+			cancel_btn.pressed.connect(
+				func() -> void:
+					_pending_class_id = ""
+					_refresh()
+			)
+			confirm_row.add_child(cancel_btn)
+		else:
+			var commit_btn := Button.new()
+			commit_btn.text = "Commit to %s…" % child_name
+			commit_btn.disabled = not reqs_met
+			commit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var cid := child_id
+			commit_btn.pressed.connect(func() -> void: _on_class_commit_pressed(cid))
+			vbox.add_child(commit_btn)
+
+
 func _refresh_metabolize_button(btn: Button, def: Dictionary) -> void:
 	var adaptation_id := String(def.get("id", ""))
 	var def_name := String(def.get("name", adaptation_id))
-	var tier := Commands.next_tier(_lineage(), def)
+	var l := _lineage()
+	var content := Data.content
+
+	# Category gate: grey out locked-category gear with class hint
+	var cat := String(def.get("category", "generalist"))
+	if not content.allowed_categories(l).has(cat):
+		btn.text = "%s — requires %s" % [def_name, _class_for_category(cat, content)]
+		btn.disabled = true
+		btn.modulate = Color(1, 1, 1, 0.4)
+		return
+	btn.modulate = Color.WHITE
+
+	var tier := Commands.next_tier(l, def)
 	if tier == 0:
 		btn.text = "%s — maxed" % def_name
 		btn.disabled = true
@@ -500,7 +786,7 @@ func _refresh_metabolize_button(btn: Button, def: Dictionary) -> void:
 	var cost := Commands.metabolize_cost(def, tier)
 	var mat_id := String(cost.keys()[0])
 	var qty := int(cost[mat_id])
-	var mat_name := String(Data.content.material(mat_id).get("name", mat_id))
+	var mat_name := String(content.material(mat_id).get("name", mat_id))
 	var verb := "Build" if tier == 1 else "Tier %d" % tier
 	btn.text = "%s %s — %d %s" % [verb, def_name, qty, mat_name]
 	btn.disabled = float(Store.state.inventory_materials.get(mat_id, 0.0)) < float(qty)
@@ -543,7 +829,7 @@ func _refresh_splice_offers() -> void:
 		lbl.custom_minimum_size = Vector2(1, 0)
 		row.add_child(lbl)
 
-		var idx := i  # capture for closure
+		var idx := i
 		var claim_btn := Button.new()
 		claim_btn.text = "Claim (+1 copy)"
 		claim_btn.tooltip_text = (
@@ -560,8 +846,6 @@ func _refresh_splice_offers() -> void:
 func _open_graft_sheet(slot: String) -> void:
 	_graft_slot = slot
 	var sheet := _graft_sheet
-	# Position at build-time is unreliable in web export (parent size may be 0).
-	# Set size and position here where size is always known.
 	var sheet_h := 400.0
 	sheet.size = Vector2(size.x, sheet_h)
 	sheet.position = Vector2(0.0, size.y - sheet_h)
@@ -584,8 +868,8 @@ func _open_graft_sheet(slot: String) -> void:
 		sheet.visible = true
 		return
 
-	# Show graftable affixes: those whose unlocking gene has >= 1 copy
-	var any_graftable := false
+	var allowed_cats := content.allowed_categories(l)
+	var any_shown := false
 	for affix: Dictionary in content.tables.get("affixes", []):
 		var affix_id := String(affix.get("id", ""))
 		var gene_row := content.gene_for_affix(affix_id)
@@ -596,7 +880,10 @@ func _open_graft_sheet(slot: String) -> void:
 		if copies == 0:
 			continue
 
-		any_graftable = true
+		any_shown = true
+		var cat := String(affix.get("category", "generalist"))
+		var cat_locked := not allowed_cats.has(cat)
+
 		var current_tier := inst.graft_tier(affix_id)
 		var target_tier := current_tier + 1
 
@@ -615,36 +902,53 @@ func _open_graft_sheet(slot: String) -> void:
 		list.add_child(row)
 		var info_lbl := Label.new()
 		var tier_str := "T%d→T%d" % [current_tier, target_tier] if current_tier > 0 else "→T1"
-		info_lbl.text = (
-			"%s  %s  (%d/%d copies · %d %s)"
-			% [
-				String(affix.get("name", affix_id)),
-				tier_str,
-				copies,
-				target_tier,
-				cost_qty,
-				mat_name
-			]
-		)
+		if cat_locked:
+			info_lbl.text = (
+				"%s  %s  (requires %s)"
+				% [String(affix.get("name", affix_id)), tier_str, _class_for_category(cat, content)]
+			)
+			info_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
+		else:
+			info_lbl.text = (
+				"%s  %s  (%d/%d copies · %d %s)"
+				% [
+					String(affix.get("name", affix_id)),
+					tier_str,
+					copies,
+					target_tier,
+					cost_qty,
+					mat_name
+				]
+			)
+			info_lbl.add_theme_color_override("font_color", DIM if not can_afford else Color.WHITE)
 		info_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if not can_afford:
-			info_lbl.add_theme_color_override("font_color", DIM)
 		row.add_child(info_lbl)
 
-		var aid := affix_id  # capture
+		var aid := affix_id
 		var graft_btn := Button.new()
 		graft_btn.text = "Graft"
-		graft_btn.disabled = not (can_afford and has_copies)
+		graft_btn.disabled = cat_locked or not (can_afford and has_copies)
+		graft_btn.modulate = Color(1, 1, 1, 0.4) if cat_locked else Color.WHITE
 		graft_btn.pressed.connect(func() -> void: _on_graft_pressed(_graft_slot, aid))
 		row.add_child(graft_btn)
 
-	if not any_graftable:
+	if not any_shown:
 		var note := Label.new()
 		note.text = "No genes in codex. Work the fight nodes."
 		note.add_theme_color_override("font_color", DIM)
 		list.add_child(note)
 
 	sheet.visible = true
+
+
+# -- helpers ------------------------------------------------------------------
+
+
+func _class_for_category(category: String, content: Content) -> String:
+	for row: Dictionary in content.tables.get("class_tree", []):
+		if (row.get("unlocks_categories", []) as Array).has(category):
+			return String(row.get("name", category))
+	return category.replace("_", " ").capitalize()
 
 
 # -- event handlers -----------------------------------------------------------
@@ -656,7 +960,6 @@ func _on_metabolize_pressed(adaptation_id: String) -> void:
 		return
 	var inst: AdaptationInstance = result["instance"]
 	var def := Data.content.adaptation(inst.def_id)
-	# Find the button for this adaptation
 	for key: String in _doll_slot_labels:
 		if key == "_btn_" + adaptation_id:
 			var refs: Dictionary = _doll_slot_labels[key]
@@ -704,7 +1007,9 @@ func _on_graft_pressed(slot: String, affix_id: String) -> void:
 	_open_graft_sheet(slot)
 
 
-func _on_loot(_lineage_id: String, loot: Dictionary) -> void:
+func _on_loot(lineage_id: String, loot: Dictionary) -> void:
+	if lineage_id != _lineage().id:
+		return
 	var refs: Dictionary = _cards.get(_lineage().assigned_node, {})
 	if refs.is_empty():
 		return
@@ -745,6 +1050,27 @@ func _on_loot(_lineage_id: String, loot: Dictionary) -> void:
 			"Splice offer: %s" % String(gene_row.get("name", offer)),
 			RarityColors.of(String(gene_row.get("rarity", "common")))
 		)
+
+
+func _on_branch_pressed() -> void:
+	_active_lineage_idx = Store.state.lineages.size()
+	_pending_class_id = ""
+	var display_name := "Branch %d" % (_active_lineage_idx + 1)
+	var result := Store.branch_lineage(display_name)
+	if not result["ok"]:
+		_active_lineage_idx = clampi(_active_lineage_idx - 1, 0, Store.state.lineages.size() - 1)
+
+
+func _on_class_commit_pressed(class_id: String) -> void:
+	_pending_class_id = class_id
+	_refresh()
+
+
+func _on_class_confirm_pressed(class_id: String) -> void:
+	_pending_class_id = ""
+	var result := Store.pick_class(_lineage().id, class_id)
+	if not result["ok"]:
+		push_warning("pick_class rejected: " + String(result.get("reason", "")))
 
 
 func _pulse(c: Control) -> void:

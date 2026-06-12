@@ -2,6 +2,7 @@
   {
     "id": "venom_minor",
     "name": "Weak Venom",
+    "category": "generalist",
     "orthogonal_role": "affliction",
     "math_term": "dot_floor",
     "params": { "tick_pct": 0.15 },
@@ -12,6 +13,7 @@
   {
     "id": "plating_minor",
     "name": "Sclerite Plating",
+    "category": "generalist",
     "orthogonal_role": "guard",
     "math_term": "danger_guard",
     "params": { "amount": 2 },
@@ -22,6 +24,7 @@
   {
     "id": "grasp_minor",
     "name": "Raptorial Grasp",
+    "category": "generalist",
     "orthogonal_role": "control",
     "math_term": "splice_mult",
     "params": { "mult": 1.5 },
@@ -32,6 +35,7 @@
   {
     "id": "gill_minor",
     "name": "Gill Branching",
+    "category": "generalist",
     "orthogonal_role": "sustain",
     "math_term": "uptime_mult",
     "params": { "mult": 1.15 },
@@ -42,6 +46,7 @@
   {
     "id": "eyes_minor",
     "name": "Compound Eyes",
+    "category": "generalist",
     "orthogonal_role": "perception",
     "math_term": "find_mult",
     "params": { "mult": 1.2 },
@@ -52,6 +57,7 @@
   {
     "id": "gnathobase_minor",
     "name": "Gnathobase",
+    "category": "generalist",
     "orthogonal_role": "penetration",
     "math_term": "pen_flat",
     "params": { "amount": 2 },
@@ -62,6 +68,7 @@
   {
     "id": "glassy_tissue",
     "name": "Glassy Tissue",
+    "category": "generalist",
     "orthogonal_role": "stealth",
     "math_term": "ambush_frac",
     "params": { "frac": 0.25 },
@@ -72,6 +79,7 @@
   {
     "id": "ambush_instinct",
     "name": "Ambush Instinct",
+    "category": "generalist",
     "orthogonal_role": "stealth",
     "math_term": "ambush_frac",
     "params": { "frac": 0.4 },
@@ -82,6 +90,7 @@
   {
     "id": "filter_combs",
     "name": "Filter Combs",
+    "category": "generalist",
     "orthogonal_role": "sustain",
     "math_term": "uptime_mult",
     "params": { "mult": 1.35 },
@@ -92,6 +101,7 @@
   {
     "id": "notochord_flick",
     "name": "Notochord Flick",
+    "category": "generalist",
     "orthogonal_role": "guard",
     "math_term": "danger_guard",
     "params": { "amount": 1 },
@@ -102,6 +112,7 @@
   {
     "id": "spine_rows",
     "name": "Spine Rows",
+    "category": "generalist",
     "orthogonal_role": "guard",
     "math_term": "danger_guard",
     "params": { "amount": 3 },
@@ -112,6 +123,7 @@
   {
     "id": "eversible_proboscis",
     "name": "Eversible Proboscis",
+    "category": "generalist",
     "orthogonal_role": "control",
     "math_term": "splice_mult",
     "params": { "mult": 2.0 },
@@ -122,11 +134,45 @@
   {
     "id": "great_appendage",
     "name": "Great Appendage",
+    "category": "generalist",
     "orthogonal_role": "control",
     "math_term": "splice_mult",
     "params": { "mult": 2.5 },
     "graft_cost": { "material": "flesh", "base": 80, "growth": 2.5 },
     "flavor": "The launch meta's apex weapon. Anomalocaris held this for a reason. Nothing in the shallows out-reaches it.",
     "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  },
+  {
+    "id": "strike_momentum",
+    "name": "Strike Momentum",
+    "category": "raptorial",
+    "orthogonal_role": "penetration",
+    "math_term": "pen_flat",
+    "params": { "amount": 4 },
+    "graft_cost": { "material": "flesh", "base": 80, "growth": 2.5 },
+    "flavor": "The raptorial arm's full kinetic commitment: the strike doesn't slow at the carapace. Armor values are a suggestion.",
+    "source": "bible/refs/classes.md#predator"
+  },
+  {
+    "id": "mineralized_spine",
+    "name": "Mineralized Spine",
+    "category": "heavy_armor",
+    "orthogonal_role": "guard",
+    "math_term": "danger_guard",
+    "params": { "amount": 4 },
+    "graft_cost": { "material": "calcite_lattice", "base": 80, "growth": 2.5 },
+    "flavor": "Calcified dorsal spines fused to the plating — a statement that retaliation costs the attacker more than the blow costs you.",
+    "source": "bible/refs/classes.md#armored_grazer"
+  },
+  {
+    "id": "laminar_current",
+    "name": "Laminar Current",
+    "category": "filter_apparatus",
+    "orthogonal_role": "sustain",
+    "math_term": "uptime_mult",
+    "params": { "mult": 1.5 },
+    "graft_cost": { "material": "soft_tissue", "base": 80, "growth": 2.5 },
+    "flavor": "The ciliary fan tuned for laminar flow: less turbulence, more throughput. The open-water metabolism machine in its final configuration.",
+    "source": "bible/refs/classes.md#filter_feeder"
   }
 ]

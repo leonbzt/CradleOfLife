@@ -175,7 +175,7 @@ Gene drop stream, splicing ("eat the venom-toad → roll to gain Venom"), all se
 
 ### Phase 3 — The portfolio + class tree (4–5 weeks)
 
-Class/spec tree (now it comes online), cladogenesis-as-respec, a 2-slot roster, and a placeholder per-lineage **soft cap** (without it, breadth-led growth has no shape and the Phase-0 curve breaks at the top end).
+Class/spec tree (now it comes online), cladogenesis-as-respec, a 2-slot roster, and a placeholder per-lineage **soft cap** (without it, breadth-led growth has no shape and the Phase-0 curve breaks at the top end). The signed, formula-exact work order is `PHASE3.md` (temporary; deleted when the phase closes — decisions recorded in DECISIONS.md 2026-06-11). A class is **stat mods + equipment/gene access by category + a light in-niche multiplier** (the monotonic-safe model: specializing only grows your allowed gear, so it never strands a build); **Option A** (doll slots become attribute subsystems) is folded in; classes are sticky and the respec valve is to branch.
 
 **Validation gate:** *With two animal lineages, does each feel like a different character to check in on, or is it tap-claim-twice?* If they feel identical, the v1 animal sub-roles aren't distinct enough — fix role variety (lean on real-biology differences) before adding slots.
 

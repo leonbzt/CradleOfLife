@@ -50,6 +50,8 @@ static func validate(content: Content) -> Array[String]:
 	errors.append_array(validate_drop_tables(content))
 	errors.append_array(validate_niches(content))
 	errors.append_array(validate_nodes(content))
+	errors.append_array(validate_class_tree(content))
+	errors.append_array(validate_categories(content))
 	return errors
 
 
@@ -88,15 +90,19 @@ static func validate_affixes(affixes: Array) -> Array[String]:
 			var expected_role: String = CANONICAL_TERMS[term]
 			if role != expected_role:
 				errors.append(
-					"affix '%s' math_term '%s' maps to role '%s' but orthogonal_role is '%s'"
-					% [id, term, expected_role, role]
+					(
+						"affix '%s' math_term '%s' maps to role '%s' but orthogonal_role is '%s'"
+						% [id, term, expected_role, role]
+					)
 				)
 			# Param shape check
 			var params: Dictionary = row.get("params", {})
 			var required: Array = TERM_PARAMS.get(term, [])
 			for pkey: Variant in required:
 				if not params.has(String(pkey)):
-					errors.append("affix '%s' missing required param '%s' for term '%s'" % [id, pkey, term])
+					errors.append(
+						"affix '%s' missing required param '%s' for term '%s'" % [id, pkey, term]
+					)
 				elif typeof(params[String(pkey)]) not in [TYPE_INT, TYPE_FLOAT]:
 					errors.append("affix '%s' param '%s' must be numeric" % [id, pkey])
 			if not by_term.has(term):
@@ -159,8 +165,10 @@ static func validate_genes(content: Content) -> Array[String]:
 				errors.append("gene '%s' unlocks affix '%s' which does not exist" % [id, affix_id])
 			elif affix_unlockers.has(affix_id):
 				errors.append(
-					"affix '%s' is unlocked by both '%s' and '%s' (must be unique)"
-					% [affix_id, affix_unlockers[affix_id], id]
+					(
+						"affix '%s' is unlocked by both '%s' and '%s' (must be unique)"
+						% [affix_id, affix_unlockers[affix_id], id]
+					)
 				)
 			else:
 				affix_unlockers[affix_id] = id
@@ -237,8 +245,10 @@ static func validate_drop_tables(content: Content) -> Array[String]:
 				var def_rarity := String(gene_row.get("rarity", ""))
 				if table_rarity != def_rarity:
 					errors.append(
-						"drop_table '%s' gene '%s' rarity '%s' ≠ gene def rarity '%s'"
-						% [table_id, gene, table_rarity, def_rarity]
+						(
+							"drop_table '%s' gene '%s' rarity '%s' ≠ gene def rarity '%s'"
+							% [table_id, gene, table_rarity, def_rarity]
+						)
 					)
 	return errors
 
@@ -289,6 +299,178 @@ static func validate_nodes(content: Content) -> Array[String]:
 		if spliceable != "" and content.gene(spliceable).is_empty():
 			errors.append("node '%s' spliceable '%s' is not a known gene" % [node_id, spliceable])
 	return errors
+
+
+## Class tree: structure, attribute names, niche refs, buff >= 1.0, no-trap check.
+## An empty class_tree passes (WP3/WP4 transition; no tree = no class rules yet).
+static func validate_class_tree(content: Content) -> Array[String]:
+	var errors: Array[String] = []
+	var rows: Array = content.tables.get("class_tree", [])
+	if rows.is_empty():
+		return errors
+
+	var seen_ids: Dictionary = {}
+	var root_count := 0
+	var attr_names: Array[String] = ["vitality", "power", "resilience", "metabolism", "instinct"]
+	var niche_ids: Dictionary = {}
+	for n: Dictionary in content.tables.get("niches", []):
+		niche_ids[String(n.get("id", ""))] = true
+
+	for row: Dictionary in rows:
+		var id := String(row.get("id", ""))
+		if id == "":
+			errors.append("class_tree row missing 'id': " + JSON.stringify(row))
+			continue
+		if seen_ids.has(id):
+			errors.append("duplicate class id: " + id)
+		seen_ids[id] = true
+
+		var parent := String(row.get("parent", ""))
+		if parent == "":
+			root_count += 1
+		elif not seen_ids.has(parent):
+			# parent might appear later — validated in cycle check below
+			pass
+
+		var stat_mods: Dictionary = row.get("stat_mods", {})
+		for stat: Variant in stat_mods:
+			if not attr_names.has(String(stat)):
+				errors.append("class '%s' stat_mods key '%s' is not a valid attribute" % [id, stat])
+			elif float(stat_mods[stat]) <= 0.0:
+				errors.append("class '%s' stat_mods.%s must be > 0" % [id, stat])
+
+		for niche: Variant in row.get("home_niches", []):
+			if not niche_ids.has(String(niche)):
+				errors.append("class '%s' home_niches '%s' is not a known niche" % [id, niche])
+
+		var nm: Dictionary = row.get("niche_mult", {})
+		for key in ["material", "gene"]:
+			if nm.has(key) and float(nm[key]) < 1.0:
+				errors.append(
+					"class '%s' niche_mult.%s must be >= 1.0 (buff, never nerf)" % [id, key]
+				)
+
+		for key: Variant in (row.get("requires", {}) as Dictionary).get("affix_keys", []):
+			if not ROLES.has(String(key)):
+				errors.append(
+					"class '%s' requires.affix_keys '%s' is not a known role" % [id, String(key)]
+				)
+
+		if not row.has("source"):
+			errors.append("class '%s' has no 'source'" % id)
+
+	# Exactly one root.
+	if rows.size() > 0 and root_count != 1:
+		errors.append("class_tree must have exactly one root (parent == ''); found %d" % root_count)
+
+	# Every non-root parent references a real class; graph is connected; no cycles.
+	for row: Dictionary in rows:
+		var id := String(row.get("id", ""))
+		var parent := String(row.get("parent", ""))
+		if parent != "" and not seen_ids.has(parent):
+			errors.append("class '%s' parent '%s' does not exist" % [id, parent])
+
+	# Cycle detection: BFS/walk from every node, ensure we reach root.
+	for row: Dictionary in rows:
+		var id := String(row.get("id", ""))
+		var cur := String(row.get("parent", ""))
+		var visited: Dictionary = {id: true}
+		while cur != "":
+			if visited.has(cur):
+				errors.append("class_tree has a cycle involving '%s'" % id)
+				break
+			visited[cur] = true
+			var cur_row := content.class_node(cur)
+			cur = String(cur_row.get("parent", ""))
+
+	# No-trap-build check: every class's allowed categories must cover every essential slot.
+	var essential_slots: Array[String] = [
+		"mouthparts", "integument", "locomotion", "metabolic_core", "sensory"
+	]
+	for row: Dictionary in rows:
+		var class_id := String(row.get("id", ""))
+		var allowed := _walk_categories(class_id, content)
+		for slot: String in essential_slots:
+			var covered := false
+			for ad: Dictionary in content.tables.get("adaptations", []):
+				if String(ad.get("slot", "")) == slot:
+					var cat := String(ad.get("category", "generalist"))
+					if allowed.has(cat):
+						covered = true
+						break
+			if not covered:
+				(
+					errors
+					. append(
+						(
+							"no-trap check: class '%s' has no accessible adaptation for essential slot '%s'"
+							% [class_id, slot]
+						)
+					)
+				)
+	return errors
+
+
+## Category cross-checks: every category in unlocks_categories must be used by
+## >= 1 adaptation or affix; every non-generalist category used by gear must be
+## unlocked by >= 1 class (PHASE3.md §4.3).
+static func validate_categories(content: Content) -> Array[String]:
+	var errors: Array[String] = []
+	# Collect all categories declared in any class's unlocks_categories.
+	var class_unlocked: Dictionary = {}  # category -> true
+	for row: Dictionary in content.tables.get("class_tree", []):
+		for cat: Variant in row.get("unlocks_categories", []):
+			class_unlocked[String(cat)] = true
+
+	# Collect all categories used by gear.
+	var gear_cats: Dictionary = {}  # category -> true
+	for ad: Dictionary in content.tables.get("adaptations", []):
+		var cat := String(ad.get("category", "generalist"))
+		gear_cats[cat] = true
+	for af: Dictionary in content.tables.get("affixes", []):
+		var cat := String(af.get("category", "generalist"))
+		gear_cats[cat] = true
+
+	# Every unlocked category must be used by >= 1 piece of gear.
+	for cat: String in class_unlocked:
+		if not gear_cats.has(cat):
+			(
+				errors
+				. append(
+					(
+						"class unlocks category '%s' but no adaptation or affix uses it (unreachable unlock)"
+						% cat
+					)
+				)
+			)
+
+	# Every non-generalist gear category must be unlocked by >= 1 class.
+	for cat: String in gear_cats:
+		if cat == "generalist":
+			continue
+		if not class_unlocked.has(cat):
+			errors.append(
+				"gear uses category '%s' but no class unlocks it (unbuildable gear)" % cat
+			)
+	return errors
+
+
+## Collect the full set of allowed categories for `class_id` (generalist + all
+## unlocks along the ancestor chain). Same logic as content.allowed_categories()
+## but operates directly on the content tables without a Lineage object.
+static func _walk_categories(class_id: String, content: Content) -> Dictionary:
+	var cats: Dictionary = {"generalist": true}
+	var visited: Dictionary = {}
+	var cid := class_id
+	while cid != "" and not visited.has(cid):
+		visited[cid] = true
+		var row := content.class_node(cid)
+		if row.is_empty():
+			break
+		for cat: Variant in row.get("unlocks_categories", []):
+			cats[String(cat)] = true
+		cid = String(row.get("parent", ""))
+	return cats
 
 
 static func _same_params(a: Variant, b: Variant) -> bool:

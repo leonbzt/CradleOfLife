@@ -1,0 +1,50 @@
+[
+  {
+    "id": "generalist",
+    "name": "Generalist",
+    "parent": "",
+    "home_niches": [],
+    "stat_mods": {},
+    "niche_mult": { "material": 1.0, "gene": 1.0 },
+    "requires": {},
+    "unlocks_categories": [],
+    "flavor": "The Mesopredator launch pad — a body plan uncommitted to any single role. Everything is available; nothing is optimised. Branch a fresh lineage to explore a different path.",
+    "source": "bible/refs/classes.md#generalist"
+  },
+  {
+    "id": "predator",
+    "name": "Predator",
+    "parent": "generalist",
+    "home_niches": ["reef_edge"],
+    "stat_mods": { "power": 1.25, "metabolism": 0.9 },
+    "niche_mult": { "material": 1.2, "gene": 1.2 },
+    "requires": { "affix_keys": ["penetration"] },
+    "unlocks_categories": ["raptorial"],
+    "flavor": "Commits to the high-power hunting niche: anomalocaridid-grade raptorial arms, ambush geometry, and a reef-edge territory where every prey item is worth the chase.",
+    "source": "bible/refs/classes.md#predator"
+  },
+  {
+    "id": "armored_grazer",
+    "name": "Armored Grazer",
+    "parent": "generalist",
+    "home_niches": ["shallow_benthos"],
+    "stat_mods": { "resilience": 1.25, "metabolism": 0.9 },
+    "niche_mult": { "material": 1.2, "gene": 1.2 },
+    "requires": { "affix_keys": ["guard"] },
+    "unlocks_categories": ["heavy_armor"],
+    "flavor": "The biomineralization play: fused sclerites, ossified plating, and a territory in the substrate-rich shallows where food is everywhere and the arms race favours whoever shrugs off the most.",
+    "source": "bible/refs/classes.md#armored_grazer"
+  },
+  {
+    "id": "filter_feeder",
+    "name": "Filter Feeder",
+    "parent": "generalist",
+    "home_niches": ["pelagic"],
+    "stat_mods": { "metabolism": 1.25, "power": 0.9 },
+    "niche_mult": { "material": 1.2, "gene": 1.2 },
+    "requires": { "affix_keys": ["sustain"] },
+    "unlocks_categories": ["filter_apparatus"],
+    "flavor": "Tamisiocaris-grade suspension feeding: the open-water metabolism play. Gear up the filter apparatus and the plankton bloom does the work.",
+    "source": "bible/refs/classes.md#filter_feeder"
+  }
+]

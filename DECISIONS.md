@@ -432,27 +432,119 @@ set of affixes.** Written into VISION §17.
 
 ---
 
+## 2026-06-11 — Phase 3 designed and signed; handed off as PHASE3.md
+
+**What.** Phase 3 (the portfolio + the class tree, IMPLEMENTATION.md §4) was
+designed in full and signed by Leon; the executable work order lives in
+`PHASE3.md` (temporary, deleted when the phase closes). Build start waits on the
+**Phase 2 gate** being called a pass (PHASE3.md precondition checkbox). The signed
+decisions:
+
+### A class is three things — stat mods + category access + an in-niche buff
+
+**Decision (Leon).** A class node carries (1) **multiplicative stat modifiers** on
+the five attributes, (2) **equipment + gene access by `category`**, and (3) a
+**light in-niche multiplier** (material/gene buff in the class's `home_niches`,
+×1.0 elsewhere — a buff, never a penalty, per VISION §12). This is the richer
+RPG-class model Leon chose over a pure-multiplier class; it realizes VISION §7's
+"trades flexibility for in-niche power" by making the *flexibility* literal — what
+gear you may build. **What it replaced:** the bare `class_node` field that existed
+but did nothing. The in-niche multiplier is **new engine surface** (one term in
+`resolve()`), signed.
+
+### Monotonic-safe access — specializing never strands gear
+
+**Decision (Leon).** The basic `generalist` category is buildable by all classes;
+specialist-exclusive categories are buildable only by the class that unlocks them
+(and its descendants). Combined with **sticky** classes (you only descend), a
+lineage's allowed set only ever *grows*, so specializing can never strand equipped
+gear — no save-stranding, no feel-bad, no loss-aversion. The traded flexibility is
+the ability to ever build a *rival* specialist's exclusive kit; to get it you
+branch a fresh lineage. A side effect: a specialist gains a second candidate per
+slot (generalist piece vs. exclusive piece), so **pick-between-items (deferred
+Option B) emerges for free** — not built as a system.
+
+### Option A — doll slots become attribute subsystems
+
+**Decision (Leon).** Each slot's tier feeds a *specific* attribute (proposed map:
+mouthparts+locomotion→power, integument→resilience, metabolic_core→metabolism,
+sensory→instinct; gland = affix host; **vitality unused this phase**), replacing
+Phase 1's uniform `effective_power = power + Σ tiers`. **What it replaced:** the
+deferred-direction status of Option A (DECISIONS 2026-06-11, "Equipment swapping +
+distinct slots") — Option A is now **in**, Option B stays deferred (and emerges
+free, above). This is an **economy change**, re-proven by the WP6 harness. The
+exact slot→attribute map is mechanical and flagged for sign-off at WP6.
+
+### Cladogenesis = fresh respec; classes are sticky
+
+**Decision (Leon).** Branching a lineage yields an empty doll + Generalist class,
+sharing the account-wide gene bank (`genes_known` is already global — nothing
+copied). Classes are sticky (descend only); the respec valve is to branch
+(VISION §4). Roster stays **exactly 2 active slots** this phase; the unlock
+schedule and graduation-frees-a-slot are Phase 4+ (§20.7 dial).
+
+### Minimal v1 tree + the no-trap-build gate
+
+**Decision (Leon).** Generalist (root) → three tier-1 classes — **Predator**
+(home reef_edge, key `penetration`, unlocks `raptorial`), **Armored Grazer**
+(home shallow_benthos, key `guard`, unlocks `heavy_armor`), **Filter Feeder**
+(home pelagic, key `sustain`, unlocks `filter_apparatus`) — grounded in the
+`bible/world_spine.md` archetype table. Tier-2 hyper-specialists deferred.
+Gate 1 gains a **no-trap-build check** (VISION §11): every leaf class's allowed
+categories must cover every essential slot, so no class is barred from a viable
+full doll.
+
+### Placeholder soft cap; schema unchanged
+
+**Decision (Leon).** Diminishing returns on effective Power past a knee (§2.2 of
+PHASE3.md), placeholder constants tuned at WP6 (Leon signs), with the hard
+constraint that **Age-I content stays beatable** (Anomalocaris DEF 9). Gives
+breadth-led growth its shape (VISION §14). **Save schema stays v2** — Option A,
+the class system, and cladogenesis add no new save fields (the migration hook
+sleeps another phase).
+
+---
+
+## 2026-06-12 — Phase 3 WP1–WP5 implemented
+
+**What shipped:**
+- **WP1 (engine):** Option A — each doll slot feeds a specific attribute (mouthparts/locomotion→power, integument→resilience, metabolic_core→metabolism, sensory→instinct, gland→none). `effective_attributes()` replaces direct `lineage.attributes` reads. Soft cap on Power (knee 12.0, k=0.15, asymptote≈18.67). In-niche class multiplier (+20% material/gene when working the class's home niche; ×1.0 elsewhere — no penalty).
+- **WP2 (commands):** `pick_class` (sticky descent, requirement checks), `branch_lineage` (cladogenesis — empty doll, Generalist class, starter node, shared gene bank), category eligibility gates on `metabolize()` and `graft()`.
+- **WP3 (validation):** `validate_class_tree` (structure, stat_mods keys, niche refs, buff ≥ 1.0, no cycles), `validate_categories` (no unreachable unlocks, no unbuildable categories), no-trap-build gate (every class must be able to fill all 5 essential slots from its allowed categories).
+- **WP4 (content):** `data/class_tree.json` — Generalist (root) → Predator (reef_edge, power↑, unlocks raptorial), Armored Grazer (shallow_benthos, resilience↑, unlocks heavy_armor), Filter Feeder (pelagic, metabolism↑, unlocks filter_apparatus). All existing gear tagged `"category": "generalist"`. Three specialist adaptations (raptorial_claw, fused_dorsal_plating, ciliary_fan) and affixes (strike_momentum, mineralized_spine, laminar_current) with genes. `bible/refs/classes.md` with sourced citations — **gate 2–3 pending Leon review**.
+- **WP5 (UI):** Roster bar (2 chips, Branch button), header updates on lineage switch, class panel (current class summary, pickable children with requirements and two-tap commit confirm), doll slots show attribute hint `[power]` / `[resilience]` etc., metabolize buttons grey out locked-category gear with "requires X" hint, graft sheet dims locked-category affixes, power readout shows `~N` when soft cap is active. `forage_all()` ticks both lineages on each timer event.
+
+**What it replaced:** Phase 2 single-lineage UI, uniform `+power` per tier, no class system.
+
+**Open for WP6:** Economy harness re-run with two diverging lineages committing different classes. Soft-cap constants (SOFT_CAP_KNEE/K) and niche_mult values are placeholders — WP6 tunes them and Leon signs the numbers.
+
+**Open for gate 2–3:** `bible/refs/classes.md` and all specialist gear rows require Leon's scientific accuracy and voice review before merge to production.
+
+---
+
 ## Open questions (current)
 
 - **Phase 2 validation gate (WP7).** Web export to friend cohort; gate
   question: "does 'what should I fight' become a build decision players talk
-  about?" Run it and report honestly.
+  about?" Run it and report honestly. **Blocks Phase 3 build** — PHASE3.md WP1  does not start until this is a pass (its precondition checkbox). *Leon, 11.6.* Pass
 - **UI gate 3 (voice).** Leon reviews all Phase 2 UI strings in `ui/main.gd`
   against `bible/voice.md`. Slot names, niche labels, and splice copy are
-  pending explicit sign-off.
+  pending explicit sign-off. Leon, 11.6.: Pass
 - **Yield growth feel.** Accepted for early game (2026-06-11, above); Phase 2's
   affix terms are the planned answer — re-evaluate at the Phase 2 gate.
+  Leon 11.6. : pass for now, reevaluate after phase 4
 - **Equip choice depth.** Phase 2's grafting is the planned answer (real
-  alternatives per slot via affixes); re-evaluate at the Phase 2 gate.
+  alternatives per slot via affixes); re-evaluate at the Phase 2 gate. **Leon, 11.6.: good with p3 new changes**
 - **Graft slot freedom.** Any affix may be grafted onto any doll slot (stated
   assumption in PHASE2.md §3.3). If venom-on-flaps reads wrong in playtest,
-  add slot affinities as data.
+  add slot affinities as data. **Leon, 11.6. : add slot affinities see phase3 **
 - **Clock-tampering** is accepted for now (2026-06-10, above); must be revisited
   before offline accrual ships to players.
-- **Equipment swapping + distinct slots.** Direction set (2026-06-11, above):
-  Option A (mechanically distinct slots) + Option B (competing adaptations per
-  slot), both deferred until after the voice/naming pass. Metabolize→graft with
-  genes-as-bank stays.
+- **Equipment swapping + distinct slots — scheduled into Phase 3.** Option A
+  (mechanically distinct slots) is now **in** (signed 2026-06-11, PHASE3.md).
+  Option B (competing adaptations per slot) stays deferred but **emerges for
+  free** from the class-category access model (a specialist gets a 2nd candidate
+  per slot) — not built as a system. Metabolize→graft with genes-as-bank stays.
 - **Voice & naming pass — resolved** 2026-06-11 (above): Express chosen; role
   labels + ids canonized and aligned (Affliction / Control / Guard / Sustain /
   Perception / Penetration / Stealth). Low-priority polish still open: a nicer
