@@ -7,7 +7,7 @@ extends RefCounted
 ## primitives, so this gate's job is to reject "the same affix with a new noun".
 ##
 ## Phase 2: strict term→role map (CANONICAL_TERMS), param shape checks,
-## graft_cost validation, gene rarity + uniqueness, drop-table rarity
+## express_cost validation, gene rarity + uniqueness, drop-table rarity
 ## normalization, and niche/node structural checks.
 ##
 ## Returns a list of human-readable error strings; empty means pass.
@@ -58,7 +58,7 @@ static func validate(content: Content) -> Array[String]:
 ## Gate 1 proper. Every affix must:
 ##  - declare a canonical math_term and the role it maps to
 ##  - carry required params for its term
-##  - carry a graft_cost pointing at a real material
+##  - carry a express_cost pointing at a real material
 ##  - carry a source
 ##  - not share a math_term+params combo with another affix (synonym check)
 static func validate_affixes(affixes: Array) -> Array[String]:
@@ -109,18 +109,28 @@ static func validate_affixes(affixes: Array) -> Array[String]:
 				by_term[term] = []
 			by_term[term].append(row)
 
-		# graft_cost required
-		var gc: Dictionary = row.get("graft_cost", {})
+		# express_cost required
+		var gc: Dictionary = row.get("express_cost", {})
 		if gc.is_empty():
-			errors.append("affix '%s' missing graft_cost" % id)
+			errors.append("affix '%s' missing express_cost" % id)
 		else:
 			if float(gc.get("base", 0.0)) <= 0.0:
-				errors.append("affix '%s' graft_cost.base must be > 0" % id)
+				errors.append("affix '%s' express_cost.base must be > 0" % id)
 			if float(gc.get("growth", 0.0)) < 1.0:
-				errors.append("affix '%s' graft_cost.growth must be >= 1" % id)
+				errors.append("affix '%s' express_cost.growth must be >= 1" % id)
 
 		if not row.has("source"):
 			errors.append("affix '%s' asserts a capability but has no 'source' (gate 2)" % id)
+
+		# Slot affinity: must name >= 1 valid doll slot (VISION §7). A gene that
+		# expresses nowhere is unreachable; one that expresses anywhere is a stat-dump.
+		var slots: Array = row.get("slots", [])
+		if slots.is_empty():
+			errors.append("affix '%s' missing 'slots' (which organs it expresses on)" % id)
+		else:
+			for s: Variant in slots:
+				if not Lineage.SLOTS.has(String(s)):
+					errors.append("affix '%s' slot '%s' is not a known doll slot" % [id, s])
 
 	# Synonym check: same term, identical params
 	for term: String in by_term:

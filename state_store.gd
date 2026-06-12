@@ -92,12 +92,44 @@ func branch_lineage(display_name: String) -> Dictionary:
 	return result
 
 
-func graft(lineage_id: String, slot: String, affix_id: String) -> Dictionary:
-	var result := Commands.graft(state, Data.content, lineage_id, slot, affix_id)
+func express(lineage_id: String, slot: String, affix_id: String) -> Dictionary:
+	var result := Commands.express(state, Data.content, lineage_id, slot, affix_id)
 	if result["ok"]:
 		save_state()
 		state_changed.emit()
 	return result
+
+
+## DEV (testing only): wipe the save and start a fresh Tree.
+func reset_save() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	new_game(int(Time.get_unix_time_from_system()))
+
+
+## DEV (testing only): jump `seconds` of offline accrual forward and apply it,
+## using the same closed-form Accrual the real offline path will (Phase 4).
+func dev_fast_forward(seconds: float) -> void:
+	if state == null:
+		return
+	var batch := Accrual.accrue(state, Data.content, seconds, rng)
+	for mat_id: String in batch["materials"] as Dictionary:
+		state.inventory_materials[mat_id] = (
+			float(state.inventory_materials.get(mat_id, 0.0))
+			+ float((batch["materials"] as Dictionary)[mat_id])
+		)
+	for ev: Dictionary in batch["events"] as Array:
+		match String(ev.get("kind", "")):
+			"gene":
+				var gid := String(ev.get("gene", ""))
+				if gid != "":
+					state.genes_known[gid] = int(state.genes_known.get(gid, 0)) + 1
+			"splice":
+				state.splice_offers.append(
+					{"gene": String(ev.get("gene", "")), "node": String(ev.get("node", ""))}
+				)
+	save_state()
+	state_changed.emit()
 
 
 func save_state() -> void:

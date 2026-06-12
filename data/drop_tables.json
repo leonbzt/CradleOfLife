@@ -10,7 +10,7 @@
     { "gene": "gene_gnathobase",       "weight": 30,  "rarity": "uncommon" },
     { "gene": "gene_nematocyst",       "weight": 20,  "rarity": "rare"     },
     { "gene": "gene_raptorial",        "weight":  9,  "rarity": "rare"     },
-    { "gene": "gene_great_appendage",  "weight":  0.1,"rarity": "legendary"}
+    { "gene": "gene_great_appendage",  "weight":  0.16,"rarity": "legendary"}
   ],
   "apex_anomalocaris": [
     { "gene": "gene_raptorial",       "weight": 50, "rarity": "rare"      },

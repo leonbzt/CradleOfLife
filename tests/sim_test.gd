@@ -1,7 +1,7 @@
 extends SceneTree
 
 ## Headless unit test for sim/commands.gd (Phase 1 thesis) and the Phase 2
-## seven-term resolve math (WP1) and state/graft mechanics (WP2):
+## seven-term resolve math (WP1) and state/express mechanics (WP2):
 ##   godot --headless --script res://tests/sim_test.gd
 
 var _failures: Array[String] = []
@@ -34,11 +34,11 @@ func _initialize() -> void:
 	_test_affix_control(content)
 	_test_accrue_determinism_with_splice(content)
 
-	# Phase 2 WP2: state, graft, migration
+	# Phase 2 WP2: state, express, migration
 	_test_forage_banks_genes(content)
 	_test_forage_banks_splice_offers(content)
 	_test_claim_splice(content)
-	_test_graft(content)
+	_test_express(content)
 	_test_rarity_escalation(content)
 	_test_niche_key_gating(content)
 	_test_migration_v1_to_v2()
@@ -54,8 +54,14 @@ func _initialize() -> void:
 	_test_pick_class(content)
 	_test_branch_lineage(content)
 	_test_metabolize_category_gate(content)
-	_test_graft_category_gate(content)
+	_test_express_category_gate(content)
 	_test_allowed_categories_monotonic(content)
+
+	# Phase 3 polish: slot affinity, per-organ cap, evolving organ names
+	_test_slot_affinity(content)
+	_test_express_cap(content)
+	_test_organ_naming(content)
+	_test_niche_key_legibility(content)
 
 	if _failures.is_empty():
 		print("== sim test: PASS ==")
@@ -208,7 +214,7 @@ func _test_save_roundtrip(content: Content) -> void:
 # affix params are verified end-to-end. Equations reference PHASE2.md §2.2.
 
 
-func _lineage_with_graft(
+func _lineage_with_express(
 	adaptation_id: String, slot: String, affix_id: String, tier: int, power: float = 1.0
 ) -> Lineage:
 	var l := Lineage.new("t", "T")
@@ -243,9 +249,9 @@ func _test_affix_pen(content: Content) -> void:
 	var totals_bare := Resolve.affix_totals(l_bare, content)
 	_check(
 		is_equal_approx(Resolve.effective_defense(node, totals_bare), 9.0),
-		"pen: no graft → D_eff == 9"
+		"pen: no express → D_eff == 9"
 	)
-	var l := _lineage_with_graft("frontal_appendage", "mouthparts", "gnathobase_minor", 1)
+	var l := _lineage_with_express("frontal_appendage", "mouthparts", "gnathobase_minor", 1)
 	var totals := Resolve.affix_totals(l, content)
 	_check(is_equal_approx(float(totals.get("pen", 0.0)), 2.0), "pen: gnathobase_minor t1 → pen 2")
 	_check(is_equal_approx(Resolve.effective_defense(node, totals), 7.0), "pen: D_eff == 7")
@@ -254,7 +260,7 @@ func _test_affix_pen(content: Content) -> void:
 func _test_affix_dot(content: Content) -> void:
 	# venom_minor tier 1 vs outgeared fight node → floor = EFF_FLOOR + dot
 	var node := _fight_node(99.0)  # outgeared (power 1 vs def 99)
-	var l := _lineage_with_graft("frontal_appendage", "mouthparts", "venom_minor", 1)
+	var l := _lineage_with_express("frontal_appendage", "mouthparts", "venom_minor", 1)
 	var tick_pct := float(
 		(content.affix("venom_minor").get("params", {}) as Dictionary).get("tick_pct", 0.0)
 	)
@@ -283,7 +289,7 @@ func _test_affix_mitigation(content: Content) -> void:
 
 	# with plating_minor tier 1 (amount 2) → guard 2 → tax = 0.15*(4-1-2) = 0.15 → df = 0.85
 	# Uses mouthparts slot (→ power, not resilience) so only guard, not slot tier, affects df.
-	var l_plated := _lineage_with_graft("frontal_appendage", "mouthparts", "plating_minor", 1)
+	var l_plated := _lineage_with_express("frontal_appendage", "mouthparts", "plating_minor", 1)
 	l_plated.attributes["resilience"] = 1.0
 	var rate_plated := Resolve.material_rate(l_plated, node, content)
 	var eff_plated := Resolve.yield_efficiency(l_plated, node, content)
@@ -293,7 +299,7 @@ func _test_affix_mitigation(content: Content) -> void:
 
 func _test_affix_uptime_find(content: Content) -> void:
 	# gill_minor mult 1.15 tier 1 → uptime_bonus = 0.15
-	var l_up := _lineage_with_graft("gill_branches", "metabolic_core", "gill_minor", 1, 100.0)
+	var l_up := _lineage_with_express("gill_branches", "metabolic_core", "gill_minor", 1, 100.0)
 	var node := {
 		"id": "tn",
 		"kind": "eat",
@@ -313,7 +319,7 @@ func _test_affix_uptime_find(content: Content) -> void:
 
 	# eyes_minor mult 1.2 tier 1 → find_bonus = 0.2
 	# Uses gland slot (feeds no stat) so the slot tier doesn't inflate instinct.
-	var l_find := _lineage_with_graft("nematocyst_gland", "gland", "eyes_minor", 1, 100.0)
+	var l_find := _lineage_with_express("nematocyst_gland", "gland", "eyes_minor", 1, 100.0)
 	var mult_find := float(
 		(content.affix("eyes_minor").get("params", {}) as Dictionary).get("mult", 1.0)
 	)
@@ -346,7 +352,7 @@ func _test_affix_stealth(content: Content) -> void:
 	# DEF=15: l_stealth (mouthparts T1 → eff_power 2.0) is outgeared; open_l
 	# (power=100, soft_cap≈18.2) beats it. DEF=99 would fail after soft cap.
 	var node := _fight_node(15.0)
-	var l_stealth := _lineage_with_graft("frontal_appendage", "mouthparts", "glassy_tissue", 1)
+	var l_stealth := _lineage_with_express("frontal_appendage", "mouthparts", "glassy_tissue", 1)
 	var open_l := Lineage.new("t", "T")
 	open_l.attributes["power"] = 100.0  # soft_cap(100)≈18.2 > 15 → winning
 	var open_rate := Resolve.gene_rate(open_l, node, content)
@@ -365,7 +371,7 @@ func _test_affix_stealth(content: Content) -> void:
 func _test_affix_control(content: Content) -> void:
 	# grasp_minor mult 1.5 tier 1 → splice_bonus = 0.5
 	var node := _fight_node(0.0, 0.0, 0.001)
-	var l := _lineage_with_graft("frontal_appendage", "mouthparts", "grasp_minor", 1, 100.0)
+	var l := _lineage_with_express("frontal_appendage", "mouthparts", "grasp_minor", 1, 100.0)
 	var mult := float(
 		(content.affix("grasp_minor").get("params", {}) as Dictionary).get("mult", 1.0)
 	)
@@ -414,7 +420,7 @@ func _test_accrue_determinism_with_splice(content: Content) -> void:
 	)
 
 
-# -- Phase 2 WP2: state v2, graft, migration -----------------------------------
+# -- Phase 2 WP2: state v2, express, migration -----------------------------------
 
 
 func _test_forage_banks_genes(content: Content) -> void:
@@ -462,44 +468,44 @@ func _test_claim_splice(content: Content) -> void:
 	_check(not bad["ok"], "claim_splice: bad index rejected")
 
 
-func _test_graft(content: Content) -> void:
+func _test_express(content: Content) -> void:
 	var state := _fresh_state(content)
 	# Need a metabolized adaptation in the mouthparts slot
 	state.inventory_materials["biofilm"] = 60.0
 	Commands.metabolize(state, content, "main", "frontal_appendage")
 	var l := state.lineages[0]
 	var inst: AdaptationInstance = l.doll.get("mouthparts")
-	_check(inst != null, "graft setup: frontal_appendage equipped")
+	_check(inst != null, "express setup: frontal_appendage equipped")
 
 	# No copies of gnathobase → reject
-	var r_no_gene := Commands.graft(state, content, "main", "mouthparts", "gnathobase_minor")
-	_check(not r_no_gene["ok"], "graft: zero copies → rejected")
+	var r_no_gene := Commands.express(state, content, "main", "mouthparts", "gnathobase_minor")
+	_check(not r_no_gene["ok"], "express: zero copies → rejected")
 
-	# Give 1 copy → tier 1 graft succeeds (need materials)
+	# Give 1 copy → tier 1 express succeeds (need materials)
 	state.genes_known["gene_gnathobase"] = 1
 	var affix_row := content.affix("gnathobase_minor")
-	var gc: Dictionary = affix_row.get("graft_cost", {})
+	var gc: Dictionary = affix_row.get("express_cost", {})
 	var mat := String(gc.get("material", ""))
 	state.inventory_materials[mat] = 9999.0
-	var r_ok := Commands.graft(state, content, "main", "mouthparts", "gnathobase_minor")
-	_check(r_ok["ok"], "graft: 1 copy → tier 1 graft accepted")
-	_check(inst.graft_tier("gnathobase_minor") == 1, "graft: graft tier set to 1")
-	_check(inst.rarity == "epic", "graft: grafted adaptation turns epic")
-	_check(int(state.genes_known.get("gene_gnathobase", 0)) == 1, "graft: copies not consumed")
+	var r_ok := Commands.express(state, content, "main", "mouthparts", "gnathobase_minor")
+	_check(r_ok["ok"], "express: 1 copy → tier 1 express accepted")
+	_check(inst.express_tier("gnathobase_minor") == 1, "express: express tier set to 1")
+	_check(inst.rarity == "epic", "express: expressed adaptation turns epic")
+	_check(int(state.genes_known.get("gene_gnathobase", 0)) == 1, "express: copies not consumed")
 
 	# Tier 2 needs 2 copies; 1 is not enough
-	var r_need2 := Commands.graft(state, content, "main", "mouthparts", "gnathobase_minor")
-	_check(not r_need2["ok"], "graft: tier 2 needs 2 copies, 1 is insufficient")
+	var r_need2 := Commands.express(state, content, "main", "mouthparts", "gnathobase_minor")
+	_check(not r_need2["ok"], "express: tier 2 needs 2 copies, 1 is insufficient")
 
 	# Give 2nd copy → tier 2
 	state.genes_known["gene_gnathobase"] = 2
-	var r_t2 := Commands.graft(state, content, "main", "mouthparts", "gnathobase_minor")
-	_check(r_t2["ok"], "graft: 2 copies → tier 2 graft accepted")
-	_check(inst.graft_tier("gnathobase_minor") == 2, "graft: tier 2 set")
+	var r_t2 := Commands.express(state, content, "main", "mouthparts", "gnathobase_minor")
+	_check(r_t2["ok"], "express: 2 copies → tier 2 express accepted")
+	_check(inst.express_tier("gnathobase_minor") == 2, "express: tier 2 set")
 
 
 func _test_rarity_escalation(content: Content) -> void:
-	# Metabolize-then-graft: rarity goes common→uncommon→rare→epic on first graft,
+	# Metabolize-then-express: rarity goes common→uncommon→rare→epic on first express,
 	# then legendary if the unlocking gene is legendary.
 	var state := _fresh_state(content)
 	state.inventory_materials["biofilm"] = 60.0
@@ -515,15 +521,15 @@ func _test_rarity_escalation(content: Content) -> void:
 
 	# Graft gnathobase_minor → epic
 	state.genes_known["gene_gnathobase"] = 1
-	var gc: Dictionary = content.affix("gnathobase_minor").get("graft_cost", {})
+	var gc: Dictionary = content.affix("gnathobase_minor").get("express_cost", {})
 	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.graft(state, content, "main", "mouthparts", "gnathobase_minor")
-	_check(inst.rarity == "epic", "rarity: grafted → epic")
+	Commands.express(state, content, "main", "mouthparts", "gnathobase_minor")
+	_check(inst.rarity == "epic", "rarity: expressed → epic")
 
 	# Metabolize again (T3) must preserve epic
 	state.inventory_materials["biofilm"] = 540.0
 	Commands.metabolize(state, content, "main", "frontal_appendage")
-	_check(inst.rarity == "epic", "rarity: metabolize after graft preserves epic")
+	_check(inst.rarity == "epic", "rarity: metabolize after express preserves epic")
 
 	# Legendary gene test: gene_great_appendage unlocks great_appendage
 	var state2 := _fresh_state(content)
@@ -532,13 +538,13 @@ func _test_rarity_escalation(content: Content) -> void:
 	var l2 := state2.lineages[0]
 	var inst2: AdaptationInstance = l2.doll.get("mouthparts")
 	state2.genes_known["gene_great_appendage"] = 1
-	var gc2: Dictionary = content.affix("great_appendage").get("graft_cost", {})
+	var gc2: Dictionary = content.affix("great_appendage").get("express_cost", {})
 	state2.inventory_materials[String(gc2.get("material", ""))] = 9999.0
-	var r_leg := Commands.graft(state2, content, "main", "mouthparts", "great_appendage")
+	var r_leg := Commands.express(state2, content, "main", "mouthparts", "great_appendage")
 	if r_leg["ok"]:
 		_check(inst2.rarity == "legendary", "rarity: legendary gene → legendary doll")
 	else:
-		_failures.append("rarity: legendary graft rejected: " + String(r_leg.get("reason", "?")))
+		_failures.append("rarity: legendary express rejected: " + String(r_leg.get("reason", "?")))
 
 
 func _test_niche_key_gating(content: Content) -> void:
@@ -557,12 +563,12 @@ func _test_niche_key_gating(content: Content) -> void:
 	state.inventory_materials["soft_tissue"] = 9999.0
 	Commands.metabolize(state, content, "main", "gill_branches")
 	state.genes_known["gene_gill"] = 1
-	var gc: Dictionary = content.affix("gill_minor").get("graft_cost", {})
+	var gc: Dictionary = content.affix("gill_minor").get("express_cost", {})
 	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.graft(state, content, "main", "metabolic_core", "gill_minor")
+	Commands.express(state, content, "main", "metabolic_core", "gill_minor")
 	_check(
 		Commands.meets_niche_keys(l, content, "pelagic"),
-		"niche key: uptime graft meets pelagic key"
+		"niche key: uptime express meets pelagic key"
 	)
 
 	# Locked niche: assign_node to pelagic node fails without key
@@ -842,17 +848,17 @@ func _test_pick_class(content: Content) -> void:
 
 	# Descend to predator — requires penetration key; not met yet.
 	var r_no_key := Commands.pick_class(state, fake, "main", "predator")
-	_check(not r_no_key["ok"], "pick_class: predator rejected without penetration graft")
+	_check(not r_no_key["ok"], "pick_class: predator rejected without penetration express")
 
-	# Equip a penetration graft to meet the key.
+	# Equip a penetration express to meet the key.
 	state.inventory_materials["biofilm"] = 60.0
 	Commands.metabolize(state, fake, "main", "frontal_appendage")
 	state.genes_known["gene_gnathobase"] = 1
-	var gc: Dictionary = content.affix("gnathobase_minor").get("graft_cost", {})
+	var gc: Dictionary = content.affix("gnathobase_minor").get("express_cost", {})
 	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.graft(state, fake, "main", "mouthparts", "gnathobase_minor")
+	Commands.express(state, fake, "main", "mouthparts", "gnathobase_minor")
 	var r_ok := Commands.pick_class(state, fake, "main", "predator")
-	_check(r_ok["ok"], "pick_class: predator accepted after penetration graft equipped")
+	_check(r_ok["ok"], "pick_class: predator accepted after penetration express equipped")
 	_check(l.class_node == "predator", "pick_class: class_node updated to predator")
 
 	# Sibling class rejected (predator → filter_feeder is a sibling).
@@ -865,15 +871,18 @@ func _test_pick_class(content: Content) -> void:
 
 	# Descend further: ambush_predator requires stealth — not met.
 	var r_no_stealth := Commands.pick_class(state, fake, "main", "ambush_predator")
-	_check(not r_no_stealth["ok"], "pick_class: ambush_predator rejected without stealth graft")
+	_check(not r_no_stealth["ok"], "pick_class: ambush_predator rejected without stealth express")
 
-	# Equip stealth graft; then descend works.
+	# Equip stealth express; then descend works. Glassy Tissue is integument-only
+	# (slot affinity), so build a carapace to host it.
 	state.genes_known["gene_glassy_tissue"] = 1
-	var gc2: Dictionary = content.affix("glassy_tissue").get("graft_cost", {})
+	var gc2: Dictionary = content.affix("glassy_tissue").get("express_cost", {})
 	state.inventory_materials[String(gc2.get("material", ""))] = 9999.0
-	Commands.graft(state, fake, "main", "mouthparts", "glassy_tissue")
+	state.inventory_materials["chitin"] = 9999.0
+	Commands.metabolize(state, fake, "main", "calcite_carapace")
+	Commands.express(state, fake, "main", "integument", "glassy_tissue")
 	var r_deep := Commands.pick_class(state, fake, "main", "ambush_predator")
-	_check(r_deep["ok"], "pick_class: ambush_predator accepted after stealth graft equipped")
+	_check(r_deep["ok"], "pick_class: ambush_predator accepted after stealth express equipped")
 
 
 func _test_branch_lineage(content: Content) -> void:
@@ -923,11 +932,11 @@ func _test_metabolize_category_gate(content: Content) -> void:
 	var r_locked := Commands.metabolize(state, fake, "main", "raptorial_claw")
 	_check(not r_locked["ok"], "metabolize gate: raptorial gear rejected for generalist")
 
-	# Pick predator class (need penetration graft first).
+	# Pick predator class (need penetration express first).
 	state.genes_known["gene_gnathobase"] = 1
-	var gc: Dictionary = content.affix("gnathobase_minor").get("graft_cost", {})
+	var gc: Dictionary = content.affix("gnathobase_minor").get("express_cost", {})
 	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.graft(state, fake, "main", "mouthparts", "gnathobase_minor")
+	Commands.express(state, fake, "main", "mouthparts", "gnathobase_minor")
 	Commands.pick_class(state, fake, "main", "predator")
 	_check(state.lineages[0].class_node == "predator", "metabolize gate setup: is predator")
 
@@ -940,7 +949,7 @@ func _test_metabolize_category_gate(content: Content) -> void:
 	_check(not r_other["ok"], "metabolize gate: filter_apparatus rejected for predator")
 
 
-func _test_graft_category_gate(content: Content) -> void:
+func _test_express_category_gate(content: Content) -> void:
 	# Add a specialist affix whose category is 'raptorial'.
 	var fake := _fake_content_with_classes(content)
 	var raptorial_affix: Dictionary = {
@@ -950,7 +959,8 @@ func _test_graft_category_gate(content: Content) -> void:
 		"math_term": "pen_flat",
 		"params": {"amount": 1.0},
 		"category": "raptorial",
-		"graft_cost": {"material": "chitin", "base": 10, "growth": 1.5},
+		"slots": ["mouthparts", "locomotion"],
+		"express_cost": {"material": "chitin", "base": 10, "growth": 1.5},
 		"source": "test",
 	}
 	# Also add a gene that unlocks it.
@@ -972,20 +982,20 @@ func _test_graft_category_gate(content: Content) -> void:
 	Commands.metabolize(state, fake, "main", "frontal_appendage")
 	state.genes_known["gene_raptorial_strike"] = 1
 
-	# Generalist cannot graft raptorial affix.
-	var r_locked := Commands.graft(state, fake, "main", "mouthparts", "raptorial_strike")
-	_check(not r_locked["ok"], "graft gate: raptorial affix rejected for generalist")
+	# Generalist cannot express raptorial affix.
+	var r_locked := Commands.express(state, fake, "main", "mouthparts", "raptorial_strike")
+	_check(not r_locked["ok"], "express gate: raptorial affix rejected for generalist")
 
-	# Unlock predator class (needs penetration key — give gnathobase graft first).
+	# Unlock predator class (needs penetration key — give gnathobase express first).
 	state.genes_known["gene_gnathobase"] = 1
-	var gc: Dictionary = content.affix("gnathobase_minor").get("graft_cost", {})
+	var gc: Dictionary = content.affix("gnathobase_minor").get("express_cost", {})
 	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.graft(state, fake, "main", "mouthparts", "gnathobase_minor")
+	Commands.express(state, fake, "main", "mouthparts", "gnathobase_minor")
 	Commands.pick_class(state, fake, "main", "predator")
 
-	# Now predator can graft raptorial affix.
-	var r_ok := Commands.graft(state, fake, "main", "mouthparts", "raptorial_strike")
-	_check(r_ok["ok"], "graft gate: raptorial affix allowed for predator")
+	# Now predator can express raptorial affix.
+	var r_ok := Commands.express(state, fake, "main", "mouthparts", "raptorial_strike")
+	_check(r_ok["ok"], "express gate: raptorial affix allowed for predator")
 
 
 func _test_allowed_categories_monotonic(content: Content) -> void:
@@ -1005,9 +1015,9 @@ func _test_allowed_categories_monotonic(content: Content) -> void:
 
 	# Pick predator class.
 	state.genes_known["gene_gnathobase"] = 1
-	var gc: Dictionary = content.affix("gnathobase_minor").get("graft_cost", {})
+	var gc: Dictionary = content.affix("gnathobase_minor").get("express_cost", {})
 	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.graft(state, fake, "main", "mouthparts", "gnathobase_minor")
+	Commands.express(state, fake, "main", "mouthparts", "gnathobase_minor")
 	Commands.pick_class(state, fake, "main", "predator")
 
 	var cats_after := fake.allowed_categories(l)
@@ -1022,3 +1032,126 @@ func _test_allowed_categories_monotonic(content: Content) -> void:
 		cats_after.has(def_cat),
 		"monotonic: previously equipped adaptation's category still allowed"
 	)
+
+
+# -- Phase 3 polish: slot affinity, per-organ cap, evolving names -------------
+
+
+func _test_slot_affinity(content: Content) -> void:
+	# gill_minor is metabolic_core-only; it must reject a mouthparts organ and
+	# accept a metabolic_core organ.
+	var state := _fresh_state(content)
+	state.inventory_materials["biofilm"] = 9999.0
+	state.inventory_materials["soft_tissue"] = 9999.0
+	Commands.metabolize(state, content, "main", "frontal_appendage")  # mouthparts
+	Commands.metabolize(state, content, "main", "gill_branches")  # metabolic_core
+	state.genes_known["gene_gill"] = 1
+
+	var r_wrong := Commands.express(state, content, "main", "mouthparts", "gill_minor")
+	_check(not r_wrong["ok"], "affinity: gill_minor rejected on mouthparts (does not fit)")
+
+	var r_right := Commands.express(state, content, "main", "metabolic_core", "gill_minor")
+	_check(r_right["ok"], "affinity: gill_minor accepted on metabolic_core")
+
+	# Static helper agrees with the data.
+	_check(
+		Commands.affix_allows_slot(content.affix("venom_minor"), "mouthparts"),
+		"affinity: venom fits mouthparts"
+	)
+	_check(
+		not Commands.affix_allows_slot(content.affix("venom_minor"), "sensory"),
+		"affinity: venom does not fit sensory"
+	)
+
+
+func _test_express_cap(content: Content) -> void:
+	# sensory holds 1; a 2nd distinct affix on a sensory organ is rejected, while
+	# tiering up the affix already there is always allowed.
+	_check(Commands.slot_express_cap("sensory") == 1, "cap: sensory holds 1")
+	_check(Commands.slot_express_cap("integument") == 3, "cap: integument holds 3")
+
+	# Use mouthparts (cap 2) with two distinct mouthparts affixes, then a third.
+	var state := _fresh_state(content)
+	state.inventory_materials["biofilm"] = 9999.0
+	state.inventory_materials["chitin"] = 9999.0
+	state.inventory_materials["soft_tissue"] = 9999.0
+	state.inventory_materials["flesh"] = 9999.0
+	Commands.metabolize(state, content, "main", "frontal_appendage")  # mouthparts
+	state.genes_known["gene_gnathobase"] = 1  # penetration, fits mouthparts
+	state.genes_known["gene_raptorial"] = 1  # grasp_minor (control), fits mouthparts
+	state.genes_known["gene_nematocyst"] = 1  # venom_minor, fits mouthparts
+
+	var r1 := Commands.express(state, content, "main", "mouthparts", "gnathobase_minor")
+	_check(r1["ok"], "cap: 1st mouthparts affix accepted")
+	var r2 := Commands.express(state, content, "main", "mouthparts", "grasp_minor")
+	_check(r2["ok"], "cap: 2nd mouthparts affix accepted (cap 2)")
+	var r3 := Commands.express(state, content, "main", "mouthparts", "venom_minor")
+	_check(not r3["ok"], "cap: 3rd distinct mouthparts affix rejected (organ full)")
+
+	# Tiering up an affix already present is NOT blocked by the cap.
+	state.genes_known["gene_gnathobase"] = 2
+	var r_up := Commands.express(state, content, "main", "mouthparts", "gnathobase_minor")
+	_check(r_up["ok"], "cap: tier-up of present affix not blocked by full organ")
+
+
+func _test_organ_naming(content: Content) -> void:
+	# Tier prefix climbs; affix adjective prepends; tech line carries the precise read.
+	var state := _fresh_state(content)
+	state.inventory_materials["biofilm"] = 9999.0
+	state.inventory_materials["chitin"] = 9999.0
+	for _i in range(3):
+		Commands.metabolize(state, content, "main", "frontal_appendage")
+	var l := state.lineages[0]
+	var inst: AdaptationInstance = l.doll.get("mouthparts")
+	_check(
+		Naming.display_name(inst, content) == "Great Frontal Appendage",
+		"naming: tier-3 base reads 'Great Frontal Appendage'"
+	)
+
+	state.genes_known["gene_gnathobase"] = 1
+	Commands.express(state, content, "main", "mouthparts", "gnathobase_minor")
+	_check(
+		Naming.display_name(inst, content) == "Toothed Great Frontal Appendage",
+		"naming: express prepends adjective"
+	)
+	_check(
+		Naming.tech_line(inst, content) == "T3 · Gnathobase I · epic",
+		"naming: tech line carries tier, express, rarity"
+	)
+
+
+func _test_niche_key_legibility(content: Content) -> void:
+	# The data the niche-gate panel renders: the key role resolves to a concrete
+	# generalist gene, and that gene has a discoverable source.
+	var pelagic := content.niche("pelagic")
+	var keys: Array = pelagic.get("affix_keys", [])
+	_check(keys.size() == 1 and String(keys[0]) == "sustain", "legibility: pelagic key is sustain")
+
+	var options := content.key_affixes_for_role("sustain")
+	var has_gill := false
+	for opt: Dictionary in options:
+		if String((opt["affix"] as Dictionary).get("id", "")) == "gill_minor":
+			has_gill = (String((opt["gene"] as Dictionary).get("id", "")) == "gene_gill")
+	_check(has_gill, "legibility: sustain key resolves to Gill Branching ← gene_gill")
+
+	# gene_gill drops at the very first free node (microbial_mat) — the path exists.
+	var sources := content.sources_for_gene("gene_gill")
+	var from_mat := false
+	for src: Dictionary in sources:
+		if (
+			String(src.get("node", "")) == "microbial_mat"
+			and (src.get("via", []) as Array).has("drop")
+		):
+			from_mat = true
+	_check(from_mat, "legibility: gene_gill drops at microbial_mat (reachable from turn one)")
+
+	# A spliceable gene reports its splice source.
+	var nemato := content.sources_for_gene("gene_nematocyst")
+	var splice_from_anemone := false
+	for src: Dictionary in nemato:
+		if (
+			String(src.get("node", "")) == "sea_anemone"
+			and (src.get("via", []) as Array).has("splice")
+		):
+			splice_from_anemone = true
+	_check(splice_from_anemone, "legibility: gene_nematocyst splices from sea_anemone")

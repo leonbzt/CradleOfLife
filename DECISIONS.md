@@ -542,7 +542,121 @@ sleeps another phase).
 
 ---
 
+## 2026-06-12 — Phase 3 polish: progression legibility, slot affinity, per-organ caps, evolving names
+
+**What.** A coherence/polish pass on the built Phase 3 state, driven by Leon's
+self-playtest and the Phase-2 cohort feedback ("loved it, played the whole first
+map, but couldn't progress"). Five changes, all signed by Leon (answers in
+session):
+
+### Progression legibility — the affix-key wall now shows its key (VISION §11)
+
+**Decision (Leon).** The niche-key gates were well-designed but **invisible**: the
+only hint for how to unlock pelagic/reef was in a hover `tooltip_text`, which does
+not exist on touch (VISION §16) — the literal cause of the cohort's "couldn't
+progress." Added a visible, tap-legible **niche-key guidance panel** under the
+niche selector: when the active niche is locked it names the role, the generalist
+gene(s) that satisfy it (easiest rarity first), **where each gene drops/splices**
+(new `Content.sources_for_gene`), and the player's live status — owning the gene
+but not expressing it gets an **Express →** shortcut. The gene codex now carries a
+static source hint per gene, and locked niches show a 🔒 marker. **What it
+replaced:** touch-invisible tooltip-only lock reasons; no map from "I need a
+sustain gene" to "grind the Microbial Mat for Branched Gill, then express it." The
+gates and the benthos→pelagic→reef chain are unchanged — only made visible.
+
+### Slot affinity — genes express only on anatomically valid organs
+
+**Decision (Leon).** Each affix declares a `slots` list (1–2 organs to start, a
+data field widened freely later — Leon's "start simple, expand" call). `graft()`
+and the harness policy enforce it; the express sheet filters to the tapped organ.
+**What it replaced:** any affix onto any slot (the open "Graft slot freedom"
+question, resolved). Canonized in VISION §7. New gate-1 rule: every affix must
+declare valid `slots`.
+
+### Per-organ expression cap — the doll becomes a body with trade-offs
+
+**Decision (Leon).** Each organ holds a bounded number of expressed genes
+(`Lineage.SLOT_GRAFT_CAP`: integument/locomotion 3, mouthparts/metabolic_core/
+gland 2, sensory 1 — "legs hold many, mouthparts/sensory fewer"). A new affix
+needs a free expression slot; tiering up one already present never does.
+Expression is a commitment (no un-express; the respec valve is to branch, §4).
+**What it replaced:** unlimited stacking on a single organ. Stacking still drives
+depth (§9b) across the six organs and via tiers — it just can't all pile on one
+part. Canonized in VISION §7.
+
+### Evolving organ names + Express applied to the UI
+
+**Decision (Leon).** An organ's name now composes from its build via the new pure
+`sim/naming.gd`: affix adjectives + a tier-graded prefix + the base name (e.g.
+*Toothed Great Frontal Appendage*), with the precise `T3 · Gnathobase I · epic`
+read kept beneath (Leon: evolved name on top, technical info still below). Affixes
+gained an `adjective`; adaptations gained a `tier_prefix` ladder (gate 2/3 flavor —
+Leon's review). Also finally applied the **Express** verb (DECISIONS 2026-06-11)
+to all player-facing UI strings, which still said "Graft." **What it replaced:**
+static `Name · T{n}` organ labels; "Graft" UI copy.
+
+### Economy harness made affinity-aware; chase curve re-proven, p50 drifted
+
+The harness policy now grafts by slot affinity + cap (mirrors `graft()`), so the
+model plays by the real rules. Re-ran the 6-week arc: **never-flat holds** (week
+means 59.9→72.5→76.2→74.3→74.7→75.0), **no stranded content** (hunter eff_power
+11.25 > DEF 9), soft cap bites, lineages diverge. **One drift, resolved:**
+constraining the doll lowered aggregate gene-find, so the legendary dry-streak
+**p50 moved 11 → 26 check-ins** — just past the agreed [10,25] band. This is a
+§20.5 drop-rate **constant**, not a shape break. **Leon chose "recenter":** raised
+`benthos_fight` `gene_great_appendage` weight **0.1 → 0.16**, bringing p50 back to
+**10** (in band, ≈ the WP6-signed cadence of 11). The other tables' legendary
+weights are unchanged. p50 is bimodal on the harness seed (snaps 10↔26 around the
+legendary count), so the band check is a coarse single-seed proxy — the locked
+never-flat *shape* is what's actually guaranteed.
+
+---
+
+## 2026-06-12 — Polish round 2: UI legibility fixes, internal Express rename, dev tools
+
+**What.** A second same-day pass on Leon's self-playtest notes.
+
+### Internal `graft` → `express` rename (reverses the 2026-06-11 "stays graft")
+
+**Decision (Leon).** Renamed the action throughout the code and content to match
+the player-facing verb: `Commands.express()`, `Store.express()`, `express_tier()`,
+`SLOT_EXPRESS_CAP`/`slot_express_cap`, the `express_cost` data field (affixes.json),
+and all UI handlers. **What it replaced:** the 2026-06-11 call to keep
+`Commands.graft()` as an internal-only name "renamable later" — Leon called it now
+so the codebase speaks one language. Behaviour-neutral; all tests + the chase curve
+identical after the rename.
+
+### UI legibility fixes (self-playtest)
+
+- **Horizontal overflow on the main lineage** (regression): the evolved organ-name
+  label had no autowrap, so a long composed name forced the doll row past the
+  720px screen (empty branch dolls fit, hence main-only). Fixed with WORD_SMART
+  autowrap on the doll name + tech labels.
+- **Font floor raised to 16** (was 14/15) across detail/flavor text for phone
+  readability, keeping the 18 body / 20+ header hierarchy.
+- **Organ-cap count removed from the doll slot button** (it read `[power ·2]`); the
+  capacity now shows only in the Express sheet title (`used/cap`), per Leon.
+- **Gene codex is now tap-to-open** (VISION §16 inspect grammar): each gene's
+  description + source is hidden until you tap the gene, instead of always-on.
+
+### Dev tools (testing only — remove before release)
+
+A "DEV" bar at the bottom of the screen: **↺ Reset save** (`Store.reset_save`) and
+**⏩ +8h** (`Store.dev_fast_forward`, applies a closed-form `Accrual` batch). For
+fast iteration on progression during playtests. Flagged in code for removal.
+
+---
+
 ## Open questions (current)
+
+- **Metabolize screen feels unintuitive — REVISIT (Leon, 2026-06-12).** Each doll
+  slot builds exactly one fixed adaptation (e.g. `sensory` → only "Stalked Eyes"),
+  which reads oddly — you "craft" one specific thing with no alternative. Leon
+  wants this reconsidered: a crafting menu with real per-slot options, or a
+  different framing, so building an organ is a choice rather than a single button.
+  Note: Option B (competing adaptations per slot) was deferred but "emerges free"
+  from class-category access (DECISIONS 2026-06-11) — that may be the seed of the
+  answer. Not scoped yet; design discussion next.
 
 - **Phase 2 validation gate (WP7).** Web export to friend cohort; gate
   question: "does 'what should I fight' become a build decision players talk
@@ -555,9 +669,17 @@ sleeps another phase).
   Leon 11.6. : pass for now, reevaluate after phase 4
 - **Equip choice depth.** Phase 2's grafting is the planned answer (real
   alternatives per slot via affixes); re-evaluate at the Phase 2 gate. **Leon, 11.6.: good with p3 new changes**
-- **Graft slot freedom.** Any affix may be grafted onto any doll slot (stated
-  assumption in PHASE2.md §3.3). If venom-on-flaps reads wrong in playtest,
-  add slot affinities as data. **Leon, 11.6. : add slot affinities see phase3 **
+- **Graft slot freedom — RESOLVED 2026-06-12.** Slot affinity (`affix.slots`,
+  1–2 organs) + per-organ caps (`Lineage.SLOT_GRAFT_CAP`) shipped; venom no
+  longer goes on swimming flaps. See the 2026-06-12 polish entry.
+- **Per-class doll specialization — DEFERRED (direction set, 2026-06-12).** Leon's
+  "specialized slots per class" was partly the gear-naming gap (now fixed) and
+  partly a future want: a strong class identity via *emphasizing/restricting*
+  themed genes and exclusive gear per organ. Build none of it now (YAGNI); the
+  affinity + caps + naming pass was the body-coherence layer he was after.
+- **Chase p50 drift — RESOLVED 2026-06-12.** Leon chose "recenter";
+  `benthos_fight` `gene_great_appendage` weight 0.1→0.16, p50 back to 10 (in
+  band). See the 2026-06-12 polish entry.
 - **Clock-tampering** is accepted for now (2026-06-10, above); must be revisited
   before offline accrual ships to players.
 - **Equipment swapping + distinct slots — scheduled into Phase 3.** Option A

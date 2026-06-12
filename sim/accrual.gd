@@ -46,14 +46,19 @@ static func accrue(state: GameState, content: Content, dt: float, rng: Rng) -> D
 		var t := rng.exp_interval(gene_stream, gene_rate)
 		while t < dt:
 			var g := Resolve.roll_gene(node, rng)
-			events.append({
-				"kind": "gene",
-				"t": t,
-				"lineage": lineage.id,
-				"node": String(node.get("id", "")),
-				"gene": String(g.get("id", "")),
-				"rarity": String(g.get("rarity", "common")),
-			})
+			(
+				events
+				. append(
+					{
+						"kind": "gene",
+						"t": t,
+						"lineage": lineage.id,
+						"node": String(node.get("id", "")),
+						"gene": String(g.get("id", "")),
+						"rarity": String(g.get("rarity", "common")),
+					}
+				)
+			)
 			t += rng.exp_interval(gene_stream, gene_rate)
 
 		var splice_rate := Resolve.splice_rate_eff(lineage, node, content)
@@ -61,13 +66,18 @@ static func accrue(state: GameState, content: Content, dt: float, rng: Rng) -> D
 			var splice_stream := "splice_accrue:" + lineage.id
 			var ts := rng.exp_interval(splice_stream, splice_rate)
 			while ts < dt:
-				events.append({
-					"kind": "splice",
-					"t": ts,
-					"lineage": lineage.id,
-					"node": String(node.get("id", "")),
-					"gene": String(node.get("spliceable", "")),
-				})
+				(
+					events
+					. append(
+						{
+							"kind": "splice",
+							"t": ts,
+							"lineage": lineage.id,
+							"node": String(node.get("id", "")),
+							"gene": String(node.get("spliceable", "")),
+						}
+					)
+				)
 				ts += rng.exp_interval(splice_stream, splice_rate)
 
 	events.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["t"] < b["t"])

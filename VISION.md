@@ -119,6 +119,13 @@ What makes this read as RPG and not as a bare incremental is the surface: a char
 
 Every adaptation carries a **tier** (weak → super), **affixes** (frost, venom, deep…), and a **rarity colour** (common → legendary). Swapping adaptations *is* the build.
 
+**The doll is a body, not a stat-dump.** Two rules make expressing genes feel like shaping a real organism with trade-offs:
+
+- **Anatomical affinity.** A gene expresses only onto organs that make biological sense — gills on the metabolic core, venom on mouthparts or glands, plating on the integument. Each affix declares its valid organs (one or two to start, widened freely as content grows; it's a data field, never engine).
+- **Bounded expression per organ.** Each organ holds a limited number of expressed genes — surface-rich, segmented parts (integument, locomotion) hold more, focused tools (mouthparts, sensory) hold fewer. So an organ is venomous *or* armoured, not everything at once. Stacking still drives depth (§9b) — across the six organs and via tiers/copies — but no single organ absorbs the whole build. Expression is a commitment; the respec valve is to branch (§4).
+
+**The organ's name evolves with its build.** Tier climbs a weak→super name ladder and expressed genes prepend adjectives (a tier-3 venom mouthpart reads *Venomous Great Frontal Appendage*), with the precise tier/affix/rarity read kept just beneath. The signature pair stays **Splice** (take foreign genes from prey) → **Express** (switch a banked gene on as a trait on an organ).
+
 **Skills**, trained OSRS-style toward a cap and gating content: Foraging, Hunting, Fortitude, Metabolism, Instinct (more as ages open). One verb wearing different costumes — the RuneScape pattern where mine+smith or chop+fletch are mechanically one loop with different rewards.
 
 **The class tree** is specialization: a Generalist root descends through progressively specialized tiers toward a hyper-specialist, IdleOn-style tiered commitment gated by affix-keys and genes. It trades flexibility for in-niche power, and it's where a lineage earns its identity. It is a locked system, but it is also the most complex to author and balance, so it comes online *after* the core loop is validated — splicing alone already supplies build identity in the earliest builds (see the production plan).

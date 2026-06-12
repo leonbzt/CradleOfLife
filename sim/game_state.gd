@@ -16,8 +16,8 @@ var master_seed: int = 0
 var lineages: Array[Lineage] = []
 var slots_active: int = 2
 var slots_max: int = 2
-var inventory_materials: Dictionary = {}   # material_id -> qty (float)
-var genes_known: Dictionary = {}           # gene_id -> int copy count
+var inventory_materials: Dictionary = {}  # material_id -> qty (float)
+var genes_known: Dictionary = {}  # gene_id -> int copy count
 var splice_offers: Array[Dictionary] = []  # [{gene: String, node: String}]
 var last_seen_unix: int = 0
 # RNG stream positions (stream_name -> state as String; see Rng.export_state).

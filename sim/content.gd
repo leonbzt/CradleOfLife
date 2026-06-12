@@ -64,7 +64,7 @@ func class_node(class_id: String) -> Dictionary:
 
 ## The set of gear categories a lineage may build: "generalist" plus every
 ## category unlocked along the lineage's committed class path (root → class_node).
-## Always returns at least {"generalist": true}. Used by metabolize/graft for
+## Always returns at least {"generalist": true}. Used by metabolize/express for
 ## eligibility and by the UI for greying (PHASE3.md §3.1).
 func allowed_categories(lineage: Lineage) -> Dictionary:
 	var cats: Dictionary = {"generalist": true}
@@ -87,6 +87,48 @@ func gene_for_affix(affix_id: String) -> Dictionary:
 		if String((g.get("unlocks", {}) as Dictionary).get("id", "")) == affix_id:
 			return g
 	return {}
+
+
+## Where a gene can be obtained: every node that drops it (in its gene_table) or
+## offers it as a splice. Powers the legibility panels (VISION §11: see the wall
+## AND the key). Returns [{node, name, niche, via:[\"drop\"|\"splice\"]}].
+func sources_for_gene(gene_id: String) -> Array:
+	var out: Array = []
+	for n: Dictionary in tables.get("nodes", []):
+		var via: Array[String] = []
+		for row: Dictionary in n.get("gene_table", []):
+			if String(row.get("gene", "")) == gene_id:
+				via.append("drop")
+				break
+		if String(n.get("spliceable", "")) == gene_id:
+			via.append("splice")
+		if not via.is_empty():
+			(
+				out
+				. append(
+					{
+						"node": String(n.get("id", "")),
+						"name": String(n.get("name", "")),
+						"niche": String(n.get("niche", "")),
+						"via": via,
+					}
+				)
+			)
+	return out
+
+
+## The generalist affixes that satisfy an affix-key `role`, paired with the gene
+## that unlocks each. Generalist so the path is class-agnostic. Used by the niche
+## key panel to tell the player exactly which gene opens a locked niche.
+func key_affixes_for_role(role: String) -> Array:
+	var out: Array = []
+	for af: Dictionary in tables.get("affixes", []):
+		if String(af.get("orthogonal_role", "")) != role:
+			continue
+		if String(af.get("category", "generalist")) != "generalist":
+			continue
+		out.append({"affix": af, "gene": gene_for_affix(String(af.get("id", "")))})
+	return out
 
 
 func _row(table: String, row_id: String) -> Dictionary:

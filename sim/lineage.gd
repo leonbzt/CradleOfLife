@@ -16,6 +16,21 @@ const SLOTS: Array[String] = [
 	"gland",
 ]
 
+## How many distinct affixes each organ can express at once (VISION.md §7).
+## Surface-rich, segmented organs hold many (integument plating/spines, the
+## serial appendages of locomotion); focused tools hold few (mouthparts, the
+## single sensory apparatus). This is what turns the doll from a stat-dump into
+## a body with trade-offs — an organ is venomous OR armoured, not both at once.
+## Open dial (§20.3); widen per organ as content grows.
+const SLOT_EXPRESS_CAP: Dictionary = {
+	"mouthparts": 2,
+	"integument": 3,
+	"locomotion": 3,
+	"sensory": 1,
+	"metabolic_core": 2,
+	"gland": 2,
+}
+
 var id: String
 var display_name: String
 var kingdom: String = "animal"  # animals only in v1 (VISION.md §13)

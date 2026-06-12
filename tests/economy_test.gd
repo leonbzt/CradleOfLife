@@ -12,7 +12,7 @@ extends SceneTree
 ## agreed to measure before deciding anything about pity).
 ##
 ## Phase 2 additions: deterministic player policy at each check-in (claim all
-## splice offers, graft best affordable affix, migrate niches when keys met).
+## splice offers, express best affordable affix, migrate niches when keys met).
 ## Phase 3 additions: two lineages commit different classes (hunter→predator,
 ## grazer→filter_feeder); category gates enforced via Commands; class
 ## commitment fires as soon as requirements are met. Hunter advances through
@@ -21,11 +21,11 @@ extends SceneTree
 
 const SECONDS_PER_HOUR: float = 3600.0
 
-## Maximum graft tier the policy will apply per affix slot. Prevents the model
+## Maximum express tier the policy will apply per affix slot. Prevents the model
 ## from stacking splice_mult affixes to astronomically high tiers (which can't
 ## happen in real play where legendary copies are gated by drop rarity).
 ## This is a model constraint, not a game rule; it doesn't touch the engine.
-const POLICY_MAX_GRAFT_TIER: int = 3
+const POLICY_MAX_EXPRESS_TIER: int = 3
 
 
 func _initialize() -> void:
@@ -87,7 +87,7 @@ func _part_b_chase_arc(content: Content) -> void:
 	var state := GameState.new()
 	state.master_seed = 42
 	# hunter: shallow_benthos → sea_anemone (benthos_fight) → trilobite_grazer;
-	#         commits Predator when gnathobase_minor (penetration) is grafted.
+	#         commits Predator when gnathobase_minor (penetration) is expressed.
 	# grazer: stays at microbial_mat, commits Filter Feeder (sustain = gill_minor
 	#         from benthos_eat genes), then migrates to pelagic (plankton_bloom).
 	# Both start at microbial_mat (benthos eat, drops biofilm + gill/eye genes).
@@ -105,7 +105,7 @@ func _part_b_chase_arc(content: Content) -> void:
 	var rows: Array = [
 		(
 			"checkin,day,events,legendaries,since_last_legendary"
-			+ ",splices_claimed,grafts_applied"
+			+ ",splices_claimed,expresses_applied"
 			+ ",hunter_niche,hunter_class,hunter_eff_power"
 			+ ",grazer_niche,grazer_class,grazer_eff_power"
 		)
@@ -118,7 +118,7 @@ func _part_b_chase_arc(content: Content) -> void:
 		# Apply batch to state (materials, gene events, splice events).
 		_apply_batch(state, batch)
 
-		# Deterministic player policy: claim splices, metabolize, graft, migrate.
+		# Deterministic player policy: claim splices, metabolize, express, migrate.
 		var policy := _apply_policy(state, content)
 
 		# Measure this check-in's events AFTER applying the batch.
@@ -156,7 +156,7 @@ func _part_b_chase_arc(content: Content) -> void:
 						legs,
 						dry,
 						int(policy["splices"]),
-						int(policy["grafts"]),
+						int(policy["expresses"]),
 						hunter_niche,
 						hunter_l.class_node,
 						hunter_ep,
@@ -287,10 +287,10 @@ func _apply_batch(state: GameState, batch: Dictionary) -> void:
 
 
 ## Deterministic player policy. Runs AFTER _apply_batch on the same check-in.
-## Returns {splices: int, grafts: int}.
+## Returns {splices: int, expresses: int}.
 func _apply_policy(state: GameState, content: Content) -> Dictionary:
 	var splices := 0
-	var grafts := 0
+	var expresses := 0
 
 	# 1. Claim all pending splice offers (each adds 1 gene copy to genes_known).
 	while not state.splice_offers.is_empty():
@@ -334,13 +334,20 @@ func _apply_policy(state: GameState, content: Content) -> Dictionary:
 				var copies := int(state.genes_known.get(gene_id, 0))
 				if copies == 0:
 					continue
-				var current_tier := inst.graft_tier(affix_id)
+				# Slot affinity + per-organ cap: only express genes that fit this
+				# organ, and only a NEW one if the organ has a free expression slot
+				# (a tier-up of one already present always fits). Mirrors express().
+				if not Commands.affix_allows_slot(affix, slot):
+					continue
+				var current_tier := inst.express_tier(affix_id)
+				if current_tier == 0 and inst.affixes.size() >= Commands.slot_express_cap(slot):
+					continue
 				var target := current_tier + 1
-				if target > POLICY_MAX_GRAFT_TIER:
+				if target > POLICY_MAX_EXPRESS_TIER:
 					continue
 				if copies < target:
 					continue
-				var gc: Dictionary = affix.get("graft_cost", {})
+				var gc: Dictionary = affix.get("express_cost", {})
 				var mat := String(gc.get("material", ""))
 				var cost_qty := roundf(
 					float(gc.get("base", 0.0)) * pow(float(gc.get("growth", 1.0)), target - 1)
@@ -351,15 +358,15 @@ func _apply_policy(state: GameState, content: Content) -> Dictionary:
 					best_copies = copies
 					best_id = affix_id
 			if best_id != "":
-				var result := Commands.graft(state, content, lineage.id, slot, best_id)
+				var result := Commands.express(state, content, lineage.id, slot, best_id)
 				if result["ok"]:
-					grafts += 1
+					expresses += 1
 
 	# 3b. Class commitment: commit class as soon as eligible (sticky descent).
-	#     hunter commits Predator when gnathobase_minor (penetration) is grafted
-	#     — gene drops from benthos_fight; graft costs chitin from trilobite_grazer.
-	#     grazer commits Filter Feeder when gill_minor (sustain) is grafted
-	#     — gene drops from benthos_eat; graft costs biofilm from microbial_mat.
+	#     hunter commits Predator when gnathobase_minor (penetration) is expressed
+	#     — gene drops from benthos_fight; express costs chitin from trilobite_grazer.
+	#     grazer commits Filter Feeder when gill_minor (sustain) is expressed
+	#     — gene drops from benthos_eat; express costs biofilm from microbial_mat.
 	var class_targets: Dictionary = {"hunter": "predator", "grazer": "filter_feeder"}
 	for lineage: Lineage in state.lineages:
 		if not class_targets.has(lineage.id):
@@ -386,7 +393,7 @@ func _apply_policy(state: GameState, content: Content) -> Dictionary:
 			if lineage.class_node == "filter_feeder":
 				Commands.assign_node(state, content, lineage.id, "plankton_bloom")
 
-	return {"splices": splices, "grafts": grafts}
+	return {"splices": splices, "expresses": expresses}
 
 
 func _lineage_niche(state: GameState, lineage_id: String, content: Content) -> String:

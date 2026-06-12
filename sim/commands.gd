@@ -7,7 +7,7 @@ extends RefCounted
 ## signals/persistence; headless tests call them directly.
 
 ## Rarity a Metabolize-built adaptation carries at each tier (1-indexed).
-## Pure craft tops out at "rare" — epic/legendary colours require gene grafts
+## Pure craft tops out at "rare" — epic/legendary colours require gene expresses
 ## (VISION.md §9: materials common→rare, genes rare→legendary).
 const TIER_RARITY: Array[String] = ["common", "uncommon", "rare"]
 
@@ -23,7 +23,7 @@ static func add_starter_lineage(state: GameState, content: Content) -> Lineage:
 
 
 ## Point the lineage at a different node. Checks niche affix-keys: a locked
-## niche requires the lineage to have an equipped graft matching each key role.
+## niche requires the lineage to have an equipped express matching each key role.
 ## A losing matchup never locks the player out — it just yields poorly.
 static func assign_node(
 	state: GameState, content: Content, lineage_id: String, node_id: String
@@ -39,7 +39,7 @@ static func assign_node(
 	return true
 
 
-## True if the lineage has at least one equipped graft for every affix_key role
+## True if the lineage has at least one equipped express for every affix_key role
 ## declared by the niche. The shallow_benthos has no keys; always passes.
 static func meets_niche_keys(lineage: Lineage, content: Content, niche_id: String) -> bool:
 	var niche := content.niche(niche_id)
@@ -53,8 +53,8 @@ static func meets_niche_keys(lineage: Lineage, content: Content, niche_id: Strin
 		var found := false
 		for slot: String in lineage.doll:
 			var inst: AdaptationInstance = lineage.doll[slot]
-			for graft: Dictionary in inst.affixes:
-				var affix_row := content.affix(String(graft.get("id", "")))
+			for express: Dictionary in inst.affixes:
+				var affix_row := content.affix(String(express.get("id", "")))
 				if String(affix_row.get("orthogonal_role", "")) == role:
 					found = true
 					break
@@ -107,7 +107,7 @@ static func claim_splice(state: GameState, index: int) -> Dictionary:
 ## Descend the class tree to `class_id`. Sticky: target must be a descendant of
 ## the lineage's current class_node (or a no-op). Returns {ok, reason}.
 ## Requirements: each role in requires.affix_keys must be present as an equipped
-## graft; each gene in requires.genes must be in genes_known (PHASE3.md §3.3).
+## express; each gene in requires.genes must be in genes_known (PHASE3.md §3.3).
 static func pick_class(
 	state: GameState, content: Content, lineage_id: String, class_id: String
 ) -> Dictionary:
@@ -134,7 +134,7 @@ static func pick_class(
 		anc = String(anc_row.get("parent", ""))
 	if not found_current:
 		return {"ok": false, "reason": "classes are sticky — branch a new lineage to respec"}
-	# Requirements: affix_keys (role must be present as equipped graft) and genes.
+	# Requirements: affix_keys (role must be present as equipped express) and genes.
 	var class_name_str := String(target.get("name", class_id))
 	var reqs: Dictionary = target.get("requires", {})
 	for key: Variant in reqs.get("affix_keys", []):
@@ -142,8 +142,8 @@ static func pick_class(
 		var found := false
 		for slot: String in l.doll:
 			var inst_check: AdaptationInstance = l.doll[slot]
-			for graft_d: Dictionary in inst_check.affixes:
-				var affix_row := content.affix(String(graft_d.get("id", "")))
+			for express_d: Dictionary in inst_check.affixes:
+				var affix_row := content.affix(String(express_d.get("id", "")))
 				if String(affix_row.get("orthogonal_role", "")) == role:
 					found = true
 					break
@@ -188,9 +188,9 @@ static func branch_lineage(
 
 
 ## Graft an affix onto the equipped adaptation in `slot`. Copies of the
-## unlocking gene cap the graft tier; copies are never consumed.
+## unlocking gene cap the express tier; copies are never consumed.
 ## Returns {ok, reason, instance?}.
-static func graft(
+static func express(
 	state: GameState, content: Content, lineage_id: String, slot: String, affix_id: String
 ) -> Dictionary:
 	var l := state.lineage_by_id(lineage_id)
@@ -202,6 +202,13 @@ static func graft(
 	var affix_row := content.affix(affix_id)
 	if affix_row.is_empty():
 		return {"ok": false, "reason": "no such affix '%s'" % affix_id}
+	# Slot affinity: a gene only expresses on anatomically valid organs (VISION §7).
+	if not affix_allows_slot(affix_row, slot):
+		return {
+			"ok": false,
+			"reason":
+			"%s does not fit %s" % [String(affix_row.get("name", affix_id)), _slot_label(slot)]
+		}
 	# Category eligibility gate (PHASE3.md §3.2).
 	var cat := String(affix_row.get("category", "generalist"))
 	if not content.allowed_categories(l).has(cat):
@@ -217,7 +224,15 @@ static func graft(
 		return {"ok": false, "reason": "no gene unlocks '%s'" % affix_id}
 	var gene_id := String(gene_row.get("id", ""))
 	var copies := int(state.genes_known.get(gene_id, 0))
-	var current_tier := inst.graft_tier(affix_id)
+	var current_tier := inst.express_tier(affix_id)
+	# Per-organ cap: a NEW affix needs a free expression slot on this organ; a
+	# tier-up of an affix already present never does (VISION §7). The trade-off:
+	# an organ is venomous OR armoured, not everything at once.
+	if current_tier == 0 and inst.affixes.size() >= slot_express_cap(slot):
+		return {
+			"ok": false,
+			"reason": "%s is full (%d genes max)" % [_slot_label(slot), slot_express_cap(slot)]
+		}
 	var target := current_tier + 1
 	if copies < target:
 		var gene_name := String(gene_row.get("name", gene_id))
@@ -225,10 +240,10 @@ static func graft(
 			"ok": false,
 			"reason": "need another %s copy (have %d, need %d)" % [gene_name, copies, target]
 		}
-	var gc: Dictionary = affix_row.get("graft_cost", {})
+	var gc: Dictionary = affix_row.get("express_cost", {})
 	var mat := String(gc.get("material", ""))
 	if mat == "":
-		return {"ok": false, "reason": "affix '%s' has no graft_cost" % affix_id}
+		return {"ok": false, "reason": "affix '%s' has no express_cost" % affix_id}
 	var cost_qty := roundf(
 		float(gc.get("base", 0.0)) * pow(float(gc.get("growth", 1.0)), target - 1)
 	)
@@ -236,11 +251,11 @@ static func graft(
 		return {"ok": false, "reason": "not enough %s" % mat}
 	state.inventory_materials[mat] = float(state.inventory_materials.get(mat, 0.0)) - cost_qty
 
-	# Apply or upgrade the graft
+	# Apply or upgrade the express
 	var found := false
-	for graft: Dictionary in inst.affixes:
-		if String(graft.get("id", "")) == affix_id:
-			graft["tier"] = target
+	for express: Dictionary in inst.affixes:
+		if String(express.get("id", "")) == affix_id:
+			express["tier"] = target
 			found = true
 			break
 	if not found:
@@ -251,7 +266,7 @@ static func graft(
 
 
 ## Metabolize (VISION.md §8): spend materials to build or tier-up an adaptation
-## and socket it into its doll slot. Preserves any existing grafts on tier-up.
+## and socket it into its doll slot. Preserves any existing expresses on tier-up.
 static func metabolize(
 	state: GameState, content: Content, lineage_id: String, adaptation_id: String
 ) -> Dictionary:
@@ -290,7 +305,7 @@ static func metabolize(
 		inst = AdaptationInstance.new(adaptation_id, tier)
 	else:
 		inst.tier = tier
-	# Preserve existing grafts: rarity recomputes including them.
+	# Preserve existing expresses: rarity recomputes including them.
 	inst.rarity = _compute_rarity(inst, content)
 	l.equip(slot, inst)
 	return {"ok": true, "reason": "", "instance": inst}
@@ -317,11 +332,27 @@ static func metabolize_cost(def: Dictionary, tier: int) -> Dictionary:
 	return {mat: roundf(qty)}
 
 
-## Rarity of an adaptation instance: legendary if any graft's unlocking gene is
-## legendary; epic if any graft exists; otherwise the tier colour (capped rare).
+## True if `affix_row` may be expressed on `slot`. A row with no `slots` list is
+## treated as unrestricted (defensive; real content declares slots — gate 1).
+static func affix_allows_slot(affix_row: Dictionary, slot: String) -> bool:
+	var slots: Array = affix_row.get("slots", [])
+	return slots.is_empty() or slots.has(slot)
+
+
+## How many distinct affixes `slot` can hold (Lineage.SLOT_EXPRESS_CAP).
+static func slot_express_cap(slot: String) -> int:
+	return int(Lineage.SLOT_EXPRESS_CAP.get(slot, 99))
+
+
+static func _slot_label(slot: String) -> String:
+	return slot.replace("_", " ").capitalize()
+
+
+## Rarity of an adaptation instance: legendary if any express's unlocking gene is
+## legendary; epic if any express exists; otherwise the tier colour (capped rare).
 static func _compute_rarity(inst: AdaptationInstance, content: Content) -> String:
-	for graft: Dictionary in inst.affixes:
-		var gene_row := content.gene_for_affix(String(graft.get("id", "")))
+	for express: Dictionary in inst.affixes:
+		var gene_row := content.gene_for_affix(String(express.get("id", "")))
 		if String(gene_row.get("rarity", "")) == "legendary":
 			return "legendary"
 	if not inst.affixes.is_empty():
