@@ -13,7 +13,11 @@ extends SceneTree
 ##
 ## Phase 2 additions: deterministic player policy at each check-in (claim all
 ## splice offers, graft best affordable affix, migrate niches when keys met).
-## CSV gains: splices_claimed, grafts_applied, hunter_niche, stinger_niche.
+## Phase 3 additions: two lineages commit different classes (hunter→predator,
+## grazer→filter_feeder); category gates enforced via Commands; class
+## commitment fires as soon as requirements are met. Hunter advances through
+## benthos fight nodes; grazer migrates to pelagic after filter_feeder commit.
+## CSV gains: hunter_class, hunter_eff_power, grazer_niche, grazer_class, grazer_eff_power.
 
 const SECONDS_PER_HOUR: float = 3600.0
 
@@ -82,12 +86,13 @@ func _part_b_chase_arc(content: Content) -> void:
 	var rng := Rng.new(42)
 	var state := GameState.new()
 	state.master_seed = 42
-	# hunter: benthos → pelagic (glass_drifter) when uptime key met.
-	# stinger: benthos → pelagic (glass_drifter) → reef_edge (reef_lurker) when stealth key met.
-	# Both start at microbial_mat (benthos eat, drops biofilm + gene_gill).
-	# stinger has higher power (10) to be able to farm glass_drifter (def 7).
-	state.lineages.append(_make_lineage("hunter", "microbial_mat", 8.0, 1.0))
-	state.lineages.append(_make_lineage("stinger", "microbial_mat", 10.0, 1.2))
+	# hunter: shallow_benthos → sea_anemone (benthos_fight) → trilobite_grazer;
+	#         commits Predator when gnathobase_minor (penetration) is grafted.
+	# grazer: stays at microbial_mat, commits Filter Feeder (sustain = gill_minor
+	#         from benthos_eat genes), then migrates to pelagic (plankton_bloom).
+	# Both start at microbial_mat (benthos eat, drops biofilm + gill/eye genes).
+	state.lineages.append(_make_lineage("hunter", "microbial_mat", 3.0, 1.0))
+	state.lineages.append(_make_lineage("grazer", "microbial_mat", 3.0, 1.0))
 
 	var gap := 8.0 * SECONDS_PER_HOUR
 	var checkins := 6 * 7 * 3  # 6 weeks, 3 check-ins/day
@@ -95,10 +100,14 @@ func _part_b_chase_arc(content: Content) -> void:
 	var legendary_gaps: Array = []  # check-ins between legendaries (the dry streak)
 	var since := 0
 	var total_legendaries := 0
+	var hunter_eff_powers: Array = []
+	var grazer_eff_powers: Array = []
 	var rows: Array = [
 		(
 			"checkin,day,events,legendaries,since_last_legendary"
-			+ ",splices_claimed,grafts_applied,hunter_niche,stinger_niche"
+			+ ",splices_claimed,grafts_applied"
+			+ ",hunter_niche,hunter_class,hunter_eff_power"
+			+ ",grazer_niche,grazer_class,grazer_eff_power"
 		)
 	]
 
@@ -127,13 +136,19 @@ func _part_b_chase_arc(content: Content) -> void:
 			since = 0
 		total_legendaries += legs
 
+		var hunter_l := state.lineage_by_id("hunter")
+		var grazer_l := state.lineage_by_id("grazer")
+		var hunter_ep := Resolve.effective_power(hunter_l, content)
+		var grazer_ep := Resolve.effective_power(grazer_l, content)
+		hunter_eff_powers.append(hunter_ep)
+		grazer_eff_powers.append(grazer_ep)
 		var hunter_niche := _lineage_niche(state, "hunter", content)
-		var stinger_niche := _lineage_niche(state, "stinger", content)
+		var grazer_niche := _lineage_niche(state, "grazer", content)
 		(
 			rows
 			. append(
 				(
-					"%d,%d,%d,%d,%d,%d,%d,%s,%s"
+					"%d,%d,%d,%d,%d,%d,%d,%s,%s,%.2f,%s,%s,%.2f"
 					% [
 						c + 1,
 						c / 3 + 1,
@@ -143,7 +158,11 @@ func _part_b_chase_arc(content: Content) -> void:
 						int(policy["splices"]),
 						int(policy["grafts"]),
 						hunter_niche,
-						stinger_niche,
+						hunter_l.class_node,
+						hunter_ep,
+						grazer_niche,
+						grazer_l.class_node,
+						grazer_ep,
 					]
 				)
 			)
@@ -184,6 +203,57 @@ func _part_b_chase_arc(content: Content) -> void:
 		)
 		var target_met := p50 >= 10 and p50 <= 25
 		print("  p50 in target band [10,25]: %s" % ("YES" if target_met else "NO — needs tuning"))
+
+	# Phase 3 acceptance checks
+	var hunter_l_fin := state.lineage_by_id("hunter")
+	var grazer_l_fin := state.lineage_by_id("grazer")
+	var hunter_max_ep := _max_float(hunter_eff_powers)
+	var grazer_max_ep := _max_float(grazer_eff_powers)
+	var hunter_final_ep: float = (
+		float(hunter_eff_powers.back()) if not hunter_eff_powers.is_empty() else 0.0
+	)
+	var grazer_final_ep: float = (
+		float(grazer_eff_powers.back()) if not grazer_eff_powers.is_empty() else 0.0
+	)
+	print(
+		(
+			"  hunter: class=%s  max_eff_power=%.2f  final_eff_power=%.2f  niche=%s"
+			% [
+				hunter_l_fin.class_node,
+				hunter_max_ep,
+				hunter_final_ep,
+				_lineage_niche(state, "hunter", content)
+			]
+		)
+	)
+	print(
+		(
+			"  grazer: class=%s  max_eff_power=%.2f  final_eff_power=%.2f  niche=%s"
+			% [
+				grazer_l_fin.class_node,
+				grazer_max_ep,
+				grazer_final_ep,
+				_lineage_niche(state, "grazer", content)
+			]
+		)
+	)
+	var soft_cap_bites: bool = (
+		hunter_final_ep < Resolve.SOFT_CAP_KNEE + 1.0 / Resolve.SOFT_CAP_K
+		and grazer_final_ep < Resolve.SOFT_CAP_KNEE + 1.0 / Resolve.SOFT_CAP_K
+	)
+	print(
+		(
+			"  soft cap bites (both < asymptote %.1f): %s"
+			% [Resolve.SOFT_CAP_KNEE + 1.0 / Resolve.SOFT_CAP_K, "YES" if soft_cap_bites else "NO"]
+		)
+	)
+	var no_stranded := hunter_max_ep > 9.0 or grazer_max_ep > 9.0
+	print("  no stranded content (someone beats DEF 9): %s" % ("YES" if no_stranded else "NO"))
+	var lineages_diverged := (
+		hunter_l_fin.class_node != grazer_l_fin.class_node
+		and _lineage_niche(state, "hunter", content) != _lineage_niche(state, "grazer", content)
+	)
+	print("  lineages diverged (class + niche differ): %s" % ("YES" if lineages_diverged else "NO"))
 
 	_write_csv("user://chase.csv", rows)
 	print("  per-check-in CSV: " + ProjectSettings.globalize_path("user://chase.csv"))
@@ -285,24 +355,36 @@ func _apply_policy(state: GameState, content: Content) -> Dictionary:
 				if result["ok"]:
 					grafts += 1
 
-	# 4. Migrate: advance lineage to the next niche when it meets the keys.
-	#    hunter: benthos → pelagic (glass_drifter); stays there.
-	#    stinger: benthos → pelagic (glass_drifter) → reef_edge (reef_lurker).
+	# 3b. Class commitment: commit class as soon as eligible (sticky descent).
+	#     hunter commits Predator when gnathobase_minor (penetration) is grafted
+	#     — gene drops from benthos_fight; graft costs chitin from trilobite_grazer.
+	#     grazer commits Filter Feeder when gill_minor (sustain) is grafted
+	#     — gene drops from benthos_eat; graft costs biofilm from microbial_mat.
+	var class_targets: Dictionary = {"hunter": "predator", "grazer": "filter_feeder"}
+	for lineage: Lineage in state.lineages:
+		if not class_targets.has(lineage.id):
+			continue
+		var target_class := String(class_targets[lineage.id])
+		if lineage.class_node == target_class:
+			continue
+		var r := Commands.pick_class(state, content, lineage.id, target_class)
+		if r["ok"]:
+			pass  # class committed; allowed categories expanded
+
+	# 4. Migrate: hunter advances through benthos fight nodes to accumulate
+	#    gnathobase genes; grazer moves to pelagic once filter_feeder committed.
 	for lineage: Lineage in state.lineages:
 		if lineage.assigned_node == "":
 			continue
-		var current_niche := _lineage_niche(state, lineage.id, content)
-		if (
-			current_niche == "shallow_benthos"
-			and Commands.meets_niche_keys(lineage, content, "pelagic")
-		):
-			Commands.assign_node(state, content, lineage.id, "glass_drifter")
-		elif (
-			lineage.id == "stinger"
-			and current_niche == "pelagic"
-			and Commands.meets_niche_keys(lineage, content, "reef_edge")
-		):
-			Commands.assign_node(state, content, lineage.id, "reef_lurker")
+		var ep := Resolve.effective_power(lineage, content)
+		if lineage.id == "hunter":
+			if lineage.assigned_node == "microbial_mat" and ep > 2.0:
+				Commands.assign_node(state, content, lineage.id, "sea_anemone")
+			elif lineage.assigned_node == "sea_anemone" and ep > 4.0:
+				Commands.assign_node(state, content, lineage.id, "trilobite_grazer")
+		elif lineage.id == "grazer":
+			if lineage.class_node == "filter_feeder":
+				Commands.assign_node(state, content, lineage.id, "plankton_bloom")
 
 	return {"splices": splices, "grafts": grafts}
 
@@ -336,6 +418,13 @@ func _max_int(a: Array) -> int:
 	var m := 0
 	for x in a:
 		m = maxi(m, int(x))
+	return m
+
+
+func _max_float(a: Array) -> float:
+	var m := 0.0
+	for x in a:
+		m = maxf(m, float(x))
 	return m
 
 

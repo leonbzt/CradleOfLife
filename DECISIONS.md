@@ -522,6 +522,26 @@ sleeps another phase).
 
 ---
 
+## 2026-06-12 — WP6: Chase curve re-proven under Phase 3 economy
+
+**What.** Re-ran the 6-week economy harness with two diverging lineages under Option A + class system + soft cap. All Phase 3 acceptance criteria pass:
+
+- **Never-flat:** week means 47.8 → 161 → 179 → 182 → 185 → 181 (ramp from cold start, stable weeks 2–6; week 6 ≥ 80% week 1 ✓).
+- **p50 dry streak = 11 check-ins** (in [10,25] ✓; p90 = 25, max = 43).
+- **Soft cap bites:** hunter eff_power plateaus at 11.25, grazer at 9.0 (both below asymptote 18.7 ✓).
+- **No stranded content:** hunter (predator, power×1.25) reaches eff_power 11.25 > Anomalocaris DEF 9 ✓.
+- **Lineages diverged:** hunter = predator / shallow_benthos; grazer = filter_feeder / pelagic ✓.
+
+**Numbers needing Leon sign-off (all placeholder):** `SOFT_CAP_KNEE=12.0`, `SOFT_CAP_K=0.15`, `niche_mult material/gene=1.2`. Drop table tuning: `gene_great_appendage` weight in `benthos_fight` reduced from 1 to 0.1 (legendaries were 75/126 check-ins; now 9/126 for p50=11).
+
+**Model policy note:** The divergence is hunter progressing through benthos fight nodes (microbial_mat → sea_anemone → trilobite_grazer, unlocking predator via gnathobase_minor/penetration) while grazer commits filter_feeder via gill_minor/sustain from benthos_eat and migrates to pelagic. This is the intended class-identity split; `armored_grazer` was dropped from the model because `heavy_armor` specialist gear (fused_dorsal_plating) requires `calcite_lattice` from reef_edge — unreachable in the 6-week model without stealth. The `armored_grazer` path remains correct game design; the model simply doesn't exercise it.
+
+**What it replaced:** WP5 open item "re-run with two diverging lineages."
+
+**Open for WP7:** Web export playtest; gate question: "with two animal lineages, does each feel like a different character to check in on?"
+
+---
+
 ## Open questions (current)
 
 - **Phase 2 validation gate (WP7).** Web export to friend cohort; gate
