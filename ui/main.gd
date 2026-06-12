@@ -251,10 +251,14 @@ func _build_node_cards(col: VBoxContainer) -> void:
 
 func _build_doll(col: VBoxContainer) -> void:
 	for slot: String in Lineage.SLOTS:
+		var cell := VBoxContainer.new()
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cell.add_theme_constant_override("separation", 2)
+		col.add_child(cell)
+
 		var row := HBoxContainer.new()
-		row.size_flags_horizontal = Control.SIZE_FILL
-		row.custom_minimum_size = Vector2(0, 52)
-		col.add_child(row)
+		row.custom_minimum_size = Vector2(0, 48)
+		cell.add_child(row)
 
 		var attr := String(Resolve.SLOT_ATTRIBUTE.get(slot, ""))
 		var attr_hint := ("  [%s]" % attr) if attr != "" else "  [—]"
@@ -268,12 +272,15 @@ func _build_doll(col: VBoxContainer) -> void:
 		var name_lbl := Label.new()
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_lbl.custom_minimum_size = Vector2(1, 0)
 		row.add_child(name_lbl)
 
 		var graft_lbl := Label.new()
 		graft_lbl.add_theme_color_override("font_color", DIM)
 		graft_lbl.add_theme_font_size_override("font_size", 14)
-		row.add_child(graft_lbl)
+		graft_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		graft_lbl.custom_minimum_size = Vector2(1, 0)
+		cell.add_child(graft_lbl)
 
 		_doll_slot_labels[slot] = {"name_lbl": name_lbl, "graft_lbl": graft_lbl}
 
@@ -610,6 +617,8 @@ func _refresh_class_panel() -> void:
 	var mods_str := ("  ·  " + "  ".join(mods_parts)) if not mods_parts.is_empty() else ""
 	cur_lbl.text = "Current: %s%s%s" % [cls_name, mods_str, home_str]
 	cur_lbl.add_theme_color_override("font_color", GOOD)
+	cur_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	cur_lbl.custom_minimum_size = Vector2(1, 0)
 	_class_panel_list.add_child(cur_lbl)
 
 	var unlocks: Array = cls_row.get("unlocks_categories", [])
@@ -724,6 +733,8 @@ func _refresh_class_panel() -> void:
 			req_lbl.text = "Requires: " + "  ".join(req_parts)
 			req_lbl.add_theme_font_size_override("font_size", 14)
 			req_lbl.add_theme_color_override("font_color", GOOD if reqs_met else BAD)
+			req_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			req_lbl.custom_minimum_size = Vector2(1, 0)
 			vbox.add_child(req_lbl)
 
 		# Commit or confirm buttons
