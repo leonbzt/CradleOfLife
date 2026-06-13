@@ -11,8 +11,17 @@ extends Node
 
 signal state_changed
 signal loot_dropped(lineage_id: String, loot: Dictionary)
+## Emitted with a closed-form Accrual batch (plus a "dt" key) when the player
+## returns to enough offline time to be worth a Dev dispatch (Phase 3.5 WP1).
+signal dispatch_ready(batch: Dictionary)
 
 const SAVE_PATH: String = "user://save.json"
+
+## Offline accrual: cap the elapsed gap so a forward/tampered clock or a long
+## sleep mints at most this much (DECISIONS.md 2026-06-13); show a dispatch only
+## for gaps past the floor — a quick reopen accrues silently.
+const OFFLINE_CAP_SECONDS: float = 72.0 * 3600.0
+const DISPATCH_MIN_SECONDS: float = 60.0
 
 var state: GameState
 var rng: Rng
@@ -107,29 +116,41 @@ func reset_save() -> void:
 	new_game(int(Time.get_unix_time_from_system()))
 
 
-## DEV (testing only): jump `seconds` of offline accrual forward and apply it,
-## using the same closed-form Accrual the real offline path will (Phase 4).
+## Compute and APPLY the offline accrual since `last_seen_unix`, returning the
+## batch (with a "dt" key) for the Dev dispatch — or {} for a sub-floor gap, which
+## still accrues silently so nothing is ever lost. The real-time counterpart of
+## dev_fast_forward; both apply through Commands.apply_accrual_batch so an offline
+## gap and a live grind can never drift (Phase 3.5 WP1). The UI calls this on
+## launch; _notification calls it on resume from background.
+func apply_offline_accrual() -> Dictionary:
+	if state == null or rng == null or Data.content == null:
+		return {}
+	var now := int(Time.get_unix_time_from_system())
+	var dt := Commands.offline_dt(state.last_seen_unix, now, OFFLINE_CAP_SECONDS)
+	if dt <= 0.0:
+		return {}
+	var batch := Accrual.accrue(state, Data.content, dt, rng)
+	Commands.apply_accrual_batch(state, batch)
+	save_state()
+	state_changed.emit()
+	if dt < DISPATCH_MIN_SECONDS:
+		return {}
+	batch["dt"] = dt
+	return batch
+
+
+## DEV (testing only): jump `seconds` of offline accrual forward, apply it through
+## the same path the real offline catch-up uses, and raise the dispatch so the
+## dispatch UI can be exercised without waiting.
 func dev_fast_forward(seconds: float) -> void:
 	if state == null:
 		return
 	var batch := Accrual.accrue(state, Data.content, seconds, rng)
-	for mat_id: String in batch["materials"] as Dictionary:
-		state.inventory_materials[mat_id] = (
-			float(state.inventory_materials.get(mat_id, 0.0))
-			+ float((batch["materials"] as Dictionary)[mat_id])
-		)
-	for ev: Dictionary in batch["events"] as Array:
-		match String(ev.get("kind", "")):
-			"gene":
-				var gid := String(ev.get("gene", ""))
-				if gid != "":
-					state.genes_known[gid] = int(state.genes_known.get(gid, 0)) + 1
-			"splice":
-				state.splice_offers.append(
-					{"gene": String(ev.get("gene", "")), "node": String(ev.get("node", ""))}
-				)
+	Commands.apply_accrual_batch(state, batch)
 	save_state()
 	state_changed.emit()
+	batch["dt"] = seconds
+	dispatch_ready.emit(batch)
 
 
 func save_state() -> void:
@@ -162,3 +183,7 @@ func load_state() -> GameState:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_APPLICATION_PAUSED:
 		save_state()
+	elif what == NOTIFICATION_APPLICATION_RESUMED:
+		var batch := apply_offline_accrual()
+		if not batch.is_empty():
+			dispatch_ready.emit(batch)

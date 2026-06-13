@@ -63,6 +63,15 @@ func _initialize() -> void:
 	_test_organ_naming(content)
 	_test_niche_key_legibility(content)
 
+	# Phase 3.5 WP1: offline accrual application + clamp
+	_test_apply_accrual_batch(content)
+	_test_offline_dt_clamp()
+	# Phase 3.5 WP2: the derived do-now agenda
+	_test_agenda_fresh(content)
+	_test_agenda_claim_splice(content)
+	_test_agenda_tierup_ready(content)
+	_test_agenda_one_copy_short(content)
+
 	if _failures.is_empty():
 		print("== sim test: PASS ==")
 		quit(0)
@@ -1155,3 +1164,99 @@ func _test_niche_key_legibility(content: Content) -> void:
 		):
 			splice_from_anemone = true
 	_check(splice_from_anemone, "legibility: gene_nematocyst splices from sea_anemone")
+
+
+# -- Phase 3.5 WP1: offline accrual application -------------------------------
+
+
+## The shared apply helper credits exactly what Accrual.accrue produced — the
+## offline path and a live grind can never drift (PHASE3_5.md WP1).
+func _test_apply_accrual_batch(content: Content) -> void:
+	var state := _fresh_state(content)  # starter works microbial_mat (always gated open)
+	var batch := Accrual.accrue(state, content, 8.0 * 3600.0, Rng.new(7))
+	var gene_events := 0
+	var splice_events := 0
+	for ev: Dictionary in batch["events"] as Array:
+		if String(ev.get("kind", "")) == "gene":
+			gene_events += 1
+		elif String(ev.get("kind", "")) == "splice":
+			splice_events += 1
+
+	Commands.apply_accrual_batch(state, batch)
+
+	var copies := 0
+	for g: String in state.genes_known:
+		copies += int(state.genes_known[g])
+	_check(copies == gene_events, "apply batch: every gene event becomes a gene-bank copy")
+	_check(state.splice_offers.size() == splice_events, "apply batch: splice events become offers")
+
+	var mats_ok := true
+	for m: String in batch["materials"] as Dictionary:
+		if (
+			float(state.inventory_materials.get(m, 0.0))
+			< float((batch["materials"] as Dictionary)[m]) - 0.001
+		):
+			mats_ok = false
+	_check(mats_ok, "apply batch: materials credited to the stash")
+	_check(gene_events > 0, "apply batch: an 8h gap actually produced events (sanity)")
+
+
+func _test_offline_dt_clamp() -> void:
+	_check(Commands.offline_dt(100, 50, 1000.0) == 0.0, "offline_dt: a clock set back clamps to 0")
+	_check(
+		Commands.offline_dt(0, 999999, 1000.0) == 1000.0, "offline_dt: an absurd gap clamps to cap"
+	)
+	_check(Commands.offline_dt(0, 500, 1000.0) == 500.0, "offline_dt: a normal gap passes through")
+
+
+# -- Phase 3.5 WP2: the do-now agenda ----------------------------------------
+
+
+func _has_kind(items: Array, kind: String) -> bool:
+	for item: Dictionary in items:
+		if String(item.get("kind", "")) == kind:
+			return true
+	return false
+
+
+## A fresh lineage with nothing in the bank still has a concrete next thing: the
+## nearest node it can't quite clear. No phantom claim/tier-up appears.
+func _test_agenda_fresh(content: Content) -> void:
+	var state := _fresh_state(content)
+	var items := Agenda.for_lineage(state, content, "main")
+	_check(not items.is_empty(), "agenda: a fresh lineage still has something to do")
+	_check(_has_kind(items, "node_in_reach"), "agenda: names the nearest node out of reach")
+	_check(not _has_kind(items, "claim_splice"), "agenda: no phantom splice on a fresh lineage")
+	_check(not _has_kind(items, "tierup_ready"), "agenda: no tier-up with an empty stash")
+
+
+func _test_agenda_claim_splice(content: Content) -> void:
+	var state := _fresh_state(content)
+	state.splice_offers.append({"gene": "gene_nematocyst", "node": "sea_anemone"})
+	var items := Agenda.for_lineage(state, content, "main")
+	_check(_has_kind(items, "claim_splice"), "agenda: a waiting splice surfaces a claim action")
+
+
+func _test_agenda_tierup_ready(content: Content) -> void:
+	var rich := _fresh_state(content)
+	rich.inventory_materials["biofilm"] = 1000.0
+	var items := Agenda.for_lineage(rich, content, "main")
+	_check(
+		_has_kind(items, "tierup_ready"),
+		"agenda: affordable tier-up surfaces with materials in hand"
+	)
+
+
+## An expressed affix held at exactly its current tier in copies is one short of
+## the next — the copy ladder, surfaced (PHASE3_5.md WP2).
+func _test_agenda_one_copy_short(content: Content) -> void:
+	var state := _fresh_state(content)
+	var l := state.lineages[0]
+	var inst := AdaptationInstance.new("frontal_appendage", 1)
+	inst.affixes.append({"id": "venom_minor", "tier": 1})
+	l.doll["mouthparts"] = inst
+	state.genes_known[String(content.gene_for_affix("venom_minor").get("id", ""))] = 1
+	var items := Agenda.for_lineage(state, content, "main")
+	_check(
+		_has_kind(items, "one_copy_short"), "agenda: surfaces an affix one copy from its next tier"
+	)

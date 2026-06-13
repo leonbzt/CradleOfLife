@@ -104,6 +104,37 @@ static func claim_splice(state: GameState, index: int) -> Dictionary:
 	return {"ok": true, "gene": gid}
 
 
+## Apply a closed-form Accrual batch to the save (Phase 3.5 WP1). Pure: this one
+## helper backs BOTH the real offline path (state_store.apply_offline_accrual) and
+## the DEV +8h button, so what an offline gap grants can never drift from a live
+## grind. Materials sum; gene events add genes_known copies; splice events bank
+## offers — exactly what a live forage does.
+static func apply_accrual_batch(state: GameState, batch: Dictionary) -> void:
+	var materials: Dictionary = batch.get("materials", {})
+	for mat_id: String in materials:
+		state.inventory_materials[mat_id] = (
+			float(state.inventory_materials.get(mat_id, 0.0)) + float(materials[mat_id])
+		)
+	for ev: Dictionary in batch.get("events", []) as Array:
+		match String(ev.get("kind", "")):
+			"gene":
+				var gid := String(ev.get("gene", ""))
+				if gid != "":
+					state.genes_known[gid] = int(state.genes_known.get(gid, 0)) + 1
+			"splice":
+				state.splice_offers.append(
+					{"gene": String(ev.get("gene", "")), "node": String(ev.get("node", ""))}
+				)
+
+
+## Elapsed offline seconds, clamped to [0, cap] (Phase 3.5 WP1, decision D6).
+## A clock set backwards → 0; an absurd gap (clock forward, or a very long sleep)
+## → cap, so tampering mints at most `cap` of accrual. This clamp is the only
+## clock-tamper defense v1 ships (DECISIONS.md 2026-06-13).
+static func offline_dt(last_seen_unix: int, now_unix: int, cap: float) -> float:
+	return clampf(float(now_unix - last_seen_unix), 0.0, cap)
+
+
 ## Descend the class tree to `class_id`. Sticky: target must be a descendant of
 ## the lineage's current class_node (or a no-op). Returns {ok, reason}.
 ## Requirements: each role in requires.affix_keys must be present as an equipped
@@ -134,14 +165,28 @@ static func pick_class(
 		anc = String(anc_row.get("parent", ""))
 	if not found_current:
 		return {"ok": false, "reason": "classes are sticky — branch a new lineage to respec"}
-	# Requirements: affix_keys (role must be present as equipped express) and genes.
-	var class_name_str := String(target.get("name", class_id))
-	var reqs: Dictionary = target.get("requires", {})
+	# Requirements (shared with Agenda so the gate never drifts): affix_keys present
+	# as equipped expresses, and required genes known.
+	var unmet := unmet_class_requirement(state, content, l, target)
+	if unmet != "":
+		return {"ok": false, "reason": unmet}
+	l.class_node = class_id
+	return {"ok": true, "reason": ""}
+
+
+## "" if `lineage` meets every requirement of `class_row`; otherwise a short reason
+## naming the first unmet one (VISION.md §7: classes are gated by affix-keys and
+## genes). Pure and read-only; shared by pick_class and Agenda.
+static func unmet_class_requirement(
+	state: GameState, content: Content, lineage: Lineage, class_row: Dictionary
+) -> String:
+	var class_name_str := String(class_row.get("name", class_row.get("id", "")))
+	var reqs: Dictionary = class_row.get("requires", {})
 	for key: Variant in reqs.get("affix_keys", []):
 		var role := String(key)
 		var found := false
-		for slot: String in l.doll:
-			var inst_check: AdaptationInstance = l.doll[slot]
+		for slot: String in lineage.doll:
+			var inst_check: AdaptationInstance = lineage.doll[slot]
 			for express_d: Dictionary in inst_check.affixes:
 				var affix_row := content.affix(String(express_d.get("id", "")))
 				if String(affix_row.get("orthogonal_role", "")) == role:
@@ -150,15 +195,11 @@ static func pick_class(
 			if found:
 				break
 		if not found:
-			return {
-				"ok": false,
-				"reason": "%s requires an equipped %s adaptation" % [class_name_str, role]
-			}
+			return "%s requires an equipped %s adaptation" % [class_name_str, role]
 	for gid: Variant in reqs.get("genes", []):
 		if int(state.genes_known.get(String(gid), 0)) == 0:
-			return {"ok": false, "reason": "%s requires gene '%s'" % [class_name_str, String(gid)]}
-	l.class_node = class_id
-	return {"ok": true, "reason": ""}
+			return "%s requires gene '%s'" % [class_name_str, String(gid)]
+	return ""
 
 
 ## Branch a fresh lineage (cladogenesis / respec valve). The new lineage starts

@@ -36,6 +36,8 @@ var _splice_list: VBoxContainer
 var _pop_layer: Control
 var _express_sheet: Control
 var _express_slot: String = ""
+var _agenda_list: VBoxContainer
+var _dispatch_sheet: Control
 
 
 func _ready() -> void:
@@ -44,6 +46,7 @@ func _ready() -> void:
 	_build_ui()
 	Store.state_changed.connect(_refresh)
 	Store.loot_dropped.connect(_on_loot)
+	Store.dispatch_ready.connect(_show_dispatch)
 
 	var timer := Timer.new()
 	timer.wait_time = ACTION_PERIOD
@@ -52,6 +55,11 @@ func _ready() -> void:
 	add_child(timer)
 
 	_refresh()
+
+	# Offline catch-up dispatch on launch (Phase 3.5 WP1). A fresh game has no gap.
+	var launch_batch := Store.apply_offline_accrual()
+	if not launch_batch.is_empty():
+		_show_dispatch(launch_batch)
 
 
 func _lineage() -> Lineage:
@@ -96,6 +104,7 @@ func _build_ui() -> void:
 
 	_build_roster_bar(col)
 	_build_header(col)
+	_build_agenda(col)
 	_build_niche_selector(col)
 	_build_niche_gate_panel(col)
 	col.add_child(_section_label("THE WILD"))
@@ -124,6 +133,17 @@ func _build_ui() -> void:
 
 	_express_sheet = _build_express_sheet()
 	add_child(_express_sheet)
+
+	_dispatch_sheet = _build_dispatch_sheet()
+	add_child(_dispatch_sheet)
+
+
+func _build_agenda(col: VBoxContainer) -> void:
+	col.add_child(_section_label("DO NOW  ·  what's worth a tap this check-in"))
+	_agenda_list = VBoxContainer.new()
+	_agenda_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_agenda_list.add_theme_constant_override("separation", 6)
+	col.add_child(_agenda_list)
 
 
 func _build_roster_bar(col: VBoxContainer) -> void:
@@ -481,6 +501,9 @@ func _refresh() -> void:
 
 	# Roster
 	_refresh_roster_bar()
+
+	# Do-now agenda (WP2)
+	_refresh_agenda(l, content)
 
 	# Niche selector
 	for niche_id: String in _niche_buttons:
@@ -1301,6 +1324,213 @@ func _on_class_confirm_pressed(class_id: String) -> void:
 	var result := Store.pick_class(_lineage().id, class_id)
 	if not result["ok"]:
 		push_warning("pick_class rejected: " + String(result.get("reason", "")))
+
+
+# -- agenda (WP2) -------------------------------------------------------------
+
+
+func _refresh_agenda(l: Lineage, content: Content) -> void:
+	for c in _agenda_list.get_children():
+		c.queue_free()
+	var items := Agenda.for_lineage(Store.state, content, l.id)
+	if items.is_empty():
+		var none := Label.new()
+		none.text = "All caught up. Let it ride — or branch a new lineage."
+		none.add_theme_color_override("font_color", DIM)
+		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_agenda_list.add_child(none)
+		return
+	for item: Dictionary in items:
+		var action: Dictionary = item.get("action", {})
+		if action.is_empty():
+			var lbl := Label.new()
+			lbl.text = "·  " + String(item.get("text", ""))
+			lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			lbl.add_theme_color_override("font_color", DIM)
+			_agenda_list.add_child(lbl)
+		else:
+			var btn := Button.new()
+			btn.text = "▶  " + String(item.get("text", ""))
+			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			btn.pressed.connect(_on_agenda_action.bind(action))
+			_agenda_list.add_child(btn)
+
+
+## Run a ready-now agenda action through the existing handlers (so loot pops and
+## pulses behave exactly as a manual tap would).
+func _on_agenda_action(action: Dictionary) -> void:
+	match String(action.get("cmd", "")):
+		"claim_splice":
+			_on_claim_splice(int(action.get("index", 0)))
+		"metabolize":
+			_on_metabolize_pressed(String(action.get("adaptation_id", "")))
+
+
+# -- the while-you-were-away dispatch (WP1) -----------------------------------
+
+
+func _build_dispatch_sheet() -> Control:
+	var root := Control.new()
+	root.visible = false
+	root.z_index = 20
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+	var dim := ColorRect.new()
+	dim.color = Color(0.0, 0.0, 0.0, 0.6)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(560.0, 0.0)
+	center.add_child(panel)
+
+	var pad := MarginContainer.new()
+	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+		pad.add_theme_constant_override(side, 18)
+	panel.add_child(pad)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	pad.add_child(vbox)
+
+	var title := Label.new()
+	title.add_theme_font_size_override("font_size", 22)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(title)
+
+	var headline := Label.new()
+	headline.add_theme_font_size_override("font_size", 18)
+	headline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(headline)
+
+	var summary := VBoxContainer.new()
+	summary.add_theme_constant_override("separation", 4)
+	vbox.add_child(summary)
+
+	var cont := Button.new()
+	cont.text = "Continue"
+	cont.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cont.pressed.connect(func() -> void: root.visible = false)
+	vbox.add_child(cont)
+
+	root.set_meta("title", title)
+	root.set_meta("headline", headline)
+	root.set_meta("summary", summary)
+	return root
+
+
+## Present an applied Accrual batch as a Dev dispatch (VISION.md §16): good-news
+## framing, the rare moment up top, the rest a tidy tally — never a scroll of
+## every event, never a "you lost progress" line.
+func _show_dispatch(batch: Dictionary) -> void:
+	var content := Data.content
+	var title := _dispatch_sheet.get_meta("title") as Label
+	var headline := _dispatch_sheet.get_meta("headline") as Label
+	var summary := _dispatch_sheet.get_meta("summary") as VBoxContainer
+	for c in summary.get_children():
+		c.queue_free()
+
+	title.text = (
+		"DISPATCH — %s offline.  The server kept running."
+		% _format_elapsed(float(batch.get("dt", 0.0)))
+	)
+
+	# Tally events.
+	var gene_by_rarity: Dictionary = {}
+	var splice_count := 0
+	var best_rarity := ""
+	var best_gene := ""
+	for ev: Dictionary in batch.get("events", []) as Array:
+		match String(ev.get("kind", "")):
+			"gene":
+				var r := String(ev.get("rarity", "common"))
+				gene_by_rarity[r] = int(gene_by_rarity.get(r, 0)) + 1
+				if _rarity_rank(r) > _rarity_rank(best_rarity):
+					best_rarity = r
+					best_gene = String(ev.get("gene", ""))
+			"splice":
+				splice_count += 1
+
+	# Headline: lead with the rarest gene, or a waiting splice; else the steady drip.
+	if best_gene != "" and _rarity_rank(best_rarity) >= _rarity_rank("rare"):
+		var gname := String(content.gene(best_gene).get("name", best_gene))
+		headline.text = "The grind paid out: %s (%s)." % [gname, best_rarity]
+		headline.add_theme_color_override("font_color", RarityColors.of(best_rarity))
+	elif splice_count > 0:
+		headline.text = "A splice is waiting to be claimed."
+		headline.add_theme_color_override("font_color", RarityColors.of("epic"))
+	else:
+		headline.text = "Steady progress while you were away."
+		headline.add_theme_color_override("font_color", GOOD)
+
+	# Materials harvested.
+	var mats: Dictionary = batch.get("materials", {})
+	var mat_line := ""
+	for mat_id: String in mats:
+		var q := roundi(float(mats[mat_id]))
+		if q <= 0:
+			continue
+		var mname := String(content.material(mat_id).get("name", mat_id))
+		mat_line += ("" if mat_line == "" else "   ") + "+%d %s" % [q, mname]
+	if mat_line != "":
+		summary.add_child(_dispatch_line("Harvest:  " + mat_line, DIM))
+
+	# Gene tally, rarest first.
+	var parts: Array[String] = []
+	for r: String in ["legendary", "epic", "rare", "uncommon", "common"]:
+		if gene_by_rarity.has(r):
+			parts.append("%d %s" % [int(gene_by_rarity[r]), r])
+	if not parts.is_empty():
+		summary.add_child(_dispatch_line("Genes:  " + " · ".join(parts), DIM))
+	if splice_count > 0:
+		summary.add_child(
+			_dispatch_line("Splice offers waiting:  %d" % splice_count, RarityColors.of("epic"))
+		)
+	if mat_line == "" and parts.is_empty() and splice_count == 0:
+		summary.add_child(_dispatch_line("Nothing notable — the server was quiet.", DIM))
+
+	_dispatch_sheet.visible = true
+	_pulse(headline)
+
+
+func _dispatch_line(text: String, color: Color) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.add_theme_color_override("font_color", color)
+	return l
+
+
+func _rarity_rank(rarity: String) -> int:
+	match rarity:
+		"legendary":
+			return 5
+		"epic":
+			return 4
+		"rare":
+			return 3
+		"uncommon":
+			return 2
+		"common":
+			return 1
+	return 0
+
+
+func _format_elapsed(seconds: float) -> String:
+	var s := int(seconds)
+	var d := s / 86400
+	var h := (s % 86400) / 3600
+	var m := (s % 3600) / 60
+	if d > 0:
+		return "%dd %dh" % [d, h]
+	if h > 0:
+		return "%dh %dm" % [h, m]
+	return "%dm" % maxi(m, 1)
 
 
 func _pulse(c: Control) -> void:

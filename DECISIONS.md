@@ -647,16 +647,109 @@ fast iteration on progression during playtests. Flagged in code for removal.
 
 ---
 
+## 2026-06-13 — Phase 3.5 interphase scoped; deep systems queued for design sessions
+
+**What.** After Leon's Phase-3 self-playtest ("fun for now, but not a lot to do
+concretely; mainly waiting with very short check-ins"), inserted an interphase
+**Phase 3.5 — _the check-in becomes a session you play_** ahead of Phase 4, and
+queued the deeper systems for dedicated design sessions. Detailed work order in
+`PHASE3_5.md` (temporary, like PHASE2/PHASE3; deleted on phase close).
+
+**Why.** "Just waiting" has two causes: (1) the check-in *product* — return → Dev
+dispatch → decision queue — does not exist yet, so Leon is testing the live tick,
+not the real loop; (2) decision density per check-in is too low. The
+highest-leverage fix is to **express and make legible the systems that already
+exist**, not add mechanics. So 3.5 is mostly UI + wiring over the finished
+`Accrual`/`Resolve` engine.
+
+### Phase 3.5 scope (signed direction, Leon 2026-06-13)
+- **Reorder:** offline-accrual *application* + the while-you-were-away **Dev
+  dispatch** move from Phase 4 into 3.5 (the spine). Phase 4 keeps notifications,
+  the land-fall age transition, and telemetry.
+- **A derived "do-now" agenda** (no new save state): the legible face of
+  opportunity cost — affordable tier-ups, claimable splices, "one copy short", the
+  node just out of reach, the class one key away.
+- **Metabolize-as-choice:** slots become "what this organ becomes" with ≥2
+  generalist options per essential slot (closes the open thread).
+- **Visible combat:** render the Power-vs-defense clash as an OSRS/Melvor-style
+  event — presentation of numbers `resolve()` already returns.
+- **Splice catalogue:** the gene collection made a visible, motivating surface.
+- **OSRS-style tab IA:** kill the one-long-scroll (Dispatch / Body / World / Class).
+- **Map-unlock achievements** (replaces the apex "summit beat", which Leon judged
+  unneeded): gene/affix-key niche unlocks get an achievement-style highlight,
+  powered by a `milestones` dict if the schema bump (v3) is cheap.
+
+### Idle vs active — the babysit question (WANTED; deferred; touches VISION §12)
+Leon wants an **engagement-optional active layer** (OSRS / IdleOn / Idle Obelisk
+Miner style) that *can* improve progress — "bursts of babysitting to progress
+better", or an option to long-term babysit for improved gains. **The check-in
+(decisions, remanaging, upgrading) stays the core.** This refines the locked §12
+stance (idle earns, attention spends; active never out-earns idle; no babysitting).
+Resolution split:
+- **In 3.5 (safe, no §12 change):** combat is *watchable/directable* but earns the
+  same whether you watch or not — active *feel*, not active *earn*.
+- **Deferred to a dedicated design session (a real §4 change):** whether active
+  play grants a *benefit* (out-earns / bursts). This is the part that risks the
+  loss-aversion / babysitting anti-pattern §12 bans, so it is designed deliberately
+  before any build. Logged as an open question.
+
+### Open-thread dispositions (Leon 2026-06-13)
+- **Metabolize** — direction set: build *options* per slot, plus the idea of
+  *situational best-in-slot* (spec a build optimal for a specific activity/niche so
+  branches have purpose). The options ship in 3.5; the situational-optimization
+  depth goes to the build-identity design session.
+- **Clock-tampering** — still not a priority (Leon). v1 = clamp `dt` to `[0, ~72h]`
+  only; no anti-cheat beyond the clamp. Closes the "revisit before offline ships"
+  flag for v1.
+- **Skills** — strongly wanted (OSRS-like / a skill tree / active skills that suit
+  the TierZoo vibe and could carry the active layer). **Not in 3.5**; needs a
+  dedicated design session first, then likely a small first build before validation.
+- **Living meta / coevolution** — wanted as a core differentiator; start small and
+  expand; approach carefully to avoid overcomplication. Dedicated design session.
+- **Splice vs gene-drop** — Leon unsure of the distinction; the splice catalogue is
+  the home for sharpening it (signature genes likely become splice-only).
+
+---
+
+## 2026-06-13 — Phase 3.5 WP1+WP2 implemented
+
+**What.** Built the session loop and the do-now agenda (PHASE3_5.md WP1–WP2).
+- **WP1 — offline accrual + Dev dispatch.** `apply_offline_accrual()` (state_store)
+  applies the existing closed-form `Accrual` on real elapsed time, clamped to
+  `[0, 72h]`, on launch and on resume. The apply logic is shared in
+  `Commands.apply_accrual_batch` so the offline path, resume, and the DEV +8h
+  button cannot drift. A Dev-voice dispatch modal (`_show_dispatch` in main) leads
+  with the rarest drop and tallies the rest — never a 72-line scroll, never
+  loss-framing (VISION §16).
+- **WP2 — do-now agenda.** New pure `sim/agenda.gd`: up to 4 derived objectives
+  (claim splice / affordable tier-up / ready-or-one-key-away class / nearest node
+  out of reach / one-copy-short express). No new save fields. `pick_class`'s
+  requirement check was extracted to shared `Commands.unmet_class_requirement`.
+
+**Verification.** validate_data PASS; sim_test PASS (+6 tests); economy_test
+**unchanged** (week means 59.9→75.0, legendary p50=10 — no economy leak); boot
+clean; gdparse/gdformat clean. Schema stayed v2 (no migration).
+
+**Why one commit for two WPs.** WP1 and WP2 share commands.gd / main.gd /
+sim_test.gd and are interdependent (the agenda reuses the shared class-requirement
+check; the UI builds both panels in one pass), so a split would have left a
+non-compiling intermediate commit. Committed together — a deliberate deviation
+from PHASE3_5.md's "one WP per commit".
+
+**Remaining (PHASE3_5.md):** WP3 metabolize-as-choice, WP4 visible combat + splice
+catalogue, WP5 tab IA, WP6 map-unlock achievements (D5), WP7 re-prove + gate.
+
+---
+
 ## Open questions (current)
 
-- **Metabolize screen feels unintuitive — REVISIT (Leon, 2026-06-12).** Each doll
-  slot builds exactly one fixed adaptation (e.g. `sensory` → only "Stalked Eyes"),
-  which reads oddly — you "craft" one specific thing with no alternative. Leon
-  wants this reconsidered: a crafting menu with real per-slot options, or a
-  different framing, so building an organ is a choice rather than a single button.
-  Note: Option B (competing adaptations per slot) was deferred but "emerges free"
-  from class-category access (DECISIONS 2026-06-11) — that may be the seed of the
-  answer. Not scoped yet; design discussion next.
+- **Metabolize screen — DIRECTION SET 2026-06-13, building in Phase 3.5.** Each
+  doll slot built one fixed adaptation, which read as "craft this specific thing"
+  with no choice. Fix: reframe a slot as "what this organ becomes" with ≥2
+  generalist options per essential slot (PHASE3_5.md WP3). The *deeper* want —
+  *situational best-in-slot*, where you spec a build optimal for a specific
+  activity/niche so branches earn their purpose — goes to the build-identity design
+  session (below), not 3.5.
 
 - **Phase 2 validation gate (WP7).** Web export to friend cohort; gate
   question: "does 'what should I fight' become a build decision players talk
@@ -680,8 +773,10 @@ fast iteration on progression during playtests. Flagged in code for removal.
 - **Chase p50 drift — RESOLVED 2026-06-12.** Leon chose "recenter";
   `benthos_fight` `gene_great_appendage` weight 0.1→0.16, p50 back to 10 (in
   band). See the 2026-06-12 polish entry.
-- **Clock-tampering** is accepted for now (2026-06-10, above); must be revisited
-  before offline accrual ships to players.
+- **Clock-tampering — RESOLVED FOR v1 2026-06-13.** Still not a priority (Leon).
+  Offline accrual (Phase 3.5 WP1) clamps `dt` to `[0, ~72h]`; no anti-cheat beyond
+  the clamp in v1 (single-player, no leaderboards). Revisit only if/when a
+  competitive or server-authoritative mode ever appears.
 - **Equipment swapping + distinct slots — scheduled into Phase 3.** Option A
   (mechanically distinct slots) is now **in** (signed 2026-06-11, PHASE3.md).
   Option B (competing adaptations per slot) stays deferred but **emerges for
@@ -692,3 +787,39 @@ fast iteration on progression during playtests. Flagged in code for removal.
   Perception / Penetration / Stealth). Low-priority polish still open: a nicer
   in-voice name for `metabolic_core`, and clearer wording for `integument` —
   both fine as-is for now.
+
+### Design-session backlog (deep topics — opened 2026-06-13, Leon)
+
+Each needs a dedicated design session before any build; none is in Phase 3.5.
+Listed so the vision stays whole and the sessions have a home. Each will follow
+the CLAUDE.md §4 protocol (propose → Leon signs → canonize → DECISIONS entry).
+
+- **Active / "babysit" layer (touches VISION §12 — the red line).** Leon wants an
+  engagement-optional active layer that *can* improve progress (OSRS / IdleOn /
+  Idle Obelisk Miner combine idle + active well). Check-in decisions stay the core.
+  3.5 ships the *watchable* (no-earn-change) version; the *active-benefit* version
+  is the §4 change to design here, carefully, so it never becomes "log in or lose".
+- **Skills.** Strongly wanted. Candidate shapes: OSRS-style trained skills; a skill
+  tree; **active skills** that suit the TierZoo vibe and could carry the active
+  layer while staying automatable. Start small, plan thoroughly. May get a small
+  first build before deep validation.
+- **Living meta / coevolution.** The marquee differentiator and most on-theme with
+  the Devs-are-natural-selection frame. Periodic patch-note rebalances that shift
+  the meta; ties to the TierZoo tier-list. Old builds becoming *less* effective is
+  acceptable to Leon ("maybe") but must avoid loss-aversion (§12) and
+  overcomplication. Start small, expand.
+- **Build identity & situational best-in-slot.** Give builds/branches purpose:
+  niches/activities where you are efficient *only* with the right build (rhythm is
+  one lever; class-exclusive niches/benefits another). Strengthens `niche_mult`
+  into real identity. Connects to the metabolize-options work.
+- **Splice catalogue & the splice-vs-drop distinction.** Leon is unsure how
+  splicing differs from gene drops — because today both just add a `genes_known`
+  copy and signature genes also appear in random drop tables. Intended difference
+  (VISION §9c): drops = random mutation lottery; splicing = *targeted* horizontal
+  transfer of a creature's signature trait. Likely fix: make signature genes
+  **splice-only** (remove from random drop tables) so the catalogue is meaningful
+  and "what should I fight" is a real targeted decision. Economy change → re-prove
+  the harness.
+- **Combat depth.** 3.5 ships *visible* combat (clash render). Whether it becomes a
+  full OSRS/Melvor-style combat surface (abilities, an active-resolve option) is a
+  later design session — it overlaps the deferred Fight-encounter layer (VISION §19).
