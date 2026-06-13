@@ -1,52 +1,48 @@
 extends Control
 
-## Phase 3 UI. Portrait screen (720×1280, canvas_items stretch).
-## All layout is code-built from content data; no hand-authored scenes to drift.
-## Pure observer of Store — every label is re-read from GameState on
-## state_changed; nothing here mutates state except through Store's named
-## commands.
+## Phase 3.5 UI shell. Portrait phone screen (720×1280, canvas_items stretch).
+## Owns only the chrome: the persistent roster + header, the tab bar, the four tab
+## scripts, and the cross-cutting overlays (loot pops, the express sheet, the Dev
+## dispatch). Each tab (ui/tabs/*.gd) builds and refreshes itself from Store +
+## UiState; the shell just fans state_changed out to them and routes navigation.
+## A pure observer of Store — mutations only ever go through Store's named commands.
 
 const ACTION_PERIOD: float = 2.5
 
-const BG_COLOR := Color("0b1d2a")
-const DIM := Color("8b9aa7")
-const GOOD := Color("5fd97a")
-const BAD := Color("ff7b72")
+# View state shared across tabs (which lineage/niche is shown, pending commit).
+var _ui: UiState
 
-# Active lineage and pending class-commit state
-var _active_lineage_idx: int = 0
-var _pending_class_id: String = ""
-
-# Niche state
-var _active_niche: String = "shallow_benthos"
-
-# Widgets
+# Persistent top widgets
 var _roster_chips: Array[Button] = []
 var _branch_btn: Button
 var _header_name_label: Label
 var _power_value: Label
-var _niche_buttons: Dictionary = {}  # niche_id -> Button
-var _niche_gate_panel: VBoxContainer
-var _cards: Dictionary = {}  # node_id -> {card, btn, name_lbl, matchup_lbl, danger_lbl}
-var _doll_slot_labels: Dictionary = {}  # slot -> {name_lbl, express_lbl}; also "_btn_<id>" -> {btn, def}
-var _class_panel_list: VBoxContainer
-var _mat_labels: Dictionary = {}  # material_id -> Label
-var _gene_rows: Dictionary = {}  # gene_id -> {row, count_lbl}
-var _splice_list: VBoxContainer
+
+# Tabs
+var _tab_bar: HBoxContainer
+var _tabs: Dictionary = {}  # name -> {scroll: ScrollContainer, btn: Button}
+var _home_tab: HomeTab
+var _body_tab: BodyTab
+var _world_tab: WorldTab
+var _class_tab: ClassTab
+
+# Overlays
 var _pop_layer: Control
-var _express_sheet: Control
-var _express_slot: String = ""
-var _agenda_list: VBoxContainer
+var _express_sheet: ExpressSheet
 var _dispatch_sheet: Control
 
 
 func _ready() -> void:
 	if Store.state == null:
 		Store.new_game(int(Time.get_unix_time_from_system()))
+	_ui = UiState.new()
 	_build_ui()
+
 	Store.state_changed.connect(_refresh)
 	Store.loot_dropped.connect(_on_loot)
 	Store.dispatch_ready.connect(_show_dispatch)
+	_ui.changed.connect(_refresh)
+	_ui.navigate.connect(_select_tab)
 
 	var timer := Timer.new()
 	timer.wait_time = ACTION_PERIOD
@@ -62,17 +58,6 @@ func _ready() -> void:
 		_show_dispatch(launch_batch)
 
 
-func _lineage() -> Lineage:
-	var lineages: Array = Store.state.lineages
-	return lineages[clampi(_active_lineage_idx, 0, lineages.size() - 1)]
-
-
-func _switch_lineage(idx: int) -> void:
-	_active_lineage_idx = idx
-	_pending_class_id = ""
-	_refresh()
-
-
 # -- build (once) -------------------------------------------------------------
 
 
@@ -82,68 +67,110 @@ func _build_ui() -> void:
 	theme = ui_theme
 
 	var bg := ColorRect.new()
-	bg.color = BG_COLOR
+	bg.color = UiUtil.BG
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	var scroll := ScrollContainer.new()
-	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
+	var root := VBoxContainer.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_theme_constant_override("separation", 8)
+	add_child(root)
 
-	var margin := MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 20)
-	scroll.add_child(margin)
+	# Persistent top: roster + header (visible on every tab).
+	var top_margin := MarginContainer.new()
+	for side in ["margin_left", "margin_right"]:
+		top_margin.add_theme_constant_override(side, 20)
+	top_margin.add_theme_constant_override("margin_top", 16)
+	root.add_child(top_margin)
+	var top := VBoxContainer.new()
+	top.add_theme_constant_override("separation", 10)
+	top_margin.add_child(top)
+	_build_roster_bar(top)
+	_build_header(top)
 
-	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_theme_constant_override("separation", 14)
-	margin.add_child(col)
+	_build_tab_bar(root)
 
-	_build_roster_bar(col)
-	_build_header(col)
-	_build_agenda(col)
-	_build_niche_selector(col)
-	_build_niche_gate_panel(col)
-	col.add_child(_section_label("THE WILD"))
-	_build_node_cards(col)
-	col.add_child(_section_label("THE BUILD  ·  tap an organ to express genes"))
-	_build_doll(col)
-	col.add_child(_section_label("CLASS"))
-	_build_class_panel_container(col)
-	col.add_child(_section_label("METABOLIZE"))
-	_build_metabolize_buttons(col)
-	col.add_child(_section_label("SPLICE OFFERS"))
-	_splice_list = VBoxContainer.new()
-	_splice_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_splice_list.add_theme_constant_override("separation", 6)
-	col.add_child(_splice_list)
-	col.add_child(_section_label("GENE CODEX  ·  copies unlock express tiers"))
-	_build_gene_codex(col)
-	col.add_child(_section_label("STASH"))
-	col.add_child(_build_stash_row())
-	_build_debug_bar(col)
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(content)
 
+	# Overlays first so the tabs can reference the pop layer + express sheet.
 	_pop_layer = Control.new()
 	_pop_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_pop_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	_express_sheet = ExpressSheet.new()
+	_express_sheet.setup(_ui, _pop_layer)
+
+	_home_tab = HomeTab.new()
+	_home_tab.setup(_ui, _pop_layer)
+	_body_tab = BodyTab.new()
+	_body_tab.setup(_ui, _pop_layer, _express_sheet)
+	_world_tab = WorldTab.new()
+	_world_tab.setup(_ui, _pop_layer, _express_sheet)
+	_class_tab = ClassTab.new()
+	_class_tab.setup(_ui)
+
+	_add_tab(content, "home", "Home", _home_tab)
+	_add_tab(content, "body", "Body", _body_tab)
+	_add_tab(content, "world", "World", _world_tab)
+	_add_tab(content, "class", "Class", _class_tab)
+
 	add_child(_pop_layer)
-
-	_express_sheet = _build_express_sheet()
 	add_child(_express_sheet)
-
 	_dispatch_sheet = _build_dispatch_sheet()
 	add_child(_dispatch_sheet)
 
+	_select_tab("home")
 
-func _build_agenda(col: VBoxContainer) -> void:
-	col.add_child(_section_label("DO NOW  ·  what's worth a tap this check-in"))
-	_agenda_list = VBoxContainer.new()
-	_agenda_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_agenda_list.add_theme_constant_override("separation", 6)
-	col.add_child(_agenda_list)
+
+func _build_tab_bar(root: VBoxContainer) -> void:
+	var margin := MarginContainer.new()
+	for side in ["margin_left", "margin_right"]:
+		margin.add_theme_constant_override(side, 20)
+	root.add_child(margin)
+	_tab_bar = HBoxContainer.new()
+	_tab_bar.add_theme_constant_override("separation", 4)
+	margin.add_child(_tab_bar)
+
+
+## Wire a tab: a bar button + a scrollable wrapper holding the (already-built) tab
+## node. Only one wrapper is visible at a time.
+func _add_tab(
+	parent: VBoxContainer, tab_name: String, label: String, tab_node: VBoxContainer
+) -> void:
+	var btn := Button.new()
+	btn.text = label
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.custom_minimum_size = Vector2(0, 44)
+	btn.pressed.connect(func() -> void: _select_tab(tab_name))
+	_tab_bar.add_child(btn)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	parent.add_child(scroll)
+
+	var margin := MarginContainer.new()
+	for side in ["margin_left", "margin_right"]:
+		margin.add_theme_constant_override(side, 20)
+	margin.add_theme_constant_override("margin_top", 6)
+	margin.add_theme_constant_override("margin_bottom", 28)
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(margin)
+	margin.add_child(tab_node)
+
+	_tabs[tab_name] = {"scroll": scroll, "btn": btn}
+
+
+func _select_tab(tab_name: String) -> void:
+	for k: String in _tabs:
+		var refs: Dictionary = _tabs[k]
+		(refs["scroll"] as Control).visible = k == tab_name
+		(refs["btn"] as Button).modulate = Color.WHITE if k == tab_name else Color(1, 1, 1, 0.5)
+	_refresh()
 
 
 func _build_roster_bar(col: VBoxContainer) -> void:
@@ -154,7 +181,7 @@ func _build_roster_bar(col: VBoxContainer) -> void:
 		var chip := Button.new()
 		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var idx := i
-		chip.pressed.connect(func() -> void: _switch_lineage(idx))
+		chip.pressed.connect(func() -> void: _ui.set_active_lineage_idx(idx))
 		row.add_child(chip)
 		_roster_chips.append(chip)
 	_branch_btn = Button.new()
@@ -171,11 +198,11 @@ func _build_header(col: VBoxContainer) -> void:
 	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(who)
 	_header_name_label = Label.new()
-	_header_name_label.add_theme_font_size_override("font_size", 30)
+	_header_name_label.add_theme_font_size_override("font_size", 28)
 	who.add_child(_header_name_label)
 	var age_label := Label.new()
 	age_label.text = "Age I: The Sea  ·  Cambrian meta"
-	age_label.add_theme_color_override("font_color", DIM)
+	age_label.add_theme_color_override("font_color", UiUtil.DIM)
 	age_label.add_theme_font_size_override("font_size", 16)
 	who.add_child(age_label)
 
@@ -183,311 +210,33 @@ func _build_header(col: VBoxContainer) -> void:
 	row.add_child(power)
 	var caption := Label.new()
 	caption.text = "POWER"
-	caption.add_theme_color_override("font_color", DIM)
+	caption.add_theme_color_override("font_color", UiUtil.DIM)
 	caption.add_theme_font_size_override("font_size", 16)
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	power.add_child(caption)
 	_power_value = Label.new()
-	_power_value.add_theme_font_size_override("font_size", 36)
+	_power_value.add_theme_font_size_override("font_size", 34)
 	_power_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	power.add_child(_power_value)
 
 
-func _build_niche_selector(col: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	col.add_child(row)
-	for niche: Dictionary in Data.content.tables.get("niches", []):
-		var niche_id := String(niche.get("id", ""))
-		var btn := Button.new()
-		btn.text = String(niche.get("name", niche_id))
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.pressed.connect(func() -> void: _select_niche(niche_id))
-		row.add_child(btn)
-		_niche_buttons[niche_id] = btn
-
-
-func _build_node_cards(col: VBoxContainer) -> void:
-	var empty_style := StyleBoxEmpty.new()
-	for node: Dictionary in Data.content.tables.get("nodes", []):
-		var node_id := String(node.get("id", ""))
-
-		var card_frame := PanelContainer.new()
-		card_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_child(card_frame)
-
-		var pad := MarginContainer.new()
-		for side in ["margin_left", "margin_right"]:
-			pad.add_theme_constant_override(side, 14)
-		for side in ["margin_top", "margin_bottom"]:
-			pad.add_theme_constant_override(side, 8)
-		card_frame.add_child(pad)
-
-		var box := VBoxContainer.new()
-		box.add_theme_constant_override("separation", 2)
-		pad.add_child(box)
-
-		var top := HBoxContainer.new()
-		box.add_child(top)
-		var name_lbl := Label.new()
-		name_lbl.add_theme_font_size_override("font_size", 21)
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		top.add_child(name_lbl)
-
-		var stats := HBoxContainer.new()
-		top.add_child(stats)
-		var def_lbl := Label.new()
-		def_lbl.text = "DEF %d" % int(node.get("defense", 0))
-		def_lbl.add_theme_color_override("font_color", DIM)
-		stats.add_child(def_lbl)
-		var danger_lbl := Label.new()
-		danger_lbl.add_theme_color_override("font_color", BAD)
-		stats.add_child(danger_lbl)
-
-		var matchup_lbl := Label.new()
-		box.add_child(matchup_lbl)
-
-		var flavor_lbl := Label.new()
-		flavor_lbl.text = String(node.get("flavor", ""))
-		flavor_lbl.add_theme_color_override("font_color", DIM)
-		flavor_lbl.add_theme_font_size_override("font_size", 16)
-		flavor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		flavor_lbl.custom_minimum_size = Vector2(1, 0)
-		box.add_child(flavor_lbl)
-
-		var click_btn := Button.new()
-		click_btn.flat = true
-		click_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
-		for style in ["normal", "hover", "pressed", "disabled", "focus"]:
-			click_btn.add_theme_stylebox_override(style, empty_style)
-		click_btn.pressed.connect(func() -> void: Store.assign_node(_lineage().id, node_id))
-		card_frame.add_child(click_btn)
-
-		_cards[node_id] = {
-			"card": card_frame,
-			"btn": click_btn,
-			"name_lbl": name_lbl,
-			"matchup_lbl": matchup_lbl,
-			"danger_lbl": danger_lbl,
-		}
-
-
-func _build_doll(col: VBoxContainer) -> void:
-	for slot: String in Lineage.SLOTS:
-		var cell := VBoxContainer.new()
-		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cell.add_theme_constant_override("separation", 2)
-		col.add_child(cell)
-
-		var row := HBoxContainer.new()
-		row.custom_minimum_size = Vector2(0, 48)
-		cell.add_child(row)
-
-		var attr := String(Resolve.SLOT_ATTRIBUTE.get(slot, ""))
-		var attr_hint := ("  [%s]" % attr) if attr != "" else "  [—]"
-		var slot_btn := Button.new()
-		slot_btn.text = slot.replace("_", " ").capitalize() + attr_hint
-		slot_btn.tooltip_text = "Tap to express a gene onto this organ."
-		slot_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		slot_btn.pressed.connect(func() -> void: _open_express_sheet(slot))
-		row.add_child(slot_btn)
-
-		var name_lbl := Label.new()
-		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		name_lbl.custom_minimum_size = Vector2(1, 0)
-		row.add_child(name_lbl)
-
-		var express_lbl := Label.new()
-		express_lbl.add_theme_color_override("font_color", DIM)
-		express_lbl.add_theme_font_size_override("font_size", 16)
-		express_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		express_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		express_lbl.custom_minimum_size = Vector2(1, 0)
-		cell.add_child(express_lbl)
-
-		_doll_slot_labels[slot] = {"name_lbl": name_lbl, "express_lbl": express_lbl}
-
-
-## The legibility panel under the niche selector: when the active niche is locked
-## for this lineage, it names the key, the gene that opens it, where the gene
-## drops, and the player's live status (VISION §11 — see the wall AND the key).
-func _build_niche_gate_panel(col: VBoxContainer) -> void:
-	_niche_gate_panel = VBoxContainer.new()
-	_niche_gate_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_niche_gate_panel.add_theme_constant_override("separation", 4)
-	col.add_child(_niche_gate_panel)
-
-
-func _build_class_panel_container(col: VBoxContainer) -> void:
-	_class_panel_list = VBoxContainer.new()
-	_class_panel_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_class_panel_list.add_theme_constant_override("separation", 8)
-	col.add_child(_class_panel_list)
-
-
-func _build_metabolize_buttons(col: VBoxContainer) -> void:
-	for def: Dictionary in Data.content.tables.get("adaptations", []):
-		var adaptation_id := String(def.get("id", ""))
-		var btn := Button.new()
-		btn.size_flags_horizontal = Control.SIZE_FILL
-		btn.custom_minimum_size = Vector2(0, 52)
-		btn.pressed.connect(func() -> void: _on_metabolize_pressed(adaptation_id))
-		col.add_child(btn)
-		if not _doll_slot_labels.has("_btn_" + adaptation_id):
-			_doll_slot_labels["_btn_" + adaptation_id] = {"btn": btn, "def": def}
-
-
-func _build_gene_codex(col: VBoxContainer) -> void:
-	for gene: Dictionary in Data.content.tables.get("genes", []):
-		var gene_id := String(gene.get("id", ""))
-		var cell := VBoxContainer.new()
-		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cell.add_theme_constant_override("separation", 0)
-		col.add_child(cell)
-
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-		cell.add_child(row)
-
-		# Tap the gene name to reveal its description + source (touch-first
-		# inspect, VISION §16 — no always-on clutter).
-		var name_btn := Button.new()
-		name_btn.flat = true
-		name_btn.text = String(gene.get("name", gene_id))
-		name_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		name_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_btn.add_theme_color_override(
-			"font_color", RarityColors.of(String(gene.get("rarity", "common")))
-		)
-		row.add_child(name_btn)
-
-		var count_lbl := Label.new()
-		count_lbl.add_theme_color_override("font_color", DIM)
-		row.add_child(count_lbl)
-
-		var desc_lbl := Label.new()
-		desc_lbl.visible = false
-		desc_lbl.text = (
-			"   %s\n   Source: %s"
-			% [String(gene.get("flavor", "")), _gene_source_text(Data.content, gene_id)]
-		)
-		desc_lbl.add_theme_color_override("font_color", DIM)
-		desc_lbl.add_theme_font_size_override("font_size", 16)
-		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		desc_lbl.custom_minimum_size = Vector2(1, 0)
-		cell.add_child(desc_lbl)
-		name_btn.pressed.connect(func() -> void: desc_lbl.visible = not desc_lbl.visible)
-
-		_gene_rows[gene_id] = {"row": cell, "count_lbl": count_lbl}
-
-
-## DEV-only controls (testing): reset the save and fast-forward offline accrual.
-## Remove this bar before any real release.
-func _build_debug_bar(col: VBoxContainer) -> void:
-	col.add_child(_section_label("DEV  ·  testing only"))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	col.add_child(row)
-
-	var reset_btn := Button.new()
-	reset_btn.text = "↺ Reset save"
-	reset_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	reset_btn.pressed.connect(_on_reset_pressed)
-	row.add_child(reset_btn)
-
-	var ff_btn := Button.new()
-	ff_btn.text = "⏩ +8h"
-	ff_btn.tooltip_text = "Jump 8 hours of offline accrual forward."
-	ff_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ff_btn.pressed.connect(func() -> void: Store.dev_fast_forward(8.0 * 3600.0))
-	row.add_child(ff_btn)
-
-
-func _on_reset_pressed() -> void:
-	_active_lineage_idx = 0
-	_pending_class_id = ""
-	_active_niche = "shallow_benthos"
-	Store.reset_save()
-
-
-func _build_stash_row() -> Control:
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.size_flags_horizontal = Control.SIZE_FILL
-	grid.add_theme_constant_override("h_separation", 18)
-	grid.add_theme_constant_override("v_separation", 6)
-	for mat: Dictionary in Data.content.tables.get("materials", []):
-		var mat_id := String(mat.get("id", ""))
-		var l := Label.new()
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		l.add_theme_color_override("font_color", RarityColors.of(String(mat.get("rarity", ""))))
-		grid.add_child(l)
-		_mat_labels[mat_id] = l
-	return grid
-
-
-func _build_express_sheet() -> Control:
-	var sheet := PanelContainer.new()
-	sheet.visible = false
-	sheet.z_index = 10
-
-	var pad := MarginContainer.new()
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		pad.add_theme_constant_override(side, 16)
-	sheet.add_child(pad)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	pad.add_child(vbox)
-
-	var header := HBoxContainer.new()
-	vbox.add_child(header)
-	var title_lbl := Label.new()
-	title_lbl.text = "EXPRESS"
-	title_lbl.add_theme_font_size_override("font_size", 22)
-	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title_lbl)
-	var close_btn := Button.new()
-	close_btn.text = "✕"
-	close_btn.pressed.connect(func() -> void: sheet.visible = false)
-	header.add_child(close_btn)
-
-	var list_scroll := ScrollContainer.new()
-	list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vbox.add_child(list_scroll)
-
-	var list := VBoxContainer.new()
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_theme_constant_override("separation", 6)
-	list_scroll.add_child(list)
-
-	sheet.set_meta("title_lbl", title_lbl)
-	sheet.set_meta("list", list)
-	return sheet
-
-
-# -- niche / lineage selection ------------------------------------------------
-
-
-func _select_niche(niche_id: String) -> void:
-	_active_niche = niche_id
-	_refresh()
-
-
-# -- refresh (every state change) ---------------------------------------------
+# -- refresh (every state / view change) --------------------------------------
 
 
 func _refresh() -> void:
-	var l := _lineage()
+	var l := _ui.active_lineage()
 	var content := Data.content
+	_refresh_header(l, content)
+	_refresh_roster_bar()
+	_home_tab.refresh()
+	_body_tab.refresh()
+	_world_tab.refresh()
+	_class_tab.refresh()
 
-	# Header
+
+func _refresh_header(l: Lineage, content: Content) -> void:
 	_header_name_label.text = l.display_name
-
-	# Power readout — show soft-cap cue when raw power exceeds the knee
+	# Power readout — show soft-cap cue when raw power exceeds the knee.
 	var raw_power := float(Resolve.effective_attributes(l, content).get("power", 0.0))
 	var eff_power := Resolve.effective_power(l, content)
 	if raw_power > Resolve.SOFT_CAP_KNEE:
@@ -498,285 +247,6 @@ func _refresh() -> void:
 	else:
 		_power_value.text = "%.0f" % eff_power
 		_power_value.tooltip_text = ""
-
-	# Roster
-	_refresh_roster_bar()
-
-	# Do-now agenda (WP2)
-	_refresh_agenda(l, content)
-
-	# Niche selector
-	for niche_id: String in _niche_buttons:
-		var btn := _niche_buttons[niche_id] as Button
-		var is_active := niche_id == _active_niche
-		var is_locked := not Commands.meets_niche_keys(l, content, niche_id)
-		var niche := content.niche(niche_id)
-		btn.text = String(niche.get("name", niche_id)) + ("  🔒" if is_locked else "")
-		if is_active:
-			btn.modulate = Color.WHITE
-		elif is_locked:
-			btn.modulate = Color(1, 1, 1, 0.55)
-		else:
-			btn.modulate = Color(1, 1, 1, 0.75)
-		var keys: Array = niche.get("affix_keys", [])
-		if is_locked and not keys.is_empty():
-			btn.tooltip_text = "Requires: an expressed %s gene." % String(keys[0]).capitalize()
-		else:
-			btn.tooltip_text = ""
-
-	# Niche key guidance panel (the visible, tap-legible version of the lock).
-	_refresh_niche_gate(l, content)
-
-	# Node cards — show only active niche
-	for node_id: String in _cards:
-		var node := content.node(node_id)
-		var refs: Dictionary = _cards[node_id]
-		var card: Control = refs["card"]
-		var click_btn := refs["btn"] as Button
-		var node_niche := String(node.get("niche", ""))
-		card.visible = node_niche == _active_niche
-
-		if not card.visible:
-			continue
-
-		var niche_locked := not Commands.meets_niche_keys(l, content, node_niche)
-		click_btn.disabled = niche_locked
-		if niche_locked:
-			var niche_row := content.niche(node_niche)
-			var keys: Array = niche_row.get("affix_keys", [])
-			card.tooltip_text = (
-				(
-					"Locked — express a %s gene to enter (see the panel above)."
-					% String(keys[0]).capitalize()
-				)
-				if not keys.is_empty()
-				else ""
-			)
-		else:
-			card.tooltip_text = ""
-
-		var active := l.assigned_node == node_id
-		(refs["name_lbl"] as Label).text = (
-			String(node.get("name", node_id)) + (" · working" if active else "")
-		)
-		card.modulate = (
-			Color(1, 1, 1, 0.45)
-			if niche_locked
-			else (Color.WHITE if active else Color(1, 1, 1, 0.72))
-		)
-
-		var danger := float(node.get("danger", 0.0))
-		var danger_lbl := refs["danger_lbl"] as Label
-		if danger > 0:
-			danger_lbl.text = "  DANGER %d" % int(danger)
-			danger_lbl.visible = true
-		else:
-			danger_lbl.visible = false
-
-		var margin := Resolve.effective_power(l, content) - float(node.get("defense", 0.0))
-		var verdict := "outgeared"
-		var color := BAD
-		if margin > 2.0:
-			verdict = "free farm"
-			color = GOOD
-		elif margin > 0.0:
-			verdict = "winning matchup"
-			color = GOOD
-		elif is_zero_approx(margin):
-			verdict = "even matchup"
-			color = DIM
-		var matchup_lbl := refs["matchup_lbl"] as Label
-		matchup_lbl.text = (
-			"%s · yield ×%.1f" % [verdict, Resolve.yield_efficiency(l, node, content)]
-		)
-		matchup_lbl.add_theme_color_override("font_color", color)
-
-	# Doll — all 6 slots
-	for slot: String in _doll_slot_labels:
-		if slot.begins_with("_btn_"):
-			continue
-		var refs: Dictionary = _doll_slot_labels[slot]
-		var name_lbl := refs["name_lbl"] as Label
-		var express_lbl := refs["express_lbl"] as Label
-		var inst: AdaptationInstance = l.doll.get(slot)
-		if inst == null:
-			name_lbl.text = "— empty —"
-			name_lbl.add_theme_color_override("font_color", DIM)
-			express_lbl.text = ""
-		else:
-			# Evolved name on top, precise read beneath (VISION §7).
-			name_lbl.text = Naming.display_name(inst, content)
-			name_lbl.add_theme_color_override("font_color", RarityColors.of(inst.rarity))
-			express_lbl.text = Naming.tech_line(inst, content)
-
-	# Class panel
-	_refresh_class_panel()
-
-	# Metabolize buttons
-	for key: String in _doll_slot_labels:
-		if not key.begins_with("_btn_"):
-			continue
-		var refs: Dictionary = _doll_slot_labels[key]
-		_refresh_metabolize_button(refs["btn"] as Button, refs["def"] as Dictionary)
-
-	# Splice offers
-	_refresh_splice_offers()
-
-	# Gene codex
-	for gene_id: String in _gene_rows:
-		var refs: Dictionary = _gene_rows[gene_id]
-		var count := int(Store.state.genes_known.get(gene_id, 0))
-		var count_lbl := refs["count_lbl"] as Label
-		var row_node := refs["row"] as Control
-		if count == 0:
-			row_node.modulate = Color(1, 1, 1, 0.3)
-			count_lbl.text = ""
-		else:
-			row_node.modulate = Color.WHITE
-			count_lbl.text = "×%d" % count
-
-	# Stash
-	for mat_id: String in _mat_labels:
-		var mat := content.material(mat_id)
-		var qty := floori(float(Store.state.inventory_materials.get(mat_id, 0.0)))
-		(_mat_labels[mat_id] as Label).text = "%s %d" % [String(mat.get("name", mat_id)), qty]
-
-
-## Renders the key guidance for the active niche when it's locked: the role, the
-## generalist genes that satisfy it (easiest rarity first), where each drops, and
-## the player's live status — own-the-gene-but-not-expressed gets an Express
-## shortcut. This is the affix-key wall finally showing its key (VISION §11).
-func _refresh_niche_gate(l: Lineage, content: Content) -> void:
-	for child in _niche_gate_panel.get_children():
-		child.queue_free()
-
-	var niche := content.niche(_active_niche)
-	var keys: Array = niche.get("affix_keys", [])
-	if keys.is_empty() or Commands.meets_niche_keys(l, content, _active_niche):
-		_niche_gate_panel.visible = false
-		return
-	_niche_gate_panel.visible = true
-
-	var head := Label.new()
-	head.text = "🔒 %s — locked" % String(niche.get("name", _active_niche))
-	head.add_theme_font_size_override("font_size", 18)
-	head.add_theme_color_override("font_color", BAD)
-	_niche_gate_panel.add_child(head)
-
-	for key: Variant in keys:
-		_build_key_block(l, content, String(key))
-
-
-func _build_key_block(l: Lineage, content: Content, role: String) -> void:
-	var card := PanelContainer.new()
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_niche_gate_panel.add_child(card)
-	var pad := MarginContainer.new()
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		pad.add_theme_constant_override(side, 10)
-	card.add_child(pad)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
-	pad.add_child(box)
-
-	var title := Label.new()
-	title.text = "Express a %s gene onto any organ:" % role.capitalize()
-	title.add_theme_color_override("font_color", GOOD)
-	box.add_child(title)
-
-	# Easiest (lowest-rarity gene) path first.
-	var options: Array = content.key_affixes_for_role(role)
-	options.sort_custom(
-		func(a: Dictionary, b: Dictionary) -> bool:
-			return (
-				Validation.RARITIES.find(String((a["gene"] as Dictionary).get("rarity", "common")))
-				< Validation.RARITIES.find(
-					String((b["gene"] as Dictionary).get("rarity", "common"))
-				)
-			)
-	)
-	for opt: Dictionary in options:
-		_build_key_option(l, content, opt["affix"], opt["gene"], box)
-
-
-func _build_key_option(
-	l: Lineage, content: Content, affix: Dictionary, gene: Dictionary, box: VBoxContainer
-) -> void:
-	var affix_id := String(affix.get("id", ""))
-	var gene_id := String(gene.get("id", ""))
-	var rarity := String(gene.get("rarity", "common"))
-	var slots: Array = affix.get("slots", [])
-	var slot_names: Array[String] = []
-	for s: Variant in slots:
-		slot_names.append(String(s).replace("_", " ").capitalize())
-
-	var line := Label.new()
-	line.text = (
-		"• %s — express on %s" % [String(affix.get("name", affix_id)), " / ".join(slot_names)]
-	)
-	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	line.custom_minimum_size = Vector2(1, 0)
-	box.add_child(line)
-
-	var copies := int(Store.state.genes_known.get(gene_id, 0))
-	var status := HBoxContainer.new()
-	status.size_flags_horizontal = Control.SIZE_FILL
-	box.add_child(status)
-	var status_lbl := Label.new()
-	status_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	status_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	status_lbl.custom_minimum_size = Vector2(1, 0)
-	status_lbl.add_theme_font_size_override("font_size", 16)
-	status.add_child(status_lbl)
-
-	if copies > 0:
-		status_lbl.text = (
-			"   ✓ %s ×%d in codex — express it now" % [String(gene.get("name", gene_id)), copies]
-		)
-		status_lbl.add_theme_color_override("font_color", GOOD)
-		var slot := _first_expressible_slot(l, slots)
-		var btn := Button.new()
-		btn.text = "Express →"
-		btn.pressed.connect(func() -> void: _open_express_sheet(slot))
-		status.add_child(btn)
-	else:
-		var src := _gene_source_text(content, gene_id)
-		status_lbl.text = "   Find %s (%s): %s" % [String(gene.get("name", gene_id)), rarity, src]
-		status_lbl.add_theme_color_override("font_color", DIM)
-
-
-## A valid slot to express `affix` onto: prefer one already holding an organ with
-## room; else any organ-bearing valid slot; else the first valid slot.
-func _first_expressible_slot(l: Lineage, slots: Array) -> String:
-	var fallback := String(slots[0]) if not slots.is_empty() else ""
-	var has_organ := ""
-	for s: Variant in slots:
-		var slot := String(s)
-		var inst: AdaptationInstance = l.doll.get(slot)
-		if inst != null:
-			if has_organ == "":
-				has_organ = slot
-			if inst.affixes.size() < Commands.slot_express_cap(slot):
-				return slot
-	return has_organ if has_organ != "" else fallback
-
-
-## "drops at A, B · splice from C" for a gene, for the key/codex panels.
-func _gene_source_text(content: Content, gene_id: String) -> String:
-	var drops: Array[String] = []
-	var splices: Array[String] = []
-	for src: Dictionary in content.sources_for_gene(gene_id):
-		var node_name := String(src.get("name", ""))
-		if (src.get("via", []) as Array).has("drop"):
-			drops.append(node_name)
-		if (src.get("via", []) as Array).has("splice"):
-			splices.append(node_name)
-	var parts: Array[String] = []
-	if not drops.is_empty():
-		parts.append("drops at " + ", ".join(drops))
-	if not splices.is_empty():
-		parts.append("splice from " + ", ".join(splices))
-	return " · ".join(parts) if not parts.is_empty() else "no known source yet"
 
 
 func _refresh_roster_bar() -> void:
@@ -794,7 +264,9 @@ func _refresh_roster_bar() -> void:
 				var cls_name := String(cls_row.get("name", lin.class_node))
 				chip.text = "%s · %s" % [lin.display_name, cls_name]
 				chip.disabled = false
-				chip.modulate = Color.WHITE if i == _active_lineage_idx else Color(1, 1, 1, 0.65)
+				chip.modulate = (
+					Color.WHITE if i == _ui.active_lineage_idx else Color(1, 1, 1, 0.65)
+				)
 		else:
 			chip.text = "— empty slot —"
 			chip.disabled = true
@@ -814,557 +286,26 @@ func _refresh_roster_bar() -> void:
 		_branch_btn.modulate = Color(1, 1, 1, 0.45)
 
 
-func _refresh_class_panel() -> void:
-	for child in _class_panel_list.get_children():
-		child.queue_free()
-
-	var l := _lineage()
-	var content := Data.content
-	var cls_row := content.class_node(l.class_node)
-	var cls_name := String(cls_row.get("name", l.class_node))
-
-	# Current class summary line
-	var stat_mods: Dictionary = cls_row.get("stat_mods", {})
-	var mods_parts: Array[String] = []
-	for stat: Variant in stat_mods:
-		mods_parts.append("%s ×%.2f" % [String(stat).capitalize(), float(stat_mods[stat])])
-	var home_niches: Array = cls_row.get("home_niches", [])
-	var home_str := ""
-	if not home_niches.is_empty():
-		var niche_row := content.niche(String(home_niches[0]))
-		var nm: Dictionary = cls_row.get("niche_mult", {})
-		var mat_buff := float(nm.get("material", 1.0))
-		home_str = (
-			"  ·  Home: %s +%.0f%%"
-			% [
-				String(niche_row.get("name", home_niches[0])),
-				(mat_buff - 1.0) * 100.0,
-			]
-		)
-	var cur_lbl := Label.new()
-	var mods_str := ("  ·  " + "  ".join(mods_parts)) if not mods_parts.is_empty() else ""
-	cur_lbl.text = "Current: %s%s%s" % [cls_name, mods_str, home_str]
-	cur_lbl.add_theme_color_override("font_color", GOOD)
-	cur_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	cur_lbl.custom_minimum_size = Vector2(1, 0)
-	_class_panel_list.add_child(cur_lbl)
-
-	var unlocks: Array = cls_row.get("unlocks_categories", [])
-	if not unlocks.is_empty():
-		var cat_lbl := Label.new()
-		cat_lbl.text = "Unlocks: %s gear" % String(unlocks[0]).replace("_", " ").capitalize()
-		cat_lbl.add_theme_color_override("font_color", DIM)
-		cat_lbl.add_theme_font_size_override("font_size", 16)
-		_class_panel_list.add_child(cat_lbl)
-
-	# Find pickable children
-	var children: Array = []
-	for row: Dictionary in content.tables.get("class_tree", []):
-		if String(row.get("parent", "")) == l.class_node:
-			children.append(row)
-
-	if children.is_empty():
-		var leaf_lbl := Label.new()
-		leaf_lbl.text = "Leaf class — branch a new lineage to try a different path."
-		leaf_lbl.add_theme_color_override("font_color", DIM)
-		leaf_lbl.add_theme_font_size_override("font_size", 16)
-		leaf_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		leaf_lbl.custom_minimum_size = Vector2(1, 0)
-		_class_panel_list.add_child(leaf_lbl)
-		return
-
-	for child_row: Dictionary in children:
-		var child_id := String(child_row.get("id", ""))
-		var child_name := String(child_row.get("name", child_id))
-
-		var card := PanelContainer.new()
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_class_panel_list.add_child(card)
-
-		var pad := MarginContainer.new()
-		for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-			pad.add_theme_constant_override(side, 10)
-		card.add_child(pad)
-
-		var vbox := VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 6)
-		pad.add_child(vbox)
-
-		# Class name + stat mods
-		var name_row := HBoxContainer.new()
-		vbox.add_child(name_row)
-		var child_name_lbl := Label.new()
-		child_name_lbl.text = child_name
-		child_name_lbl.add_theme_font_size_override("font_size", 20)
-		child_name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_row.add_child(child_name_lbl)
-
-		var child_mods: Dictionary = child_row.get("stat_mods", {})
-		var cm_parts: Array[String] = []
-		for stat: Variant in child_mods:
-			cm_parts.append("%s ×%.2f" % [String(stat).capitalize(), float(child_mods[stat])])
-		if not cm_parts.is_empty():
-			var mods_lbl := Label.new()
-			mods_lbl.text = "  ".join(cm_parts)
-			mods_lbl.add_theme_color_override("font_color", DIM)
-			mods_lbl.add_theme_font_size_override("font_size", 16)
-			name_row.add_child(mods_lbl)
-
-		# Home niche + category unlocked
-		var child_home: Array = child_row.get("home_niches", [])
-		var child_unlocks: Array = child_row.get("unlocks_categories", [])
-		if not child_home.is_empty() or not child_unlocks.is_empty():
-			var detail_parts: Array[String] = []
-			if not child_home.is_empty():
-				var niche_row := content.niche(String(child_home[0]))
-				detail_parts.append("Home: %s" % String(niche_row.get("name", child_home[0])))
-			if not child_unlocks.is_empty():
-				detail_parts.append(
-					"Unlocks: %s" % String(child_unlocks[0]).replace("_", " ").capitalize()
-				)
-			var detail_lbl := Label.new()
-			detail_lbl.text = "  ·  ".join(detail_parts)
-			detail_lbl.add_theme_color_override("font_color", DIM)
-			detail_lbl.add_theme_font_size_override("font_size", 16)
-			vbox.add_child(detail_lbl)
-
-		# Requirements
-		var reqs: Dictionary = child_row.get("requires", {})
-		var reqs_met := true
-		var req_parts: Array[String] = []
-		for key: Variant in reqs.get("affix_keys", []):
-			var role := String(key)
-			var has_role := false
-			for slot: String in l.doll:
-				var inst: AdaptationInstance = l.doll[slot]
-				for gd: Dictionary in inst.affixes:
-					var ar := content.affix(String(gd.get("id", "")))
-					if String(ar.get("orthogonal_role", "")) == role:
-						has_role = true
-						break
-				if has_role:
-					break
-			if has_role:
-				req_parts.append("✓ %s" % role.capitalize())
-			else:
-				req_parts.append("✗ %s (missing)" % role.capitalize())
-				reqs_met = false
-		for gid: Variant in reqs.get("genes", []):
-			var gname := String(content.gene(String(gid)).get("name", String(gid)))
-			if int(Store.state.genes_known.get(String(gid), 0)) > 0:
-				req_parts.append("✓ %s" % gname)
-			else:
-				req_parts.append("✗ %s (missing)" % gname)
-				reqs_met = false
-		if not req_parts.is_empty():
-			var req_lbl := Label.new()
-			req_lbl.text = "Requires: " + "  ".join(req_parts)
-			req_lbl.add_theme_font_size_override("font_size", 16)
-			req_lbl.add_theme_color_override("font_color", GOOD if reqs_met else BAD)
-			req_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			req_lbl.custom_minimum_size = Vector2(1, 0)
-			vbox.add_child(req_lbl)
-
-		# Commit or confirm buttons
-		if _pending_class_id == child_id:
-			var warn_lbl := Label.new()
-			warn_lbl.text = "⚠ Classes are sticky — cannot be undone for this lineage."
-			warn_lbl.add_theme_color_override("font_color", BAD)
-			warn_lbl.add_theme_font_size_override("font_size", 16)
-			warn_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			warn_lbl.custom_minimum_size = Vector2(1, 0)
-			vbox.add_child(warn_lbl)
-			var confirm_row := HBoxContainer.new()
-			confirm_row.add_theme_constant_override("separation", 8)
-			vbox.add_child(confirm_row)
-			var confirm_btn := Button.new()
-			confirm_btn.text = "Commit to %s" % child_name
-			confirm_btn.disabled = not reqs_met
-			confirm_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			var cid := child_id
-			confirm_btn.pressed.connect(func() -> void: _on_class_confirm_pressed(cid))
-			confirm_row.add_child(confirm_btn)
-			var cancel_btn := Button.new()
-			cancel_btn.text = "Cancel"
-			cancel_btn.pressed.connect(
-				func() -> void:
-					_pending_class_id = ""
-					_refresh()
-			)
-			confirm_row.add_child(cancel_btn)
-		else:
-			var commit_btn := Button.new()
-			commit_btn.text = "Commit to %s…" % child_name
-			commit_btn.disabled = not reqs_met
-			commit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			var cid := child_id
-			commit_btn.pressed.connect(func() -> void: _on_class_commit_pressed(cid))
-			vbox.add_child(commit_btn)
-
-
-func _refresh_metabolize_button(btn: Button, def: Dictionary) -> void:
-	var adaptation_id := String(def.get("id", ""))
-	var def_name := String(def.get("name", adaptation_id))
-	var l := _lineage()
-	var content := Data.content
-
-	# Category gate: grey out locked-category gear with class hint
-	var cat := String(def.get("category", "generalist"))
-	if not content.allowed_categories(l).has(cat):
-		btn.text = "%s — requires %s" % [def_name, _class_for_category(cat, content)]
-		btn.disabled = true
-		btn.modulate = Color(1, 1, 1, 0.4)
-		return
-	btn.modulate = Color.WHITE
-
-	var tier := Commands.next_tier(l, def)
-	if tier == 0:
-		btn.text = "%s — maxed" % def_name
-		btn.disabled = true
-		return
-	var cost := Commands.metabolize_cost(def, tier)
-	var mat_id := String(cost.keys()[0])
-	var qty := int(cost[mat_id])
-	var mat_name := String(content.material(mat_id).get("name", mat_id))
-	var verb := "Build" if tier == 1 else "Tier %d" % tier
-	btn.text = "%s %s — %d %s" % [verb, def_name, qty, mat_name]
-	btn.disabled = float(Store.state.inventory_materials.get(mat_id, 0.0)) < float(qty)
-
-
-func _refresh_splice_offers() -> void:
-	for child in _splice_list.get_children():
-		child.queue_free()
-
-	var offers: Array = Store.state.splice_offers
-	if offers.is_empty():
-		var none := Label.new()
-		none.text = "Splice queue empty."
-		none.add_theme_color_override("font_color", DIM)
-		none.add_theme_font_size_override("font_size", 16)
-		_splice_list.add_child(none)
-		return
-
-	for i in range(offers.size()):
-		var offer: Dictionary = offers[i]
-		var gene_id := String(offer.get("gene", ""))
-		var node_id := String(offer.get("node", ""))
-		var gene_row := Data.content.gene(gene_id)
-		var gene_name := String(gene_row.get("name", gene_id))
-		var rarity := String(gene_row.get("rarity", "common"))
-		var node_row := Data.content.node(node_id)
-		var node_name := String(node_row.get("name", node_id))
-
-		var row := HBoxContainer.new()
-		row.size_flags_horizontal = Control.SIZE_FILL
-		row.add_theme_constant_override("separation", 10)
-		_splice_list.add_child(row)
-
-		var current_copies := int(Store.state.genes_known.get(gene_id, 0))
-		var lbl := Label.new()
-		lbl.text = "%s  ·  from %s  (have ×%d)" % [gene_name, node_name, current_copies]
-		lbl.add_theme_color_override("font_color", RarityColors.of(rarity))
-		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lbl.custom_minimum_size = Vector2(1, 0)
-		row.add_child(lbl)
-
-		var idx := i
-		var claim_btn := Button.new()
-		claim_btn.text = "Claim (+1 copy)"
-		claim_btn.tooltip_text = (
-			"Adds 1 copy of this gene to your codex.\n"
-			+ "Gene copies unlock traits — tap an organ to express them."
-		)
-		claim_btn.pressed.connect(func() -> void: _on_claim_splice(idx))
-		row.add_child(claim_btn)
-
-
-# -- express sheet --------------------------------------------------------------
-
-
-func _open_express_sheet(slot: String) -> void:
-	_express_slot = slot
-	var sheet := _express_sheet
-	var sheet_h := 400.0
-	sheet.size = Vector2(size.x, sheet_h)
-	sheet.position = Vector2(0.0, size.y - sheet_h)
-	var list := sheet.get_meta("list") as VBoxContainer
-	var title_lbl := sheet.get_meta("title_lbl") as Label
-
-	for child in list.get_children():
-		child.queue_free()
-
-	var l := _lineage()
-	var content := Data.content
-	var inst: AdaptationInstance = l.doll.get(slot)
-	var cap := Commands.slot_express_cap(slot)
-	var used := inst.affixes.size() if inst != null else 0
-	title_lbl.text = "EXPRESS — %s  (%d/%d)" % [slot.replace("_", " ").capitalize(), used, cap]
-
-	if inst == null:
-		var note := Label.new()
-		note.text = "No organ here yet — metabolize one into this slot first."
-		note.add_theme_color_override("font_color", DIM)
-		list.add_child(note)
-		sheet.visible = true
-		return
-
-	var organ_full := used >= cap
-	var allowed_cats := content.allowed_categories(l)
-	var any_shown := false
-	for affix: Dictionary in content.tables.get("affixes", []):
-		var affix_id := String(affix.get("id", ""))
-		# Slot affinity: only genes that express on THIS organ appear here.
-		if not Commands.affix_allows_slot(affix, slot):
-			continue
-		var gene_row := content.gene_for_affix(affix_id)
-		if gene_row.is_empty():
-			continue
-		var gene_id := String(gene_row.get("id", ""))
-		var copies := int(Store.state.genes_known.get(gene_id, 0))
-		if copies == 0:
-			continue
-
-		any_shown = true
-		var cat := String(affix.get("category", "generalist"))
-		var cat_locked := not allowed_cats.has(cat)
-
-		var current_tier := inst.express_tier(affix_id)
-		var target_tier := current_tier + 1
-		# A new affix needs a free expression slot; a tier-up never does.
-		var cap_blocked := current_tier == 0 and organ_full
-
-		var gc: Dictionary = affix.get("express_cost", {})
-		var mat := String(gc.get("material", ""))
-		var cost_qty := int(
-			roundf(float(gc.get("base", 0.0)) * pow(float(gc.get("growth", 1.0)), target_tier - 1))
-		)
-		var have_mat := int(Store.state.inventory_materials.get(mat, 0.0))
-		var mat_name := String(content.material(mat).get("name", mat))
-
-		var can_afford := have_mat >= cost_qty
-		var has_copies := copies >= target_tier
-
-		var row := HBoxContainer.new()
-		list.add_child(row)
-		var info_lbl := Label.new()
-		var tier_str := "T%d→T%d" % [current_tier, target_tier] if current_tier > 0 else "→T1"
-		if cat_locked:
-			info_lbl.text = (
-				"%s  %s  (requires %s)"
-				% [String(affix.get("name", affix_id)), tier_str, _class_for_category(cat, content)]
-			)
-			info_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
-		elif cap_blocked:
-			info_lbl.text = (
-				"%s  %s  (organ full — %d/%d)"
-				% [String(affix.get("name", affix_id)), tier_str, used, cap]
-			)
-			info_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
-		else:
-			info_lbl.text = (
-				"%s  %s  (%d/%d copies · %d %s)"
-				% [
-					String(affix.get("name", affix_id)),
-					tier_str,
-					copies,
-					target_tier,
-					cost_qty,
-					mat_name
-				]
-			)
-			info_lbl.add_theme_color_override("font_color", DIM if not can_afford else Color.WHITE)
-		info_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(info_lbl)
-
-		var aid := affix_id
-		var express_btn := Button.new()
-		express_btn.text = "Express"
-		express_btn.disabled = cat_locked or cap_blocked or not (can_afford and has_copies)
-		express_btn.modulate = Color(1, 1, 1, 0.4) if (cat_locked or cap_blocked) else Color.WHITE
-		express_btn.pressed.connect(func() -> void: _on_express_pressed(_express_slot, aid))
-		row.add_child(express_btn)
-
-	if not any_shown:
-		var note := Label.new()
-		note.text = "No genes in your codex fit this organ yet."
-		note.add_theme_color_override("font_color", DIM)
-		list.add_child(note)
-
-	sheet.visible = true
-
-
-# -- helpers ------------------------------------------------------------------
-
-
-func _class_for_category(category: String, content: Content) -> String:
-	for row: Dictionary in content.tables.get("class_tree", []):
-		if (row.get("unlocks_categories", []) as Array).has(category):
-			return String(row.get("name", category))
-	return category.replace("_", " ").capitalize()
-
-
 # -- event handlers -----------------------------------------------------------
 
 
-func _on_metabolize_pressed(adaptation_id: String) -> void:
-	var result := Store.metabolize(_lineage().id, adaptation_id)
-	if not result["ok"]:
-		return
-	var inst: AdaptationInstance = result["instance"]
-	var def := Data.content.adaptation(inst.def_id)
-	for key: String in _doll_slot_labels:
-		if key == "_btn_" + adaptation_id:
-			var refs: Dictionary = _doll_slot_labels[key]
-			var btn := refs["btn"] as Button
-			var at := btn.global_position + Vector2(btn.size.x * 0.5, 0.0)
-			LootPop.spawn(
-				_pop_layer,
-				at,
-				"%s T%d" % [String(def.get("name", inst.def_id)), inst.tier],
-				RarityColors.of(inst.rarity)
-			)
-			_pulse(btn)
-			break
-
-
-func _on_claim_splice(index: int) -> void:
-	var result := Store.claim_splice(index)
-	if not result["ok"]:
-		return
-	var gene_id := String(result.get("gene", ""))
-	var gene_row := Data.content.gene(gene_id)
-	var rarity := String(gene_row.get("rarity", "common"))
-	var at := get_viewport().get_visible_rect().size * 0.5
-	LootPop.spawn(
-		_pop_layer,
-		at,
-		"Spliced: %s" % String(gene_row.get("name", gene_id)),
-		RarityColors.of(rarity)
-	)
-
-
-func _on_express_pressed(slot: String, affix_id: String) -> void:
-	var result := Store.express(_lineage().id, slot, affix_id)
-	if not result["ok"]:
-		return
-	var inst: AdaptationInstance = result["instance"]
-	var affix_row := Data.content.affix(affix_id)
-	var at := get_viewport().get_visible_rect().size * Vector2(0.5, 0.75)
-	LootPop.spawn(
-		_pop_layer,
-		at,
-		"Expressed: %s" % String(affix_row.get("name", affix_id)),
-		RarityColors.of(inst.rarity)
-	)
-	_open_express_sheet(slot)
-
-
-func _on_loot(lineage_id: String, loot: Dictionary) -> void:
-	if lineage_id != _lineage().id:
-		return
-	var refs: Dictionary = _cards.get(_lineage().assigned_node, {})
-	if refs.is_empty():
-		return
-	var card: Control = refs["card"]
-	if not card.visible:
-		return
-	var at := Vector2(48.0, card.global_position.y + 16.0)
-
-	var mats: Dictionary = loot["materials"]
-	for mat_id: String in mats:
-		var qty := float(mats[mat_id])
-		var mat := Data.content.material(mat_id)
-		var amount := "+%d" % roundi(qty) if qty >= 0.95 else "+%.1f" % qty
-		LootPop.spawn(
-			_pop_layer,
-			at + Vector2(0.0, -20.0),
-			"%s %s" % [amount, String(mat.get("name", mat_id))],
-			RarityColors.of(String(mat.get("rarity", "common")))
-		)
-
-	var gene: Dictionary = loot["gene"]
-	if not gene.is_empty():
-		var gene_id := String(gene.get("id", ""))
-		var gene_row := Data.content.gene(gene_id)
-		LootPop.spawn(
-			_pop_layer,
-			at + Vector2(0.0, 30.0),
-			"Gene: %s" % String(gene_row.get("name", gene_id)),
-			RarityColors.of(String(gene.get("rarity", "common")))
-		)
-
-	var offer := String(loot["splice_offer"])
-	if offer != "":
-		var gene_row := Data.content.gene(offer)
-		LootPop.spawn(
-			_pop_layer,
-			at + Vector2(0.0, 60.0),
-			"Splice offer: %s" % String(gene_row.get("name", offer)),
-			RarityColors.of(String(gene_row.get("rarity", "common")))
-		)
-
-
 func _on_branch_pressed() -> void:
-	_active_lineage_idx = Store.state.lineages.size()
-	_pending_class_id = ""
-	var display_name := "Branch %d" % (_active_lineage_idx + 1)
+	_ui.active_lineage_idx = Store.state.lineages.size()
+	_ui.pending_class_id = ""
+	var display_name := "Branch %d" % (_ui.active_lineage_idx + 1)
 	var result := Store.branch_lineage(display_name)
 	if not result["ok"]:
-		_active_lineage_idx = clampi(_active_lineage_idx - 1, 0, Store.state.lineages.size() - 1)
+		_ui.active_lineage_idx = clampi(
+			_ui.active_lineage_idx - 1, 0, Store.state.lineages.size() - 1
+		)
 
 
-func _on_class_commit_pressed(class_id: String) -> void:
-	_pending_class_id = class_id
-	_refresh()
-
-
-func _on_class_confirm_pressed(class_id: String) -> void:
-	_pending_class_id = ""
-	var result := Store.pick_class(_lineage().id, class_id)
-	if not result["ok"]:
-		push_warning("pick_class rejected: " + String(result.get("reason", "")))
-
-
-# -- agenda (WP2) -------------------------------------------------------------
-
-
-func _refresh_agenda(l: Lineage, content: Content) -> void:
-	for c in _agenda_list.get_children():
-		c.queue_free()
-	var items := Agenda.for_lineage(Store.state, content, l.id)
-	if items.is_empty():
-		var none := Label.new()
-		none.text = "All caught up. Let it ride — or branch a new lineage."
-		none.add_theme_color_override("font_color", DIM)
-		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_agenda_list.add_child(none)
+## A forage tick: hand the loot to the World tab (the clash heartbeat + node pops),
+## but only for the lineage currently shown.
+func _on_loot(lineage_id: String, loot: Dictionary) -> void:
+	if lineage_id != _ui.active_lineage().id:
 		return
-	for item: Dictionary in items:
-		var action: Dictionary = item.get("action", {})
-		if action.is_empty():
-			var lbl := Label.new()
-			lbl.text = "·  " + String(item.get("text", ""))
-			lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			lbl.add_theme_color_override("font_color", DIM)
-			_agenda_list.add_child(lbl)
-		else:
-			var btn := Button.new()
-			btn.text = "▶  " + String(item.get("text", ""))
-			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			btn.pressed.connect(_on_agenda_action.bind(action))
-			_agenda_list.add_child(btn)
-
-
-## Run a ready-now agenda action through the existing handlers (so loot pops and
-## pulses behave exactly as a manual tap would).
-func _on_agenda_action(action: Dictionary) -> void:
-	match String(action.get("cmd", "")):
-		"claim_splice":
-			_on_claim_splice(int(action.get("index", 0)))
-		"metabolize":
-			_on_metabolize_pressed(String(action.get("adaptation_id", "")))
+	_world_tab.on_loot(loot)
 
 
 # -- the while-you-were-away dispatch (WP1) -----------------------------------
@@ -1425,8 +366,8 @@ func _build_dispatch_sheet() -> Control:
 
 
 ## Present an applied Accrual batch as a Dev dispatch (VISION.md §16): good-news
-## framing, the rare moment up top, the rest a tidy tally — never a scroll of
-## every event, never a "you lost progress" line.
+## framing, the rare moment up top, the rest a tidy tally — never a scroll of every
+## event, never a "you lost progress" line.
 func _show_dispatch(batch: Dictionary) -> void:
 	var content := Data.content
 	var title := _dispatch_sheet.get_meta("title") as Label
@@ -1440,7 +381,6 @@ func _show_dispatch(batch: Dictionary) -> void:
 		% _format_elapsed(float(batch.get("dt", 0.0)))
 	)
 
-	# Tally events.
 	var gene_by_rarity: Dictionary = {}
 	var splice_count := 0
 	var best_rarity := ""
@@ -1450,14 +390,13 @@ func _show_dispatch(batch: Dictionary) -> void:
 			"gene":
 				var r := String(ev.get("rarity", "common"))
 				gene_by_rarity[r] = int(gene_by_rarity.get(r, 0)) + 1
-				if _rarity_rank(r) > _rarity_rank(best_rarity):
+				if UiUtil.rarity_rank(r) > UiUtil.rarity_rank(best_rarity):
 					best_rarity = r
 					best_gene = String(ev.get("gene", ""))
 			"splice":
 				splice_count += 1
 
-	# Headline: lead with the rarest gene, or a waiting splice; else the steady drip.
-	if best_gene != "" and _rarity_rank(best_rarity) >= _rarity_rank("rare"):
+	if best_gene != "" and UiUtil.rarity_rank(best_rarity) >= UiUtil.rarity_rank("rare"):
 		var gname := String(content.gene(best_gene).get("name", best_gene))
 		headline.text = "The grind paid out: %s (%s)." % [gname, best_rarity]
 		headline.add_theme_color_override("font_color", RarityColors.of(best_rarity))
@@ -1466,9 +405,8 @@ func _show_dispatch(batch: Dictionary) -> void:
 		headline.add_theme_color_override("font_color", RarityColors.of("epic"))
 	else:
 		headline.text = "Steady progress while you were away."
-		headline.add_theme_color_override("font_color", GOOD)
+		headline.add_theme_color_override("font_color", UiUtil.GOOD)
 
-	# Materials harvested.
 	var mats: Dictionary = batch.get("materials", {})
 	var mat_line := ""
 	for mat_id: String in mats:
@@ -1478,24 +416,23 @@ func _show_dispatch(batch: Dictionary) -> void:
 		var mname := String(content.material(mat_id).get("name", mat_id))
 		mat_line += ("" if mat_line == "" else "   ") + "+%d %s" % [q, mname]
 	if mat_line != "":
-		summary.add_child(_dispatch_line("Harvest:  " + mat_line, DIM))
+		summary.add_child(_dispatch_line("Harvest:  " + mat_line, UiUtil.DIM))
 
-	# Gene tally, rarest first.
 	var parts: Array[String] = []
 	for r: String in ["legendary", "epic", "rare", "uncommon", "common"]:
 		if gene_by_rarity.has(r):
 			parts.append("%d %s" % [int(gene_by_rarity[r]), r])
 	if not parts.is_empty():
-		summary.add_child(_dispatch_line("Genes:  " + " · ".join(parts), DIM))
+		summary.add_child(_dispatch_line("Genes:  " + " · ".join(parts), UiUtil.DIM))
 	if splice_count > 0:
 		summary.add_child(
 			_dispatch_line("Splice offers waiting:  %d" % splice_count, RarityColors.of("epic"))
 		)
 	if mat_line == "" and parts.is_empty() and splice_count == 0:
-		summary.add_child(_dispatch_line("Nothing notable — the server was quiet.", DIM))
+		summary.add_child(_dispatch_line("Nothing notable — the server was quiet.", UiUtil.DIM))
 
 	_dispatch_sheet.visible = true
-	_pulse(headline)
+	UiUtil.pulse(headline)
 
 
 func _dispatch_line(text: String, color: Color) -> Label:
@@ -1504,21 +441,6 @@ func _dispatch_line(text: String, color: Color) -> Label:
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.add_theme_color_override("font_color", color)
 	return l
-
-
-func _rarity_rank(rarity: String) -> int:
-	match rarity:
-		"legendary":
-			return 5
-		"epic":
-			return 4
-		"rare":
-			return 3
-		"uncommon":
-			return 2
-		"common":
-			return 1
-	return 0
 
 
 func _format_elapsed(seconds: float) -> String:
@@ -1531,35 +453,3 @@ func _format_elapsed(seconds: float) -> String:
 	if h > 0:
 		return "%dh %dm" % [h, m]
 	return "%dm" % maxi(m, 1)
-
-
-func _pulse(c: Control) -> void:
-	c.pivot_offset = c.size / 2.0
-	c.scale = Vector2(1.3, 1.3)
-	var t := c.create_tween()
-	t.tween_property(c, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(
-		Tween.EASE_OUT
-	)
-
-
-func _section_label(caption: String) -> Label:
-	var l := Label.new()
-	l.text = caption
-	l.add_theme_color_override("font_color", DIM)
-	l.add_theme_font_size_override("font_size", 16)
-	return l
-
-
-func _roman(n: int) -> String:
-	match n:
-		1:
-			return "I"
-		2:
-			return "II"
-		3:
-			return "III"
-		4:
-			return "IV"
-		5:
-			return "V"
-	return str(n)

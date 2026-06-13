@@ -286,6 +286,16 @@ func _apply_batch(state: GameState, batch: Dictionary) -> void:
 				)
 
 
+## True if the live stash can pay every material in `cost` (empty cost → false).
+func _affordable(state: GameState, cost: Dictionary) -> bool:
+	if cost.is_empty():
+		return false
+	for mat_id: String in cost:
+		if float(state.inventory_materials.get(mat_id, 0.0)) < float(cost[mat_id]):
+			return false
+	return true
+
+
 ## Deterministic player policy. Runs AFTER _apply_batch on the same check-in.
 ## Returns {splices: int, expresses: int}.
 func _apply_policy(state: GameState, content: Content) -> Dictionary:
@@ -299,22 +309,39 @@ func _apply_policy(state: GameState, content: Content) -> Dictionary:
 			break
 		splices += 1
 
-	# 2. Metabolize: build or tier-up any affordable adaptation for each lineage.
+	# 2. Metabolize, ORGAN-STABLE: keep one organ per slot and tier it up; never
+	#    replace a different organ (which would thrash and waste materials every
+	#    check-in). Empty slot → build the first allowed, affordable adaptation in
+	#    data order; occupied slot → tier up the organ already there. Models a
+	#    coherent player build now that essential slots offer ≥2 options (WP3).
 	for lineage: Lineage in state.lineages:
-		for def: Dictionary in content.tables.get("adaptations", []):
-			var tier := Commands.next_tier(lineage, def)
-			if tier == 0:
+		for slot: String in Lineage.SLOTS:
+			var inst: AdaptationInstance = lineage.doll.get(slot)
+			if inst != null:
+				var cur_def := content.adaptation(inst.def_id)
+				var tier := Commands.next_tier(lineage, cur_def)
+				if tier > 0 and _affordable(state, Commands.metabolize_cost(cur_def, tier)):
+					Commands.metabolize(state, content, lineage.id, inst.def_id)
 				continue
-			var cost := Commands.metabolize_cost(def, tier)
-			if cost.is_empty():
-				continue
-			var affordable := true
-			for mat_id: String in cost:
-				if float(state.inventory_materials.get(mat_id, 0.0)) < float(cost[mat_id]):
-					affordable = false
-					break
-			if affordable:
-				Commands.metabolize(state, content, lineage.id, String(def.get("id", "")))
+			# Empty slot: target the CANONICAL organ (first allowed adaptation in data
+			# order) and build it when affordable, otherwise wait this check-in. We do
+			# NOT substitute a different same-slot option just because it's affordable
+			# first — that would model a thrashier player and drift the curve. The new
+			# WP3 options widen the player's menu; the harness still verifies one
+			# representative generalist build (PHASE3_5 WP7).
+			var target_def: Dictionary = {}
+			for def: Dictionary in content.tables.get("adaptations", []):
+				if String(def.get("slot", "")) != slot:
+					continue
+				if not content.allowed_categories(lineage).has(String(def.get("category", ""))):
+					continue
+				target_def = def
+				break
+			if (
+				not target_def.is_empty()
+				and _affordable(state, Commands.metabolize_cost(target_def, 1))
+			):
+				Commands.metabolize(state, content, lineage.id, String(target_def.get("id", "")))
 
 	# 3. Graft: for each equipped slot, apply the affordable affix with the most
 	#    gene copies (ties broken by data order).

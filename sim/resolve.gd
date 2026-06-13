@@ -17,10 +17,14 @@ extends RefCounted
 ## a material/gene buff when the lineage works inside its class's home niches
 ## (buff at home, ×1.0 elsewhere — never a penalty, VISION.md §12).
 
-## Option A: which attribute each doll slot's tier feeds. gland is the affix
-## host and feeds no base attribute; vitality is unused this phase (PHASE3.md §1.3).
-## NOTE (flagged in PHASE3.md §2.1): locomotion→power keeps two power slots so
-## the margin engine stays healthy. WP6 may flip it to metabolism.
+## Option A (Phase 3.5 WP3 refinement): the equipped *adaptation* declares which
+## attribute its tier feeds, via its `feeds` field — so two organs in the same
+## slot can grow different attributes (a power mouthpart vs a filter-feeding one).
+## SLOT_ATTRIBUTE below is the per-slot DEFAULT, used only for rows that omit
+## `feeds` (defensive); real content declares `feeds`. gland feeds no base
+## attribute (affix host); vitality is unused this phase (PHASE3.md §1.3).
+## NOTE: keeping a power default on locomotion (and the swimming_flaps option)
+## holds two power slots so the margin engine stays healthy (DECISIONS 2026-06-13).
 const SLOT_ATTRIBUTE: Dictionary = {
 	"mouthparts": "power",
 	"locomotion": "power",
@@ -49,18 +53,26 @@ const AMBUSH_CAP: float = 0.75
 static func effective_attributes(lineage: Lineage, content: Content) -> Dictionary:
 	var attrs := lineage.attributes.duplicate()
 	for slot: String in lineage.doll:
-		var a: String = String(SLOT_ATTRIBUTE.get(slot, ""))
+		var inst := lineage.doll[slot] as AdaptationInstance
+		var a := attribute_for_def(content.adaptation(inst.def_id), slot)
 		if a != "":
-			attrs[a] = (
-				float(attrs.get(a, 0.0))
-				+ SLOT_TIER_WEIGHT * float((lineage.doll[slot] as AdaptationInstance).tier)
-			)
+			attrs[a] = float(attrs.get(a, 0.0)) + SLOT_TIER_WEIGHT * float(inst.tier)
 	var cls := content.class_node(lineage.class_node)
 	var stat_mods: Dictionary = cls.get("stat_mods", {})
 	for stat: Variant in stat_mods:
 		var key := String(stat)
 		attrs[key] = float(attrs.get(key, 0.0)) * float(stat_mods.get(stat, 1.0))
 	return attrs
+
+
+## The attribute an adaptation `def` feeds: its declared `feeds`, falling back to
+## the slot default for rows that omit it. "" means it feeds no base attribute
+## (the gland). The UI reads THIS so a metabolize option can show its attribute.
+static func attribute_for_def(def: Dictionary, slot: String = "") -> String:
+	if def.has("feeds"):
+		return String(def.get("feeds", ""))
+	var s := slot if slot != "" else String(def.get("slot", ""))
+	return String(SLOT_ATTRIBUTE.get(s, ""))
 
 
 ## Diminishing returns on Power above SOFT_CAP_KNEE.
@@ -200,6 +212,13 @@ static func resolve(
 ## The UI reads THIS to show "yield ×N" — it never re-derives the formula.
 static func yield_efficiency(lineage: Lineage, node: Dictionary, content: Content) -> float:
 	return _eff(lineage, node, affix_totals(lineage, content), content)
+
+
+## The danger-tax multiplier as the clash panel shows it (1.0 = no tax, < 1 =
+## retaliation bites; eat nodes are always 1.0). Public readout so the UI reads
+## THIS rather than re-deriving the tax formula (WP4 visible combat).
+static func danger_factor(lineage: Lineage, node: Dictionary, content: Content) -> float:
+	return _danger_factor(lineage, node, affix_totals(lineage, content), content)
 
 
 ## Materials gathered per second: margin efficiency, uptime bonus, danger tax,

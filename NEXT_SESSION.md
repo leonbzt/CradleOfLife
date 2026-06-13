@@ -12,12 +12,25 @@
   - **WP1 ✅** session loop — offline accrual applied on launch/resume + the
     while-you-were-away **Dev dispatch** (lead with the rare drop, tally the rest).
   - **WP2 ✅** the **do-now agenda** — derived "what's worth a tap" panel.
-  - **WP3–WP7 pending** — metabolize-as-choice, visible combat + splice catalogue,
-    tab IA, map-unlock achievements, re-prove + playtest gate. Full spec:
-    `PHASE3_5.md`.
+  - **WP3 ✅** metabolize-as-choice — each slot reads "what this organ becomes";
+    ≥2 generalist options per essential slot, each feeding a real attribute via the
+    new organ-declared `feeds` field (Leon signed the small Option A engine tweak).
+  - **WP4 ✅** visible combat (World-tab **clash panel** from the resolve() math —
+    pen cracking armour, danger tax, splice window) + the **splice catalogue**
+    (signature gene · copies · express tier · reach) + rare+ loot beats.
+  - **WP5 ✅** tab IA — persistent roster+header over Home / Body / World / Class.
+  - **WP7** harness ✅ re-proven (curve byte-identical to pre-WP3). **Pending:**
+    WP6 map-unlock achievements (not built — out of this session's ask) and the
+    **WP7 playtest gate** (web export to cohort). Full spec: `PHASE3_5.md`.
+- **Gate 2/3 sign-off owed (Leon):** the 5 new generalist adaptations' flavor +
+  the new `bible/refs/shallow-benthos.md` rationale sections (science), and all new
+  UI strings (voice). The Storage Cecum → resilience claim is the most interpretive.
+- **UI is now split per tab:** `ui/main.gd` is a 455-line shell; tabs live in
+  `ui/tabs/*.gd` over shared `ui_util` / `ui_state` / `express_sheet`. Whole UI is
+  gdlint-clean.
 - Playtest feedback that drove 3.5: *"fun, but not a lot to do concretely; mainly
-  waiting with very short check-ins."* WP1+WP2 are the first answer; eyeball them
-  with a web export (the DEV **⏩ +8h** button now raises the dispatch).
+  waiting with very short check-ins."* Eyeball the build with a web export (the DEV
+  **⏩ +8h** button raises the dispatch; the new tabs + clash + catalogue are live).
 
 ## To resume any session
 

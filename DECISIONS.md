@@ -736,20 +736,99 @@ check; the UI builds both panels in one pass), so a split would have left a
 non-compiling intermediate commit. Committed together — a deliberate deviation
 from PHASE3_5.md's "one WP per commit".
 
-**Remaining (PHASE3_5.md):** WP3 metabolize-as-choice, WP4 visible combat + splice
-catalogue, WP5 tab IA, WP6 map-unlock achievements (D5), WP7 re-prove + gate.
+**Remaining after WP1+WP2 (PHASE3_5.md):** WP3 metabolize-as-choice, WP4 visible
+combat + splice catalogue, WP5 tab IA, WP6 map-unlock achievements (D5), WP7
+re-prove + gate.
+
+---
+
+## 2026-06-13 — Phase 3.5 WP3+WP4+WP5 implemented (+ Option A refined)
+
+**What.** Built metabolize-as-choice, visible combat + the splice catalogue, and
+the tab IA (PHASE3_5.md WP3–WP5). WP6 (achievements) and the WP7 playtest gate
+were out of this session's scope; the WP7 harness re-prove was done.
+
+- **Option A refined — organ declares its attribute (signed 2026-06-13).** D3 asked
+  for ≥2 generalist options per essential slot, but the old engine routed
+  *slot → one fixed attribute* (`SLOT_ATTRIBUTE`), so two organs in a slot were
+  mechanically identical (only the build material differed). Offered Leon "ship the
+  material/identity choice" vs "small engine tweak so the organ picks the
+  attribute" — **Leon chose the engine tweak.** `Resolve.effective_attributes` now
+  reads each equipped adaptation's `feeds` field (fallback `SLOT_ATTRIBUTE` for
+  rows without one); `Resolve.attribute_for_def()` exposes it to the UI. This is a
+  §4 change to the locked Option A routing; the slot map remains the per-slot
+  *default*. **Replaces:** "each slot feeds a fixed attribute."
+- **WP3 content.** 5 new generalist adaptations, one per essential slot, feeding a
+  *peer/alternate* attribute so the choice is a real fork: Filtering Basket
+  (mouthparts→metabolism), Permeable Cuticle (integument→metabolism, cutaneous
+  respiration), Walking Legs (locomotion→metabolism), Storage Cecum
+  (metabolic_core→resilience), Sensory Antennae (sensory→instinct, the one honest
+  single-attribute slot — material/modality choice only). Validation now checks
+  `feeds`. **Gate 2/3 PENDING Leon:** flavor + the new `bible/refs/shallow-benthos.md`
+  rationale sections are written-to-be-checked, not signed; the Storage Cecum
+  resilience framing is the most interpretive — verify or retune `feeds`.
+- **WP4 visible combat + splice catalogue.** UI-only. A World-tab **clash panel**
+  renders the assigned node's fight from the existing resolve() math — power vs
+  effective armour, penetration cracking it, the danger tax, yield, and the splice
+  window — pulsing on each forage tick (eat nodes get a calm graze line). Added a
+  public `Resolve.danger_factor()` readout so the UI reads the tax, not a copy of
+  it. A **splice catalogue** lists every spliceable creature: its signature gene,
+  copies banked, the express tier those copies unlock, and a reach hint. Rare+
+  loot pops get the emphatic beat (`LootPop.spawn(..., emphatic)`); commons stay
+  quiet. *No economy change, no splice-vs-drop sharpening (still deferred).*
+- **WP5 tab IA.** `ui/main.gd` restructured from one scroll into a persistent top
+  (roster + header) over a Home / Body / World / Class tab bar (VISION §16
+  one-handed grammar). Body = metabolize-as-choice per-slot cards + express + gene
+  codex; World = niche + clash + the wild + splice offers + catalogue; Home =
+  agenda + stash + DEV bar; Class = the class panel.
+
+**Harness re-prove (WP7, part).** WP3's new same-slot options would thrash the old
+"build every affordable adaptation" policy and drift the curve. Made the harness
+player policy **organ-stable + canonical-targeting**: build one organ per slot
+(the first allowed in data order), tier it, and never substitute/replace — models
+one representative generalist build. Verified by isolation (new policy + old data
+= byte-identical baseline). Result: chase curve **unchanged** vs pre-WP3 — week
+means 59.9, 72.5, 76.2, 74.3, 74.7, 75.0; legendary p50=10 (in band); soft cap
+bites; no stranded content; lineages diverge. This is test scaffolding, not
+economy math (Resolve/Accrual constants untouched).
+
+**Verification.** validate_data PASS; sim_test PASS (existing organ→attribute
+assertions hold — every existing organ kept its attribute via an explicit
+`feeds`); economy_test unchanged; boot clean; gdparse/gdformat clean; all 4 tabs
+visually verified (no overflow, correct attribute routing, clash + catalogue
+render). Schema stayed v2.
+
+**Follow-up done — `ui/main.gd` split per tab (same session, Leon).** The 1950-line
+file became a thin shell (455 lines: chrome + tab routing + overlays + Store/UiState
+wiring) plus `ui/tabs/{home,body,world,class}_tab.gd`, a shared `ui/ui_util.gd`
+(colors + pure helpers), `ui/ui_state.gd` (view state + a `changed`/`navigate`
+signal so tabs never reference the shell — no cyclic class deps), and
+`ui/express_sheet.gd` (the overlay both Body and World open). Every UI file is now
+< 700 lines and the whole UI is **gdlint-clean** (max-file-lines no longer tripped).
+
+**Four playtest tweaks folded into the split (Leon, same session).**
+1. Home "do-now" equipment tier-ups now **navigate to the Body tab** (pulsing the
+   organ) instead of building inline — you choose what the organ becomes there.
+   Claims still act in place.
+2. DEV bar gained a **+1h** jump beside +8h.
+3. The clash panel shows **power vs current armour, with base armour + penetration
+   in parentheses** ("Power 3 vs armour 2 (base 4, penetration −2)").
+4. Owned genes in the codex (and the niche-key panel) now carry an **Express ▸**
+   that jumps to a valid slot's express sheet — so there's always an obvious place
+   to put a gene you just earned (e.g. the Great Appendage). The agenda also no
+   longer suggests a "build" that would silently replace a different organ.
 
 ---
 
 ## Open questions (current)
 
-- **Metabolize screen — DIRECTION SET 2026-06-13, building in Phase 3.5.** Each
-  doll slot built one fixed adaptation, which read as "craft this specific thing"
-  with no choice. Fix: reframe a slot as "what this organ becomes" with ≥2
-  generalist options per essential slot (PHASE3_5.md WP3). The *deeper* want —
-  *situational best-in-slot*, where you spec a build optimal for a specific
-  activity/niche so branches earn their purpose — goes to the build-identity design
-  session (below), not 3.5.
+- **Metabolize screen — BUILT 2026-06-13 (WP3).** Each slot now reads as "what this
+  organ becomes": ≥2 generalist options per essential slot, each feeding a real
+  attribute via the organ-declared `feeds` field (see the WP3+4+5 entry above). The
+  *deeper* want — *situational best-in-slot*, where you spec a build optimal for a
+  specific activity/niche so branches earn their purpose — still goes to the
+  build-identity design session (below). The `feeds` field is the hook that session
+  builds on (e.g. per-niche attribute weightings).
 
 - **Phase 2 validation gate (WP7).** Web export to friend cohort; gate
   question: "does 'what should I fight' become a build decision players talk

@@ -82,6 +82,12 @@ static func _add_tierup_ready(
 	for def: Dictionary in content.tables.get("adaptations", []):
 		if not allowed.has(String(def.get("category", "generalist"))):
 			continue
+		# Don't suggest a "build" that would silently REPLACE a different organ
+		# already in this slot (a metabolize swap, not a free upgrade). Only tier up
+		# the organ that's there, or build into an empty slot (WP3: ≥2 options/slot).
+		var equipped: AdaptationInstance = l.doll.get(String(def.get("slot", "")))
+		if equipped != null and equipped.def_id != String(def.get("id", "")):
+			continue
 		var tier := Commands.next_tier(l, def)
 		if tier == 0:
 			continue

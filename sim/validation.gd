@@ -16,6 +16,7 @@ const ROLES: Array[String] = [
 	"affliction", "control", "guard", "sustain", "perception", "penetration", "stealth"
 ]
 const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
+const ATTRIBUTES: Array[String] = ["vitality", "power", "resilience", "metabolism", "instinct"]
 
 ## Canonical math_term → orthogonal_role mapping. This is the engine vocabulary;
 ## a new term in data must fail loudly (PHASE2.md §3, WP3).
@@ -222,6 +223,12 @@ static func validate_adaptations(content: Content) -> Array[String]:
 		seen_ids[id] = true
 		if not Lineage.SLOTS.has(String(row.get("slot", ""))):
 			errors.append("adaptation '%s' has unknown slot '%s'" % [id, row.get("slot", "")])
+		# `feeds` (Option A WP3): which attribute the organ's tier grows. "" is the
+		# gland (affix host, no base attribute); any other value must be a real one.
+		if row.has("feeds"):
+			var feeds := String(row.get("feeds", ""))
+			if feeds != "" and not ATTRIBUTES.has(feeds):
+				errors.append("adaptation '%s' feeds unknown attribute '%s'" % [id, feeds])
 		var cost: Dictionary = row.get("build_cost", {})
 		if cost.is_empty():
 			errors.append("adaptation '%s' missing build_cost" % id)

@@ -8,8 +8,11 @@
 > disagree, the canonical docs win — stop and flag.
 >
 > **Progress (2026-06-13):** WP1 ✅ (session loop + dispatch) · WP2 ✅ (do-now
-> agenda) · WP3–WP7 pending. See DECISIONS.md 2026-06-13 for the implementation
-> record.
+> agenda) · WP3 ✅ (metabolize-as-choice — with the signed Option A refinement:
+> organ declares its attribute) · WP4 ✅ (visible combat clash panel + splice
+> catalogue) · WP5 ✅ (tab IA) · WP7 harness ✅ re-proven (curve unchanged).
+> **WP6 (achievements) not built this session; WP7 playtest gate pending.** See
+> DECISIONS.md 2026-06-13 for the implementation record.
 
 ---
 

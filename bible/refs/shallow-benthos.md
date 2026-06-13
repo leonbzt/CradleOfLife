@@ -72,3 +72,61 @@ bases of the legs — capable of crushing shelled prey. Crushing through hard pa
 maps to penetration: reducing the effectiveness of an opponent's mitigation,
 distinct from raw power. *Verify: source on arthropod gnathobasic feeding (e.g.
 trilobites, Sidneyia).*
+
+---
+
+## Metabolize-as-choice: alternate generalist organs (Phase 3.5 WP3)
+
+These are the second generalist option per essential slot (a choose-one against
+the organ already documented above). Each declares which **attribute** its tier
+feeds (`feeds`), so the choice is a real build fork, not just a renamed organ
+(DECISIONS.md 2026-06-13). All five are **rationale only — pending gate-2 sign-off.**
+
+## Mouthpart strategies
+
+**Feeds:** `metabolism` (filter feeding). **Used by:** Filtering Basket organ.
+Suspension/filter feeding — straining suspended food from the water with mesh-like
+or comb-like appendages — is an ancient and widespread feeding mode (and arose
+among Cambrian radiodonts such as *Tamisiocaris*). It trades the seizing force of
+a raptorial mouthpart for sustained processing of large water volumes, i.e.
+throughput rather than attack power — mapped here to Metabolism, contrasted with
+the power-feeding Frontal Appendage. *Verify: source on Cambrian suspension/filter
+feeding mouthpart morphology.*
+
+## Cuticle strategies
+
+**Feeds:** `metabolism` (cutaneous gas exchange). **Used by:** Permeable Cuticle organ.
+Many soft-bodied marine animals respire across a thin, permeable body wall
+(cutaneous respiration) rather than investing in mineralized armour. A thin
+integument supports diffusive gas exchange — energy throughput — at the cost of
+the mitigation a mineralized carapace provides; mapped to Metabolism, contrasted
+with the resilience-feeding Calcite Carapace. *Verify: source on cutaneous
+respiration / thin-cuticle gas exchange in marine invertebrates.*
+
+## Locomotion strategies
+
+**Feeds:** `metabolism` (economical benthic foraging). **Used by:** Walking Legs organ.
+Benthic walking on jointed legs is a low-cost-of-transport mode relative to active
+swimming; steady ambulatory foraging across the substrate sustains feeding effort
+rather than producing burst movement — mapped to Metabolism, contrasted with the
+power-feeding Swimming Flaps. *Verify: source on cost of transport for benthic
+walking vs swimming in early arthropods.*
+
+## Sensory strategies
+
+**Feeds:** `instinct` (chemo-/mechanoreception). **Used by:** Sensory Antennae organ.
+Antennae bearing chemo- and mechanoreceptors are a primary non-visual sense in
+early arthropods, detecting chemical cues and water movement — an alternate route
+to the same find-rate/detection role as compound eyes (both feed Instinct; the
+choice is modality and material, this slot's honest single-attribute case).
+*Verify: source on arthropod antennal chemo-/mechanoreception.*
+
+## Metabolic strategies
+
+**Feeds:** `resilience` (energy reserves buffer starvation). **Used by:** Storage Cecum organ.
+Digestive ceca / midgut glands that store energy reserves let an animal ride out
+lean periods; banked reserves buffer starvation stress — an endurance function
+mapped to Resilience, contrasted with the throughput-feeding Gill Branches. *(This
+is the most interpretive of the five — verify the reserve-storage → endurance
+framing, or retune `feeds`.)* *Verify: source on midgut gland / cecal energy
+storage in early arthropods.*
