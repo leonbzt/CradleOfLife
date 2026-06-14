@@ -43,19 +43,14 @@ func _initialize() -> void:
 	_test_niche_key_gating(content)
 	_test_migration_v1_to_v2()
 
-	# Phase 3 WP1: Option A, class stat mods, soft cap, niche multiplier
+	# Per-slot doll routing + soft cap (class tree parked: reset 2026-06-14)
 	_test_option_a_slot_routing(content)
-	_test_class_stat_mods(content)
 	_test_soft_cap(content)
-	_test_niche_mult(content)
+	_test_derived_role(content)
 	_test_accrue_determinism_phase3(content)
 
-	# Phase 3 WP2: pick_class, branch_lineage, eligibility gates
-	_test_pick_class(content)
+	# Cladogenesis (the respec valve)
 	_test_branch_lineage(content)
-	_test_metabolize_category_gate(content)
-	_test_express_category_gate(content)
-	_test_allowed_categories_monotonic(content)
 
 	# Phase 3 polish: slot affinity, per-organ cap, evolving organ names
 	_test_slot_affinity(content)
@@ -644,40 +639,6 @@ func _test_option_a_slot_routing(content: Content) -> void:
 	)
 
 
-func _test_class_stat_mods(content: Content) -> void:
-	# stat_mods {power: 1.25} applied after slot contributions.
-	var fake := Content.new()
-	fake.tables = content.tables.duplicate(true)
-	fake.tables["class_tree"] = [
-		{
-			"id": "mock_class",
-			"name": "Mock",
-			"parent": "generalist",
-			"stat_mods": {"power": 1.25},
-			"home_niches": [],
-			"niche_mult": {"material": 1.0, "gene": 1.0},
-		}
-	]
-	var l := Lineage.new("t", "T")
-	var inst := AdaptationInstance.new("frontal_appendage", 2)  # +2 power from mouthparts
-	l.doll["mouthparts"] = inst
-	l.class_node = "mock_class"
-	# base power 1 + slot 2 = 3; ×1.25 = 3.75; soft_cap(3.75) = 3.75 (< KNEE)
-	_check(
-		is_equal_approx(Resolve.effective_power(l, fake), 3.75),
-		"class_stat_mods: power 1+tier2=3, ×1.25 stat_mod → 3.75"
-	)
-
-	# Unknown class_node → identity (no stat mods applied).
-	var l2 := Lineage.new("t", "T")
-	l2.doll["mouthparts"] = AdaptationInstance.new("frontal_appendage", 2)
-	l2.class_node = "nonexistent_class"
-	_check(
-		is_equal_approx(Resolve.effective_power(l2, content), 3.0),
-		"class_stat_mods: unknown class_node is identity → power 1+tier2=3"
-	)
-
-
 func _test_soft_cap(content: Content) -> void:
 	# Below the knee: identity.
 	var below := Resolve.soft_cap(Resolve.SOFT_CAP_KNEE - 1.0)
@@ -700,75 +661,29 @@ func _test_soft_cap(content: Content) -> void:
 	_check(very_high > Resolve.SOFT_CAP_KNEE, "soft_cap: well above knee is still above knee")
 
 
-func _test_niche_mult(content: Content) -> void:
-	# Build a fake content with one specialist class: home_niches = [shallow_benthos].
-	var fake := Content.new()
-	fake.tables = content.tables.duplicate(true)
-	fake.tables["class_tree"] = [
-		{
-			"id": "mock_specialist",
-			"name": "Mock Specialist",
-			"parent": "generalist",
-			"stat_mods": {},
-			"home_niches": ["shallow_benthos"],
-			"niche_mult": {"material": 1.2, "gene": 1.3},
-		}
-	]
-	var benthos_node := content.node("microbial_mat")  # niche = shallow_benthos
-	var pelagic_node := content.node("plankton_bloom")  # niche = pelagic
-
-	var l_home := Lineage.new("t", "T")
-	l_home.attributes["power"] = 10.0
-	l_home.class_node = "mock_specialist"
-
-	# At home niche: material ×1.2, gene ×1.3.
-	var nm_home := Resolve.niche_mult(l_home, benthos_node, fake)
-	_check(is_equal_approx(nm_home.material, 1.2), "niche_mult: at home niche → material 1.2")
-	_check(is_equal_approx(nm_home.gene, 1.3), "niche_mult: at home niche → gene 1.3")
-
-	# Away from home niche: identity.
-	var nm_away := Resolve.niche_mult(l_home, pelagic_node, fake)
-	_check(is_equal_approx(nm_away.material, 1.0), "niche_mult: away niche → material 1.0")
-	_check(is_equal_approx(nm_away.gene, 1.0), "niche_mult: away niche → gene 1.0")
-
-	# Rate ratio home/away = 1.2 for material, 1.3 for gene.
-	var rate_home := Resolve.material_rate(l_home, benthos_node, fake)
-	l_home.class_node = "generalist"  # identity class
-	var rate_away := Resolve.material_rate(l_home, benthos_node, fake)
-	l_home.class_node = "mock_specialist"
+func _test_derived_role(content: Content) -> void:
+	# Role is a pure display read off the doll (class tree parked, reset 2026-06-14):
+	# an empty doll reads Generalist; the dominant fed attribute names the role.
+	var l_empty := Lineage.new("t", "T")
 	_check(
-		is_equal_approx(rate_home / rate_away, 1.2),
-		"niche_mult: material_rate at home / away = 1.2"
+		Resolve.derived_role(l_empty, content) == "Generalist",
+		"derived_role: empty doll → Generalist"
 	)
 
-	var gene_rate_home := Resolve.gene_rate(l_home, benthos_node, fake)
-	l_home.class_node = "generalist"
-	var gene_rate_away := Resolve.gene_rate(l_home, benthos_node, fake)
-	l_home.class_node = "mock_specialist"
-	if not is_zero_approx(gene_rate_away):
-		_check(
-			is_equal_approx(gene_rate_home / gene_rate_away, 1.3),
-			"niche_mult: gene_rate at home / away = 1.3"
-		)
-
-	# Splice rate is NOT affected by niche_mult.
-	var fight_node: Dictionary = {
-		"id": "tn",
-		"kind": "fight",
-		"defense": 0.0,
-		"material_rate": 1.0,
-		"gene_rate": 0.001,
-		"gene_table": [],
-		"splice_rate": 0.1,
-		"spliceable": "gene_gill",
-		"niche": "shallow_benthos",
-	}
-	var splice_home := Resolve.splice_rate_eff(l_home, fight_node, fake)
-	l_home.class_node = "generalist"
-	var splice_away := Resolve.splice_rate_eff(l_home, fight_node, fake)
+	# A power mouthpart (feeds power) → Predator.
+	var l_power := Lineage.new("t", "T")
+	l_power.doll["mouthparts"] = AdaptationInstance.new("frontal_appendage", 2)
 	_check(
-		is_equal_approx(splice_home, splice_away),
-		"niche_mult: splice_rate_eff identical at home and away"
+		Resolve.derived_role(l_power, content) == "Predator",
+		"derived_role: power-fed doll → Predator"
+	)
+
+	# A resilience integument (feeds resilience) → Armored Grazer.
+	var l_guard := Lineage.new("t", "T")
+	l_guard.doll["integument"] = AdaptationInstance.new("calcite_carapace", 2)
+	_check(
+		Resolve.derived_role(l_guard, content) == "Armored Grazer",
+		"derived_role: resilience-fed doll → Armored Grazer"
 	)
 
 
@@ -794,104 +709,7 @@ func _test_accrue_determinism_phase3(content: Content) -> void:
 	)
 
 
-# -- Phase 3 WP2: pick_class, branch_lineage, eligibility gates ---------------
-
-
-func _fake_content_with_classes(content: Content) -> Content:
-	var fake := Content.new()
-	fake.tables = content.tables.duplicate(true)
-	fake.tables["class_tree"] = [
-		{
-			"id": "generalist",
-			"name": "Generalist",
-			"parent": "",
-			"stat_mods": {},
-			"home_niches": [],
-			"niche_mult": {"material": 1.0, "gene": 1.0},
-			"requires": {},
-			"unlocks_categories": [],
-		},
-		{
-			"id": "predator",
-			"name": "Predator",
-			"parent": "generalist",
-			"stat_mods": {"power": 1.2},
-			"home_niches": ["reef_edge"],
-			"niche_mult": {"material": 1.2, "gene": 1.2},
-			"requires": {"affix_keys": ["penetration"], "genes": []},
-			"unlocks_categories": ["raptorial"],
-		},
-		{
-			"id": "ambush_predator",
-			"name": "Ambush Predator",
-			"parent": "predator",
-			"stat_mods": {"power": 1.3, "instinct": 1.1},
-			"home_niches": ["reef_edge"],
-			"niche_mult": {"material": 1.3, "gene": 1.3},
-			"requires": {"affix_keys": ["stealth"], "genes": []},
-			"unlocks_categories": ["raptorial"],
-		},
-		{
-			"id": "filter_feeder",
-			"name": "Filter Feeder",
-			"parent": "generalist",
-			"stat_mods": {"metabolism": 1.3},
-			"home_niches": ["pelagic"],
-			"niche_mult": {"material": 1.2, "gene": 1.2},
-			"requires": {"affix_keys": ["sustain"], "genes": []},
-			"unlocks_categories": ["filter_apparatus"],
-		},
-	]
-	return fake
-
-
-func _test_pick_class(content: Content) -> void:
-	var fake := _fake_content_with_classes(content)
-	var state := _fresh_state(fake)
-	var l := state.lineages[0]
-	_check(l.class_node == "generalist", "pick_class setup: starts as generalist")
-
-	# No-op: pick current class → ok.
-	var r_noop := Commands.pick_class(state, fake, "main", "generalist")
-	_check(r_noop["ok"], "pick_class: no-op (same class) returns ok")
-
-	# Descend to predator — requires penetration key; not met yet.
-	var r_no_key := Commands.pick_class(state, fake, "main", "predator")
-	_check(not r_no_key["ok"], "pick_class: predator rejected without penetration express")
-
-	# Equip a penetration express to meet the key.
-	state.inventory_materials["biofilm"] = 60.0
-	Commands.metabolize(state, fake, "main", "frontal_appendage")
-	state.genes_known["gene_gnathobase"] = 1
-	var gc: Dictionary = content.affix("gnathobase_minor").get("express_cost", {})
-	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.express(state, fake, "main", "mouthparts", "gnathobase_minor")
-	var r_ok := Commands.pick_class(state, fake, "main", "predator")
-	_check(r_ok["ok"], "pick_class: predator accepted after penetration express equipped")
-	_check(l.class_node == "predator", "pick_class: class_node updated to predator")
-
-	# Sibling class rejected (predator → filter_feeder is a sibling).
-	var r_sibling := Commands.pick_class(state, fake, "main", "filter_feeder")
-	_check(not r_sibling["ok"], "pick_class: sibling class rejected (sticky)")
-
-	# Regress to generalist rejected.
-	var r_regress := Commands.pick_class(state, fake, "main", "generalist")
-	_check(not r_regress["ok"], "pick_class: regression to parent rejected (sticky)")
-
-	# Descend further: ambush_predator requires stealth — not met.
-	var r_no_stealth := Commands.pick_class(state, fake, "main", "ambush_predator")
-	_check(not r_no_stealth["ok"], "pick_class: ambush_predator rejected without stealth express")
-
-	# Equip stealth express; then descend works. Glassy Tissue is integument-only
-	# (slot affinity), so build a carapace to host it.
-	state.genes_known["gene_glassy_tissue"] = 1
-	var gc2: Dictionary = content.affix("glassy_tissue").get("express_cost", {})
-	state.inventory_materials[String(gc2.get("material", ""))] = 9999.0
-	state.inventory_materials["chitin"] = 9999.0
-	Commands.metabolize(state, fake, "main", "calcite_carapace")
-	Commands.express(state, fake, "main", "integument", "glassy_tissue")
-	var r_deep := Commands.pick_class(state, fake, "main", "ambush_predator")
-	_check(r_deep["ok"], "pick_class: ambush_predator accepted after stealth express equipped")
+# -- Cladogenesis (the respec valve) -----------------------------------------
 
 
 func _test_branch_lineage(content: Content) -> void:
@@ -903,7 +721,6 @@ func _test_branch_lineage(content: Content) -> void:
 	var r1 := Commands.branch_lineage(state, content, "", "Beta")
 	_check(r1["ok"], "branch_lineage: first branch accepted")
 	var l1: Lineage = r1["lineage"]
-	_check(l1.class_node == "generalist", "branch_lineage: starts as generalist")
 	_check(l1.doll.is_empty(), "branch_lineage: doll is empty")
 	_check(l1.assigned_node != "", "branch_lineage: assigned to starter node")
 	_check(state.lineages.size() == 1, "branch_lineage: lineage appended to state")
@@ -922,125 +739,6 @@ func _test_branch_lineage(content: Content) -> void:
 	for lin: Lineage in state.lineages:
 		_check(not ids.has(lin.id), "branch_lineage: unique ids ('%s' not duplicate)" % lin.id)
 		ids[lin.id] = true
-
-
-func _test_metabolize_category_gate(content: Content) -> void:
-	var fake := _fake_content_with_classes(content)
-	var state := GameState.new()
-	state.master_seed = 5
-	Commands.add_starter_lineage(state, fake)
-	state.inventory_materials["chitin"] = 9999.0
-	state.inventory_materials["biofilm"] = 9999.0
-	state.inventory_materials["flesh"] = 9999.0
-
-	# Generalist: generalist-category gear always allowed.
-	var r_gen := Commands.metabolize(state, fake, "main", "frontal_appendage")
-	_check(r_gen["ok"], "metabolize gate: generalist gear allowed for generalist class")
-
-	# Raptorial claw is category 'raptorial' — generalist cannot build it.
-	var r_locked := Commands.metabolize(state, fake, "main", "raptorial_claw")
-	_check(not r_locked["ok"], "metabolize gate: raptorial gear rejected for generalist")
-
-	# Pick predator class (need penetration express first).
-	state.genes_known["gene_gnathobase"] = 1
-	var gc: Dictionary = content.affix("gnathobase_minor").get("express_cost", {})
-	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.express(state, fake, "main", "mouthparts", "gnathobase_minor")
-	Commands.pick_class(state, fake, "main", "predator")
-	_check(state.lineages[0].class_node == "predator", "metabolize gate setup: is predator")
-
-	# Now raptorial gear is allowed.
-	var r_spec := Commands.metabolize(state, fake, "main", "raptorial_claw")
-	_check(r_spec["ok"], "metabolize gate: raptorial gear allowed after predator class")
-
-	# Filter apparatus still rejected for predator (different specialist).
-	var r_other := Commands.metabolize(state, fake, "main", "ciliary_fan")
-	_check(not r_other["ok"], "metabolize gate: filter_apparatus rejected for predator")
-
-
-func _test_express_category_gate(content: Content) -> void:
-	# Add a specialist affix whose category is 'raptorial'.
-	var fake := _fake_content_with_classes(content)
-	var raptorial_affix: Dictionary = {
-		"id": "raptorial_strike",
-		"name": "Raptorial Strike",
-		"orthogonal_role": "penetration",
-		"math_term": "pen_flat",
-		"params": {"amount": 1.0},
-		"category": "raptorial",
-		"slots": ["mouthparts", "locomotion"],
-		"express_cost": {"material": "chitin", "base": 10, "growth": 1.5},
-		"source": "test",
-	}
-	# Also add a gene that unlocks it.
-	var raptorial_gene: Dictionary = {
-		"id": "gene_raptorial_strike",
-		"name": "Raptorial Strike Gene",
-		"rarity": "rare",
-		"unlocks": {"kind": "affix", "id": "raptorial_strike"},
-		"source": "test",
-	}
-	(fake.tables["affixes"] as Array).append(raptorial_affix)
-	(fake.tables["genes"] as Array).append(raptorial_gene)
-
-	var state := GameState.new()
-	state.master_seed = 6
-	Commands.add_starter_lineage(state, fake)
-	state.inventory_materials["biofilm"] = 9999.0
-	state.inventory_materials["chitin"] = 9999.0
-	Commands.metabolize(state, fake, "main", "frontal_appendage")
-	state.genes_known["gene_raptorial_strike"] = 1
-
-	# Generalist cannot express raptorial affix.
-	var r_locked := Commands.express(state, fake, "main", "mouthparts", "raptorial_strike")
-	_check(not r_locked["ok"], "express gate: raptorial affix rejected for generalist")
-
-	# Unlock predator class (needs penetration key — give gnathobase express first).
-	state.genes_known["gene_gnathobase"] = 1
-	var gc: Dictionary = content.affix("gnathobase_minor").get("express_cost", {})
-	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.express(state, fake, "main", "mouthparts", "gnathobase_minor")
-	Commands.pick_class(state, fake, "main", "predator")
-
-	# Now predator can express raptorial affix.
-	var r_ok := Commands.express(state, fake, "main", "mouthparts", "raptorial_strike")
-	_check(r_ok["ok"], "express gate: raptorial affix allowed for predator")
-
-
-func _test_allowed_categories_monotonic(content: Content) -> void:
-	# After any legal pick_class, every previously-equipped item is still allowed.
-	var fake := _fake_content_with_classes(content)
-	var state := GameState.new()
-	state.master_seed = 8
-	Commands.add_starter_lineage(state, fake)
-	state.inventory_materials["biofilm"] = 9999.0
-	state.inventory_materials["chitin"] = 9999.0
-
-	# Equip generalist gear.
-	Commands.metabolize(state, fake, "main", "frontal_appendage")
-	var l := state.lineages[0]
-	var cats_before := fake.allowed_categories(l)
-	_check(cats_before.has("generalist"), "monotonic: generalist always in allowed set")
-
-	# Pick predator class.
-	state.genes_known["gene_gnathobase"] = 1
-	var gc: Dictionary = content.affix("gnathobase_minor").get("express_cost", {})
-	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.express(state, fake, "main", "mouthparts", "gnathobase_minor")
-	Commands.pick_class(state, fake, "main", "predator")
-
-	var cats_after := fake.allowed_categories(l)
-	# Generalist category must still be present.
-	_check(cats_after.has("generalist"), "monotonic: generalist still allowed after predator pick")
-	# Raptorial is now unlocked too.
-	_check(cats_after.has("raptorial"), "monotonic: raptorial unlocked after predator pick")
-	# The frontal_appendage (generalist category) must still be buildable.
-	var def := fake.adaptation("frontal_appendage")
-	var def_cat := String(def.get("category", "generalist"))
-	_check(
-		cats_after.has(def_cat),
-		"monotonic: previously equipped adaptation's category still allowed"
-	)
 
 
 # -- Phase 3 polish: slot affinity, per-organ cap, evolving names -------------

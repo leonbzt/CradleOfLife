@@ -43,7 +43,6 @@ var attributes: Dictionary = {
 }
 var doll: Dictionary = {}  # slot_id: String -> AdaptationInstance
 var skills: Dictionary = {}  # skill_id: String -> xp (float)
-var class_node: String = "generalist"
 var assigned_node: String = ""  # which world node this lineage is working
 var graduated: bool = false
 
@@ -69,7 +68,6 @@ func to_dict() -> Dictionary:
 		"attributes": attributes.duplicate(),
 		"doll": doll_out,
 		"skills": skills.duplicate(),
-		"class_node": class_node,
 		"assigned_node": assigned_node,
 		"graduated": graduated,
 	}
@@ -80,7 +78,6 @@ static func from_dict(d: Dictionary) -> Lineage:
 	l.kingdom = String(d.get("kingdom", "animal"))
 	l.attributes = (d.get("attributes", {}) as Dictionary).duplicate()
 	l.skills = (d.get("skills", {}) as Dictionary).duplicate()
-	l.class_node = String(d.get("class_node", "generalist"))
 	l.assigned_node = String(d.get("assigned_node", ""))
 	l.graduated = bool(d.get("graduated", false))
 	for slot: String in d.get("doll", {}):

@@ -9,20 +9,18 @@ extends RefCounted
 ## the rate helpers below; long offline gaps are integrated by sim/accrual.gd
 ## using these SAME rates — so there is exactly one economy, evaluated two ways.
 ##
-## Phase 2: all seven orthogonal affix roles are mechanically real.
+## All seven orthogonal affix roles are mechanically real (the moat, VISION §17).
 ##
-## Phase 3 (WP1): Option A — each doll slot feeds a specific attribute rather
-## than uniform +Power. Class stat_mods multiply attributes after slot
-## contributions. effective_power() soft-caps the result. niche_mult() applies
-## a material/gene buff when the lineage works inside its class's home niches
-## (buff at home, ×1.0 elsewhere — never a penalty, VISION.md §12).
-
-## Option A (Phase 3.5 WP3 refinement): the equipped *adaptation* declares which
-## attribute its tier feeds, via its `feeds` field — so two organs in the same
+## Each doll slot feeds a specific attribute (not uniform +Power): the equipped
+## *adaptation* declares which via its `feeds` field, so two organs in the same
 ## slot can grow different attributes (a power mouthpart vs a filter-feeding one).
+## effective_power() soft-caps the result. Role is *derived* from the doll for
+## display only (derived_role) — the class tree is parked (DECISIONS 2026-06-14
+## reset), so there is no class stat_mod or niche multiplier in the economy.
+##
 ## SLOT_ATTRIBUTE below is the per-slot DEFAULT, used only for rows that omit
 ## `feeds` (defensive); real content declares `feeds`. gland feeds no base
-## attribute (affix host); vitality is unused this phase (PHASE3.md §1.3).
+## attribute (affix host); vitality is unused this phase.
 ## NOTE: keeping a power default on locomotion (and the swimming_flaps option)
 ## holds two power slots so the margin engine stays healthy (DECISIONS 2026-06-13).
 const SLOT_ATTRIBUTE: Dictionary = {
@@ -47,9 +45,17 @@ const DANGER_TAX_K: float = 0.15
 const DANGER_FACTOR_FLOOR: float = 0.2
 const AMBUSH_CAP: float = 0.75
 
+## Display-only role labels (derived_role): the dominant fed attribute → a label.
+const ROLE_BY_ATTRIBUTE: Dictionary = {
+	"power": "Predator",
+	"resilience": "Armored Grazer",
+	"metabolism": "Filter Feeder",
+	"instinct": "Ambusher",
+}
 
-## The lineage's five attributes after Option A slot contributions and class
-## stat_mods. Every rate helper reads THIS — never lineage.attributes directly.
+
+## The lineage's five attributes after per-slot doll contributions. Every rate
+## helper reads THIS — never lineage.attributes directly.
 static func effective_attributes(lineage: Lineage, content: Content) -> Dictionary:
 	var attrs := lineage.attributes.duplicate()
 	for slot: String in lineage.doll:
@@ -57,12 +63,23 @@ static func effective_attributes(lineage: Lineage, content: Content) -> Dictiona
 		var a := attribute_for_def(content.adaptation(inst.def_id), slot)
 		if a != "":
 			attrs[a] = float(attrs.get(a, 0.0)) + SLOT_TIER_WEIGHT * float(inst.tier)
-	var cls := content.class_node(lineage.class_node)
-	var stat_mods: Dictionary = cls.get("stat_mods", {})
-	for stat: Variant in stat_mods:
-		var key := String(stat)
-		attrs[key] = float(attrs.get(key, 0.0)) * float(stat_mods.get(stat, 1.0))
 	return attrs
+
+
+## A display-only role label read off the doll — no engine effect (VISION §7:
+## "build is the doll; role emerges from it"). The class tree is parked
+## (DECISIONS 2026-06-14 reset); this derives a label from the dominant attribute
+## the equipped organs feed. An unbuilt doll reads "Generalist".
+static func derived_role(lineage: Lineage, content: Content) -> String:
+	var attrs := effective_attributes(lineage, content)
+	var best := ""
+	var best_over := 0.0
+	for a: String in ["power", "resilience", "metabolism", "instinct"]:
+		var over := float(attrs.get(a, 1.0)) - 1.0  # contribution above the base 1.0
+		if over > best_over:
+			best_over = over
+			best = a
+	return String(ROLE_BY_ATTRIBUTE.get(best, "Generalist")) if best != "" else "Generalist"
 
 
 ## The attribute an adaptation `def` feeds: its declared `feeds`, falling back to
@@ -84,28 +101,10 @@ static func soft_cap(p: float) -> float:
 	return SOFT_CAP_KNEE + over / (1.0 + SOFT_CAP_K * over)
 
 
-## Effective Power: Option A slot contributions + class mods + soft cap.
+## Effective Power: per-slot doll contributions + soft cap.
 ## content is required — no default arg so the compiler catches every call site.
 static func effective_power(lineage: Lineage, content: Content) -> float:
 	return soft_cap(float(effective_attributes(lineage, content).get("power", 1.0)))
-
-
-## {material, gene} multipliers from the lineage's class, applied only when the
-## worked node sits in one of the class's home_niches. Buff at home, ×1.0 away.
-## If no class_tree row exists yet (WP3+), returns identity.
-static func niche_mult(lineage: Lineage, node: Dictionary, content: Content) -> Dictionary:
-	var cls := content.class_node(lineage.class_node)
-	var home_niches: Array = cls.get("home_niches", [])
-	if home_niches.is_empty():
-		return {"material": 1.0, "gene": 1.0}
-	var node_niche := String(node.get("niche", ""))
-	if node_niche != "" and home_niches.has(node_niche):
-		var nm: Dictionary = cls.get("niche_mult", {})
-		return {
-			"material": float(nm.get("material", 1.0)),
-			"gene": float(nm.get("gene", 1.0)),
-		}
-	return {"material": 1.0, "gene": 1.0}
 
 
 ## Sums every grafted affix's contribution per math_term. Returns all keys
@@ -170,29 +169,18 @@ static func resolve(
 	var loot: Dictionary = {"materials": {}, "gene": {}, "splice_offer": ""}
 	var totals := affix_totals(lineage, content)
 	var eff_attrs := effective_attributes(lineage, content)
-	var nm := niche_mult(lineage, node, content)
 
 	var mat_id := String(node.get("material", ""))
 	if mat_id != "":
 		loot["materials"][mat_id] = (
-			_material_rate_inner(lineage, node, totals, content, eff_attrs, nm) * dt
+			_material_rate_inner(lineage, node, totals, content, eff_attrs) * dt
 		)
 
 	var gate := _gate(lineage, node, totals, content)
 	var base_gene := float(node.get("gene_rate", 0.0))
 	var instinct := float(eff_attrs.get("instinct", 1.0))
 	var p_gene := (
-		1.0
-		- exp(
-			(
-				-base_gene
-				* instinct
-				* (1.0 + float(totals.get("find_bonus", 0.0)))
-				* gate
-				* nm.gene
-				* dt
-			)
-		)
+		1.0 - exp(-base_gene * instinct * (1.0 + float(totals.get("find_bonus", 0.0))) * gate * dt)
 	)
 	if rng.chance("gene", p_gene):
 		loot["gene"] = roll_gene(node, rng)
@@ -221,18 +209,16 @@ static func danger_factor(lineage: Lineage, node: Dictionary, content: Content) 
 	return _danger_factor(lineage, node, affix_totals(lineage, content), content)
 
 
-## Materials gathered per second: margin efficiency, uptime bonus, danger tax,
-## and in-niche class multiplier all fold in. Always positive.
+## Materials gathered per second: margin efficiency, uptime bonus, and the danger
+## tax all fold in. Always positive.
 static func material_rate(lineage: Lineage, node: Dictionary, content: Content) -> float:
 	var totals := affix_totals(lineage, content)
 	var eff_attrs := effective_attributes(lineage, content)
-	var nm := niche_mult(lineage, node, content)
-	return _material_rate_inner(lineage, node, totals, content, eff_attrs, nm)
+	return _material_rate_inner(lineage, node, totals, content, eff_attrs)
 
 
 ## Mean gene drops per second (the Poisson rate). Zero until power clears the
 ## effective defense — unless stealth's ambush fraction cracks the gate open.
-## Includes the in-niche class multiplier.
 static func gene_rate(lineage: Lineage, node: Dictionary, content: Content) -> float:
 	var totals := affix_totals(lineage, content)
 	var gate := _gate(lineage, node, totals, content)
@@ -241,13 +227,7 @@ static func gene_rate(lineage: Lineage, node: Dictionary, content: Content) -> f
 	var eff_attrs := effective_attributes(lineage, content)
 	var base := float(node.get("gene_rate", 0.0))
 	var instinct := float(eff_attrs.get("instinct", 1.0))
-	return (
-		base
-		* instinct
-		* (1.0 + float(totals.get("find_bonus", 0.0)))
-		* gate
-		* niche_mult(lineage, node, content).gene
-	)
+	return base * instinct * (1.0 + float(totals.get("find_bonus", 0.0))) * gate
 
 
 ## Mean splice offers per second. Gated like genes; control affix multiplies it.
@@ -331,12 +311,9 @@ static func _material_rate_inner(
 	totals: Dictionary,
 	content: Content,
 	eff_attrs: Dictionary,
-	nm: Dictionary,
 ) -> float:
 	var base := float(node.get("material_rate", 0.0))
 	var metab := float(eff_attrs.get("metabolism", 1.0))
 	var eff := _eff(lineage, node, totals, content)
 	var danger := _danger_factor(lineage, node, totals, content)
-	return (
-		base * metab * eff * (1.0 + float(totals.get("uptime_bonus", 0.0))) * danger * nm.material
-	)
+	return base * metab * eff * (1.0 + float(totals.get("uptime_bonus", 0.0))) * danger

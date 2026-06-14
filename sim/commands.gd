@@ -135,73 +135,6 @@ static func offline_dt(last_seen_unix: int, now_unix: int, cap: float) -> float:
 	return clampf(float(now_unix - last_seen_unix), 0.0, cap)
 
 
-## Descend the class tree to `class_id`. Sticky: target must be a descendant of
-## the lineage's current class_node (or a no-op). Returns {ok, reason}.
-## Requirements: each role in requires.affix_keys must be present as an equipped
-## express; each gene in requires.genes must be in genes_known (PHASE3.md §3.3).
-static func pick_class(
-	state: GameState, content: Content, lineage_id: String, class_id: String
-) -> Dictionary:
-	var l := state.lineage_by_id(lineage_id)
-	if l == null:
-		return {"ok": false, "reason": "no such lineage"}
-	var target := content.class_node(class_id)
-	if target.is_empty():
-		return {"ok": false, "reason": "no such class '%s'" % class_id}
-	if l.class_node == class_id:
-		return {"ok": true, "reason": ""}
-	# Sticky descent: class_id must have current class_node in its ancestor chain.
-	var anc := String(target.get("parent", ""))
-	var visited: Dictionary = {}
-	var found_current := false
-	while anc != "" and not visited.has(anc):
-		visited[anc] = true
-		if anc == l.class_node:
-			found_current = true
-			break
-		var anc_row := content.class_node(anc)
-		if anc_row.is_empty():
-			break
-		anc = String(anc_row.get("parent", ""))
-	if not found_current:
-		return {"ok": false, "reason": "classes are sticky — branch a new lineage to respec"}
-	# Requirements (shared with Agenda so the gate never drifts): affix_keys present
-	# as equipped expresses, and required genes known.
-	var unmet := unmet_class_requirement(state, content, l, target)
-	if unmet != "":
-		return {"ok": false, "reason": unmet}
-	l.class_node = class_id
-	return {"ok": true, "reason": ""}
-
-
-## "" if `lineage` meets every requirement of `class_row`; otherwise a short reason
-## naming the first unmet one (VISION.md §7: classes are gated by affix-keys and
-## genes). Pure and read-only; shared by pick_class and Agenda.
-static func unmet_class_requirement(
-	state: GameState, content: Content, lineage: Lineage, class_row: Dictionary
-) -> String:
-	var class_name_str := String(class_row.get("name", class_row.get("id", "")))
-	var reqs: Dictionary = class_row.get("requires", {})
-	for key: Variant in reqs.get("affix_keys", []):
-		var role := String(key)
-		var found := false
-		for slot: String in lineage.doll:
-			var inst_check: AdaptationInstance = lineage.doll[slot]
-			for express_d: Dictionary in inst_check.affixes:
-				var affix_row := content.affix(String(express_d.get("id", "")))
-				if String(affix_row.get("orthogonal_role", "")) == role:
-					found = true
-					break
-			if found:
-				break
-		if not found:
-			return "%s requires an equipped %s adaptation" % [class_name_str, role]
-	for gid: Variant in reqs.get("genes", []):
-		if int(state.genes_known.get(String(gid), 0)) == 0:
-			return "%s requires gene '%s'" % [class_name_str, String(gid)]
-	return ""
-
-
 ## Branch a fresh lineage (cladogenesis / respec valve). The new lineage starts
 ## with an empty doll, Generalist class, and the starter node. The account gene
 ## bank (genes_known) is shared automatically — nothing is copied (PHASE3.md §3.4).
@@ -220,7 +153,6 @@ static func branch_lineage(
 	while state.lineage_by_id(new_id) != null:
 		new_id = new_id + "_"
 	var l := Lineage.new(new_id, display_name)
-	l.class_node = "generalist"
 	var nodes: Array = content.tables.get("nodes", [])
 	if not nodes.is_empty():
 		l.assigned_node = String((nodes[0] as Dictionary).get("id", ""))
@@ -249,16 +181,6 @@ static func express(
 			"ok": false,
 			"reason":
 			"%s does not fit %s" % [String(affix_row.get("name", affix_id)), _slot_label(slot)]
-		}
-	# Category eligibility gate (PHASE3.md §3.2).
-	var cat := String(affix_row.get("category", "generalist"))
-	if not content.allowed_categories(l).has(cat):
-		var class_row := content.class_node(l.class_node)
-		var class_name_str := String(class_row.get("name", l.class_node))
-		return {
-			"ok": false,
-			"reason":
-			"%s cannot build %s" % [class_name_str, String(affix_row.get("name", affix_id))]
 		}
 	var gene_row := content.gene_for_affix(affix_id)
 	if gene_row.is_empty():
@@ -317,16 +239,6 @@ static func metabolize(
 	var def := content.adaptation(adaptation_id)
 	if def.is_empty():
 		return {"ok": false, "reason": "no such adaptation"}
-	# Category eligibility gate (PHASE3.md §3.2).
-	var cat := String(def.get("category", "generalist"))
-	if not content.allowed_categories(l).has(cat):
-		var class_row := content.class_node(l.class_node)
-		var class_name_str := String(class_row.get("name", l.class_node))
-		return {
-			"ok": false,
-			"reason":
-			"%s cannot build %s" % [class_name_str, String(def.get("name", adaptation_id))]
-		}
 
 	var tier := next_tier(l, def)
 	if tier == 0:

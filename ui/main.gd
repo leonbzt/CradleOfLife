@@ -24,7 +24,6 @@ var _tabs: Dictionary = {}  # name -> {scroll: ScrollContainer, btn: Button}
 var _home_tab: HomeTab
 var _body_tab: BodyTab
 var _world_tab: WorldTab
-var _class_tab: ClassTab
 
 # Overlays
 var _pop_layer: Control
@@ -109,13 +108,10 @@ func _build_ui() -> void:
 	_body_tab.setup(_ui, _pop_layer, _express_sheet)
 	_world_tab = WorldTab.new()
 	_world_tab.setup(_ui, _pop_layer, _express_sheet)
-	_class_tab = ClassTab.new()
-	_class_tab.setup(_ui)
 
 	_add_tab(content, "home", "Home", _home_tab)
 	_add_tab(content, "body", "Body", _body_tab)
 	_add_tab(content, "world", "World", _world_tab)
-	_add_tab(content, "class", "Class", _class_tab)
 
 	add_child(_pop_layer)
 	add_child(_express_sheet)
@@ -231,7 +227,6 @@ func _refresh() -> void:
 	_home_tab.refresh()
 	_body_tab.refresh()
 	_world_tab.refresh()
-	_class_tab.refresh()
 
 
 func _refresh_header(l: Lineage, content: Content) -> void:
@@ -260,9 +255,8 @@ func _refresh_roster_bar() -> void:
 				chip.disabled = true
 				chip.modulate = Color(1, 1, 1, 0.35)
 			else:
-				var cls_row := Data.content.class_node(lin.class_node)
-				var cls_name := String(cls_row.get("name", lin.class_node))
-				chip.text = "%s · %s" % [lin.display_name, cls_name]
+				var role := Resolve.derived_role(lin, Data.content)
+				chip.text = "%s · %s" % [lin.display_name, role]
 				chip.disabled = false
 				chip.modulate = (
 					Color.WHITE if i == _ui.active_lineage_idx else Color(1, 1, 1, 0.65)
@@ -291,7 +285,6 @@ func _refresh_roster_bar() -> void:
 
 func _on_branch_pressed() -> void:
 	_ui.active_lineage_idx = Store.state.lineages.size()
-	_ui.pending_class_id = ""
 	var display_name := "Branch %d" % (_ui.active_lineage_idx + 1)
 	var result := Store.branch_lineage(display_name)
 	if not result["ok"]:

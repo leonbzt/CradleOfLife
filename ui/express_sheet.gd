@@ -52,7 +52,7 @@ func setup(ui: UiState, pop_layer: Control) -> void:
 
 
 ## Open (or refresh) the sheet for `slot`, listing every codex gene that fits this
-## organ with its tier-up cost / cap / category status.
+## organ with its tier-up cost and per-organ cap status.
 func open(slot: String) -> void:
 	_slot = slot
 	var screen := get_viewport().get_visible_rect().size
@@ -79,7 +79,6 @@ func open(slot: String) -> void:
 		return
 
 	var organ_full := used >= cap
-	var allowed_cats := content.allowed_categories(l)
 	var any_shown := false
 	for affix: Dictionary in content.tables.get("affixes", []):
 		var affix_id := String(affix.get("id", ""))
@@ -95,9 +94,6 @@ func open(slot: String) -> void:
 			continue
 
 		any_shown = true
-		var cat := String(affix.get("category", "generalist"))
-		var cat_locked := not allowed_cats.has(cat)
-
 		var current_tier := inst.express_tier(affix_id)
 		var target_tier := current_tier + 1
 		# A new affix needs a free expression slot; a tier-up never does.
@@ -118,17 +114,7 @@ func open(slot: String) -> void:
 		_list.add_child(row)
 		var info_lbl := Label.new()
 		var tier_str := "T%d→T%d" % [current_tier, target_tier] if current_tier > 0 else "→T1"
-		if cat_locked:
-			info_lbl.text = (
-				"%s  %s  (requires %s)"
-				% [
-					String(affix.get("name", affix_id)),
-					tier_str,
-					UiUtil.class_for_category(cat, content)
-				]
-			)
-			info_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
-		elif cap_blocked:
+		if cap_blocked:
 			info_lbl.text = (
 				"%s  %s  (organ full — %d/%d)"
 				% [String(affix.get("name", affix_id)), tier_str, used, cap]
@@ -155,8 +141,8 @@ func open(slot: String) -> void:
 		var aid := affix_id
 		var express_btn := Button.new()
 		express_btn.text = "Express"
-		express_btn.disabled = cat_locked or cap_blocked or not (can_afford and has_copies)
-		express_btn.modulate = Color(1, 1, 1, 0.4) if (cat_locked or cap_blocked) else Color.WHITE
+		express_btn.disabled = cap_blocked or not (can_afford and has_copies)
+		express_btn.modulate = Color(1, 1, 1, 0.4) if cap_blocked else Color.WHITE
 		express_btn.pressed.connect(func() -> void: _on_express_pressed(aid))
 		row.add_child(express_btn)
 

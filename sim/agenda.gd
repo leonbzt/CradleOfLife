@@ -11,10 +11,8 @@ extends RefCounted
 ## Lower = more important. Ready-to-act objectives rank above chase nudges.
 const P_CLAIM_SPLICE: int = 10
 const P_TIERUP_READY: int = 20
-const P_CLASS_READY: int = 30
 const P_NODE_IN_REACH: int = 40
 const P_ONE_COPY_SHORT: int = 50
-const P_CLASS_KEY_AWAY: int = 60
 
 const MAX_ITEMS: int = 4
 
@@ -33,7 +31,6 @@ static func for_lineage(
 
 	_add_claim_splice(state, content, items)
 	_add_tierup_ready(state, content, l, items)
-	_add_class_objective(state, content, l, items)
 	_add_node_in_reach(state, content, l, items)
 	_add_one_copy_short(state, content, l, items)
 
@@ -71,17 +68,14 @@ static func _add_claim_splice(state: GameState, content: Content, items: Array[D
 	)
 
 
-## The cheapest adaptation this lineage can build or tier up right now (allowed
-## category, not maxed, materials in hand).
+## The cheapest adaptation this lineage can build or tier up right now (not maxed,
+## materials in hand).
 static func _add_tierup_ready(
 	state: GameState, content: Content, l: Lineage, items: Array[Dictionary]
 ) -> void:
-	var allowed := content.allowed_categories(l)
 	var best: Dictionary = {}
 	var best_cost := INF
 	for def: Dictionary in content.tables.get("adaptations", []):
-		if not allowed.has(String(def.get("category", "generalist"))):
-			continue
 		# Don't suggest a "build" that would silently REPLACE a different organ
 		# already in this slot (a metabolize swap, not a free upgrade). Only tier up
 		# the organ that's there, or build into an empty slot (WP3: ≥2 options/slot).
@@ -114,46 +108,6 @@ static func _add_tierup_ready(
 				"text": "%s %s (T%d)" % [verb, String(best.get("name", best.get("id", ""))), next],
 				"priority": P_TIERUP_READY,
 				"action": {"cmd": "metabolize", "adaptation_id": String(best.get("id", ""))},
-			}
-		)
-	)
-
-
-## The best class objective: a child class ready to commit (all requirements met),
-## or — failing that — the first child and the one requirement still missing.
-static func _add_class_objective(
-	state: GameState, content: Content, l: Lineage, items: Array[Dictionary]
-) -> void:
-	var first_child: Dictionary = {}
-	for row: Dictionary in content.tables.get("class_tree", []):
-		if String(row.get("parent", "")) != l.class_node:
-			continue
-		if first_child.is_empty():
-			first_child = row
-		if Commands.unmet_class_requirement(state, content, l, row) == "":
-			(
-				items
-				. append(
-					{
-						"kind": "class_ready",
-						"text":
-						"Ready to specialize → %s" % String(row.get("name", row.get("id", ""))),
-						"priority": P_CLASS_READY,
-						"action": {},
-					}
-				)
-			)
-			return
-	if first_child.is_empty():
-		return
-	(
-		items
-		. append(
-			{
-				"kind": "class_key_away",
-				"text": Commands.unmet_class_requirement(state, content, l, first_child),
-				"priority": P_CLASS_KEY_AWAY,
-				"action": {},
 			}
 		)
 	)

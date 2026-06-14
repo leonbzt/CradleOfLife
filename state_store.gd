@@ -85,14 +85,6 @@ func claim_splice(index: int) -> Dictionary:
 	return result
 
 
-func pick_class(lineage_id: String, class_id: String) -> Dictionary:
-	var result := Commands.pick_class(state, Data.content, lineage_id, class_id)
-	if result["ok"]:
-		save_state()
-		state_changed.emit()
-	return result
-
-
 func branch_lineage(display_name: String) -> Dictionary:
 	var result := Commands.branch_lineage(state, Data.content, "", display_name)
 	if result["ok"]:

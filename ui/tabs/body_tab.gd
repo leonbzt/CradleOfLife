@@ -164,7 +164,7 @@ func _attr_hint(attr: String) -> String:
 
 
 ## One metabolize option: its name + the attribute it grows + build/tier cost, or a
-## class-lock / replace note. Tapping metabolizes it.
+## replace note. Tapping metabolizes it.
 func _refresh_option_btn(
 	l: Lineage,
 	content: Content,
@@ -176,16 +176,6 @@ func _refresh_option_btn(
 	var def_name := String(def.get("name", def.get("id", "")))
 	var attr := Resolve.attribute_for_def(def, slot)
 	var attr_tag := attr.capitalize() if attr != "" else "affix host"
-	var cat := String(def.get("category", "generalist"))
-
-	if not content.allowed_categories(l).has(cat):
-		btn.text = (
-			"%s · %s — requires %s" % [def_name, attr_tag, UiUtil.class_for_category(cat, content)]
-		)
-		btn.disabled = true
-		btn.modulate = Color(1, 1, 1, 0.4)
-		btn.tooltip_text = ""
-		return
 	btn.modulate = Color.WHITE
 
 	var is_current := inst != null and inst.def_id == String(def.get("id", ""))

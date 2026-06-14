@@ -1,6 +1,6 @@
 # WORKORDER_RESET.md — Reset to the clean spine
 
-> **DRAFT — PROPOSED, awaiting Leon's review of the trim scope (CLAUDE.md §4).**
+> **DRAFT — PROPOSED, awaiting Leon's review of the trim scope (CLAUDE.md §4).** 
 > Temporary work order; deleted on completion, decisions in DECISIONS.md
 > (2026-06-14 "Aggressive reset to the spine"). **Canonical docs win on conflict.**
 >
@@ -57,9 +57,18 @@ verb. (Each its own small signed piece.)
   from the doll (a pure read, no engine). Strip `niche_mult` from the economy. *Gate:
   project boots; `sim_test` + `validate_data` green; **harness re-proven** (removing
   `niche_mult` is an economy change — the never-flat curve must still hold).*
-- **R3 — Trim content to a clean starter.** Reduce affixes (keep the 7-role framework +
-  a few seeds), genes, adaptations, niches, nodes to a minimal coherent base. *Gate:
-  gate-1 green; no dangling references; harness green.*
+- **R3 — Trim content to a clean starter** (
+  **Leon 26-6-14: decisions: approved proposed trim scope, choose the ones that fit the vision and identity and biology the most.**
+  throwaway placeholder scaffolding, replaced
+  in the rebuild — *don't polish it*). *Proposed minimal set (confirm/tune at session
+  start):* **1 niche** (`shallow_benthos`; park `pelagic`/`reef_edge` — affix-key-gated,
+  a teeth concern); **~2–3 nodes** (≥1 passive eat + 1–2 defended fight, so power-vs-
+  defense and the chase are feelable); **~2–3 affixes** across distinct roles (keeps
+  gate-1 meaningful); **~4–5 genes** spanning common→rare→**1 legendary** (the two-tier
+  distribution the harness needs to prove never-flat — **do not trim below this**); **~4–5
+  adaptations** to fill the doll's core slots; **~2–3 materials**. Keep the 6 doll slots
+  and the soft cap (framework). *Gate: gate-1 green; no dangling references; harness shows
+  the two-tier shape.*
 - **R4 — Reduce the economy to the clean core.** `resolve`/`accrual` = power-vs-defense
   → materials + the two-tier chase, no parked-system math, placeholder constants.
   **Re-prove the never-flat curve on the clean core — this is the critical gate of the
@@ -98,4 +107,47 @@ Combo/Surge + metabolism burst-fuel · the ecosystem loop.)
   the gates — these are vision-agnostic and correct. "Aggressive" applies to *content
   and the class tree*, not the scaffolding.
 - **Trim scope is the one open call.** R3's exact minimal set (how few affixes/genes/
-  niches/nodes) is Leon's to tune before R3 runs — list it at session start.
+  niches/nodes) is Leon's to tune before R3 runs — list it at session start. A proposed
+  starting point is now in R3 above.
+
+---
+
+## How to proceed — what to check, what to plan
+
+**The rhythm (subtractive, one system at a time).** Don't rip everything at once. Do
+R2 → green → R3 → green → R4 → re-prove, each a small commit. After every step: the
+project boots, `validate_data` + `sim_test` pass, gdlint is clean, and (on rate changes)
+the harness still shows the never-flat shape. If a step turns red, fix or revert *that*
+step before the next — never stack a second teardown on a broken one.
+
+**Treat trimmed content as throwaway placeholder.** R3 is not about picking the "right"
+old rows — it leaves the **minimum scaffolding that keeps the engine and harness running**
+until the rebuild authors real content (B1+). This honours the no-old-gravity rule: the
+kept rows are scaffolding, not "the content."
+
+**Re-prove means *shape*, not *numbers*.** Stripping `niche_mult` (R2) and reducing the
+economy (R4) will *change* the curve — expected. The gate is the §9a never-flat *shape*
+(a meaningful event most check-ins; a legendary always reachable-but-never-given),
+re-tuned with placeholder constants. The harness is the judge; the old numbers are not a
+target.
+
+**Pre-flight (before R2 — R1/snapshot is done):**
+- [x] Current state committed, pushed, and **tagged** (`prototype-v3.5`).
+- [ ] **Harness runs green *now*** (`godot --headless --script res://tests/economy_test.gd`)
+  — confirm the tool works before changing the economy under it.
+- [ ] Godot 4.6 + gdtoolkit on PATH (lint between steps).
+- [ ] **Branch decision:** a `reset-spine` branch (tidier; merge when green) or `main`
+  with the tag as the net. Either is fine; a branch is cleaner for a multi-step teardown.
+- [ ] R3 trim scope confirmed/tuned (proposed set in R3 above).
+
+**Planning the rebuild (after R6).** Each "Next" piece follows one rhythm: **propose a
+small spec → Leon signs → build the smallest version → re-prove the harness → validate
+the feel → next.** Actively resist the AI-bias: **design each piece from the vision
+(VISION.md + ROADMAP "Next"), not from "what the old code did."** Parked code is a
+reference of last resort, not a template. Build order is the rebuild list above; the
+clean niche/node ladder leads.
+
+**Definition of done for Phase R.** Project boots; all tests + gdlint green; the harness
+shows the never-flat shape on the clean core economy; `SPINE.md` describes the *actual*
+base; the class tree and excess content are parked (recoverable via the tag); the tree is
+committed. You then build the new vision on a base you fully understand.

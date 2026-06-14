@@ -50,15 +50,6 @@ static func slot_label(slot: String) -> String:
 	return slot.replace("_", " ").capitalize()
 
 
-## The class whose unlock grants `category` (for "requires X" hints), or a
-## prettified category name if none claims it.
-static func class_for_category(category: String, content: Content) -> String:
-	for row: Dictionary in content.tables.get("class_tree", []):
-		if (row.get("unlocks_categories", []) as Array).has(category):
-			return String(row.get("name", category))
-	return category.replace("_", " ").capitalize()
-
-
 ## "drops at A, B · splice from C" for a gene, for the key/codex panels.
 static func gene_source_text(content: Content, gene_id: String) -> String:
 	var drops: Array[String] = []
