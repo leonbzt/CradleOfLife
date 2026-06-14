@@ -39,9 +39,12 @@ an active verb + legible progression + the chase landing — before re-accreting
 complexity.** Each re-added system must earn its place by making the core better, validated
 one at a time (VISION §21). This is *not* a smaller vision; it is how the big one ships.
 
-- **Keep:** the Node-free `sim/` core, closed-form accrual, `resolve()`, the seeded headless
-  harness, the JSON-data + three-gates pipeline. The doll/affixes/classes are a *prototype
-  that taught us things* — simplify freely; nothing is sacred above the core feeling.
+- **Execute the reset *aggressively* (signed 2026-06-14):** **keep** the vision-agnostic
+  architecture — Node-free `sim/`, seeded RNG, closed-form accrual, `resolve()` structure,
+  the chase harness, the data + three-gates pipeline, the doll, the soft cap, the session
+  frame. **Park** the old feature/content gravity — the **class tree in full** (role derives
+  from the doll) and **most affix/gene/niche/node DATA** (trimmed to a clean starter). Old
+  code is biasing; parking (git-recoverable) frees the new vision. Steps: `WORKORDER_RESET.md`.
 - **Active play is now core, not a sprinkle** — VISION §12 reframed: idle is the complete
   floor, active is a bounded fun ceiling, the gap is opportunity cost, never loss/decay.
 - **Validation still pays:** a player read on the current build (the old WP7) is useful

@@ -971,6 +971,46 @@ until their gate (§19, §21).
 
 ---
 
+## 2026-06-14 — Aggressive reset to the spine (the clean base for the rebuild)
+
+**What.** Decided to execute the reset-to-spine (governing decision, this date)
+**aggressively**: keep the vision-agnostic *architecture*, but **park the old
+feature/content surface** so the new vision is built on clean ground. Signed by Leon.
+Execution is `WORKORDER_RESET.md` (temporary; deleted on close). **Code changes happen
+in the build session, not this entry.**
+
+**Why.** The prototype's content is modest, but its *systems* (the class tree, the old
+loot/affix model, the ad-hoc niche/node set) embed the pre-reframe vision. Leon's
+insight: *keeping old code biases the build (and the AI) toward adapting it rather than
+creating the better-fitting thing.* A clean base lets the new spine — mutation-under-
+selection, clean niche/node progression, the active verb — be built without that
+gravity. The harness keeps the aggression safe (re-prove the never-flat curve on the
+clean core at every step).
+
+**Keep (the true spine — vision-agnostic):** Node-free `sim/` architecture, seeded
+`rng`, the data model (`game_state`/`lineage`/`adaptation_instance`), the data-loader +
+**gate-1 validation** (the locked 7-role moat framework), the **chase harness**
+(`economy_test`, re-greened every step), the **doll** (slots + Express, §7), the **soft
+cap**, and the **session/check-in frame** (dispatch, agenda, UI shell minus the class tab).
+
+**Park (remove from the active build; a git tag + history retain them):** the **class
+tree in full** (`class_tree.json` + class math in `resolve`/`commands`/`content` +
+`ui/tabs/class_tab`) — role derives from the doll instead; **most affix/gene/adaptation/
+niche/node DATA** — trimmed to a minimal coherent starter, rebuilt fresh (the 7-role
+framework stays).
+
+**Rewrite (keep the structure, rebuild the math):** `resolve`/`accrual` economy →
+niches-with-teeth + mutation-under-selection + the active multiplier; keep the
+power-vs-defense→loot + Poisson-gene structure and the closed-form accrual.
+
+**Build new (ROADMAP Next):** clean niche/node progression ladder, skills,
+niches-with-teeth, chase-lands-early, mutation-under-selection, the active verb.
+
+**Replaces** the earlier moderate "keep most content, park only classes" reset proposal
+(this date). The class tree is fully parked, not merely simplified.
+
+---
+
 ## Open questions (current)
 
 - **Metabolize screen — BUILT 2026-06-13 (WP3).** Each slot now reads as "what this
