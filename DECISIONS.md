@@ -820,15 +820,167 @@ signal so tabs never reference the shell — no cyclic class deps), and
 
 ---
 
+## 2026-06-14 — Vision reframed around mutation-under-selection; ROADMAP.md created
+
+**What.** A multi-session vision pass (it began as the build-identity design session and
+opened into a full foundations review) reframed the spine of the game and produced a living
+`ROADMAP.md`. Signed by Leon across the session; locked-item changes called out below.
+VISION.md was edited in place; this entry is the permanent history. **No code changed.**
+
+**Why.** "What makes one build meaningfully different, and where is each uniquely good?"
+opened into foundations. Two inputs drove it: (1) Leon's conviction that **convergent
+evolution** and **activity / trophic role** are the real axis of build identity; (2) cohort
+feedback on the 3.5 prototype (`leon_docs/feedback/26_6_14.txt`) — the lineage hook lands,
+but "niches need teeth," progress feels like "random respec with no rhyme or reason," and a
+player "maxed upgrades without seeing a gene." The cure for all three is the same: make
+evolution **legible and directed**.
+
+**The spine (new center of gravity).** *The lineage becomes what it grinds — random
+**mutation** throws up variation, you and the niche **select** what sticks, and the
+accumulated **genome** is the lineage's growth, identity, and the fuel for everything;
+grinding deepens fit, innovation lets it outgrow the niche and rise.* Must be **legible
+in-game.**
+
+**Signed changes to VISION.md:**
+- **§9 — mutation under selection is the engine** (replaces "two drop streams / two paths to
+  a gene"). Mutation = vertical, common, biased by where/how you grind, with a **selection**
+  decision; **splicing = horizontal, rare, targeted** (finally distinct from a drop). The
+  never-flat two-tier chase (§9a) is unchanged in shape. *[LOCKED change.]*
+- **§16 — the check-in is a core focus, not the whole product** (overwrites "the tight
+  check-in IS the product"). Mobile-first, Melvor / Idle-Obelisk shape (flat-but-deep, a
+  **central number** = the genome, clear resources). 2–5 min loop = engagement floor;
+  deeper/longer/active sessions = the retention layer above it. *[LOCKED change.]*
+- **§12 — active adds optional depth/progress** on top of a complete idle baseline (refines
+  "active does not out-earn idle"); never "log in or lose"; the active-benefit "babysit"
+  layer remains its own careful design. *[LOCKED change.]*
+- **§4 / §13 / §14 — attach to lineage + Tree**, with **descent-with-inheritance** (the Tree
+  is the only "prestige," and it deletes nothing); roster as an **interdependent ecosystem**
+  with **different rhythms** and division of labour.
+- **§7 — build is the doll; role emerges** (derived/displayed, not a mandated up-front
+  class); **skills/abilities/skill-tree as the identity carrier** (one branch per lineage) —
+  the home of build uniqueness and the carrier for active play + combat depth. Convergence =
+  **trait motifs**, not clones.
+- **§8 / §10 — the one loop chains into a production web**; resource-creativity/efficiency a
+  core joy; the economy is an **internal open-math substrate** (theorycraft a feature),
+  single-player first.
+- **§11 — niches need teeth**: power = access, the niche's signature stat = throughput;
+  steep but **never a penalty** (fixes the old "dead weight outside" phrasing). Named by a
+  playtester in the 6/14 feedback.
+- **§2 — substance = life/evolution; the frame/voice is the flavour** (defuses the
+  borrowed-brand risk); the science is "thematically true & legible," not pretend-rigorous.
+- **§19 — core/deferred** updated (mutation → core; role-emergent + abilities-tree replace
+  the class-tree line; social/economy/multiplayer added as the far north star); points to
+  ROADMAP.md for ordering.
+- **New §21 — Build disciplines**: the doc is a guideline, not a build spec; each increment
+  a complete sub-game; sequence independent wins, never big-bang the co-dependent ones; the
+  idle floor stays complete; legibility is a requirement; don't oversell the biology.
+- **What's locked** rewritten to the new spine.
+
+**Coherence review (Leon asked explicitly not to be cheerled).** The vision *can* cohere,
+but that is guaranteed by disciplines, not by the doc. Four risks, accepted and written into
+§21: (1) **form factor** — resolved **mobile-first**, Melvor-flat with a central number;
+(2) **over-unification / big-bang** — the near spine decomposes and ships first, the horizon
+is sequenced; (3) **"two games"** — the idle floor must stay complete; (4) **don't oversell
+accuracy** — the mutation model is game-ified (you don't pick real mutations; real selection
+is culling). Also flagged: this is a **much bigger game** for a small team — survivable only
+if each increment ships complete. Leon: "cull-the-junk" mutations (mostly-useless drops you
+sift for the gem) is a wanted **future experiment**; classic prestige stays out
+(descent-with-inheritance is the compatible form); the login/retention crutch stays out
+during validation (it pollutes the signal).
+
+**Roadmap.** New living `ROADMAP.md`: Now (finish 3.5 + validate) / Next (mutation engine,
+splice-split, teeth, legibility) / Horizon (skills-abilities, active layer, web, economy,
+tree-graph, ages, living-meta, role taxonomy) / Far (social-economy-multiplayer, kingdoms,
+history-overgrows-world), governed by the entry rule. **The old "Phase 4 — mobile product"
+is dissolved** (its parts shipped in 3.5 or became a pre-launch checklist).
+
+**Build gating.** 3.5 proceeds as specced (WP6–WP7 remain). The spine's economy changes
+(mutation, splice-split, teeth) are sequenced *after* the 3.5/validation gate and each
+re-proves the chase harness. No scaffolding for horizon/far systems until their gate
+(CLAUDE.md §6).
+
+---
+
+## 2026-06-14 — Building-blocks brainstorm: reset to the spine; active-as-core (§12 reframed)
+
+**What.** The queued building-blocks design session (CLAUDE.md §4). It decomposed the big
+vision into self-standing systems and, more importantly, produced a **governing rebuild
+decision** and a **further §12 reframe**. Signed by Leon across the session. VISION §12 +
+"What's locked" edited in place; ROADMAP.md Now/Next/Horizon rewritten; this is the history.
+**No code changed.**
+
+**Why.** The 3.5 cohort read (dull, "random respec," "maxed upgrades without a gene") is a
+*core-feel* failure, not a content gap. Diagnosis (Leon agreed): the feature surface (doll,
+7 affixes, 4 classes, splice, soft cap) was built ahead of the loop's *feeling* — no active
+verb, illegible progression, a chase that never started — a §21 discipline miss.
+
+**Signed decisions:**
+- **Reset to the spine.** Keep the engine + content pipeline (Node-free `sim/`, accrual,
+  `resolve()`, the seeded harness, JSON + three gates). Treat doll/affixes/classes/soft-cap
+  as a prototype; rebuild the loop's *feel* — active verb + legible progression + the chase
+  landing — before re-accreting complexity, each piece validated. *Not* a smaller vision;
+  the way the big one ships. *(Replaces "build forward on the 3.5 surface.")*
+- **§12 reframed: active is core, idle is the complete floor.** *[LOCKED change — supersedes
+  the earlier-same-day §12 line "active adds optional depth on top."]* Idle = complete floor
+  (full baseline, never decays, never requires login, never moves backward). Active = a
+  **bounded, genuinely-fun ceiling and the primary way engaged players play** — modestly more
+  efficient (edge **capped**), the floor↔ceiling gap felt as **opportunity cost, never loss
+  or decay**. Litmus test for any active feature: *if never touched, is the game still
+  complete and progressing well?* Yes → ship; No → cut. Licenses active-as-core while holding
+  the no-loss red line. Leon's framing: OSRS players grind hard (tick manipulation) for
+  optimal gains — fun can come from *progression*, not only the activity.
+- **Active play = two axes.** *Axis 1 — optimize the loop* (Increlution: set up each
+  lineage's activity + tune the doll/genome against a budget; auto-runs idle). *Axis 2 —
+  light combat-babysit* (Iktah/Melvor: idle auto-resolves; active eat/heal/pre-buff/ability,
+  capped). Gene-**drafting** (deckbuilder, maybe Archero-combinable) rides Axis 2; a reflex
+  layer (Idle Slayer) is a later optional sprinkle. Tap-the-gather dropped (weak fit).
+- **Selection without spam.** Surfaced mutations are **drafted** (Slay the Spire / Loop Hero
+  / Niche), bounded by **expression** (§7, structural slot limit) *and* **metabolic upkeep**
+  (Thrive, the draft budget) — *can't keep all*. Everything else stays additive/stacking
+  (Leon: additive overall, budget only in a few core aspects). **Chromosomes = multi-affix
+  genes slotted PoE-jewel-style**; the chase is for the gene that *completes a combo* (Diablo
+  sets), not the rarest. *Open: when/at what level drafting enters — a live feel call.*
+- **Niche unlock ladder.** Sequential node unlocks within a niche (Melvor copper→iron;
+  IdleOn maps), showing only the next couple of locked nodes (Iktah UX). The unfold dopamine
+  + half the legibility cure.
+- **Skills → ability-tree → active abilities (sequence).** Skill-level first (gates + powers
+  + guaranteed-progress floor; "level the skill, not the node"). Ability-tree starts passive
+  + a few simple actives. **Active abilities require combat depth** — sequence together.
+- **Combat = light auto-battler** (Iktah/Melvor shape, decided): idle auto-resolve + active
+  food/heal/buff/ability + pre-fight loadout, *not* a real-time rotation. May be a *second
+  core loop* (the skilling/combat split).
+- **Ecosystem loop = graph of buffs (marquee, horizon).** Chain lineages into a web of roles;
+  **synergy is always upside, never a required supply chain that could starve a lineage**
+  (§8/§13; hard nutrient-loops stay far-horizon). It is the **scaled-up Axis-1 verb** (one
+  lineage's loop → the web), so it accretes from the core, not a new engine.
+- **Grind curve (taste, recorded).** Quick early → medium mid → **very grindy late** by
+  design; committed players want huge grinds (IdleOn / Idle-Obelisk high card tiers). The
+  no-babysitting calm (§12) and a deep optional late grind coexist — the grind is an opt-in
+  ceiling, never a floor requirement.
+
+**Reference findings.** Iktah *has* prestige ("Legacy" — all-99 reset for a permanent buff +
+new mechanic; endgame splits speedrun-the-loop vs deep rare-hunt/completion); its
+soft-cap→re-climb-faster pull maps onto Cradle's **descent-with-inheritance** (§14), so we
+get it without a reset. Thrive: organelle editor where every part costs upkeep → the
+build-as-budget steal. Gacha: the gene chase is the ethical, non-monetized gacha; paid power
+gacha stays banned (§18).
+
+**Build gating.** No code yet. The rebuild's economy changes each re-prove the chase harness
+(CLAUDE.md §6). No scaffolding for horizon systems (ecosystem loop, combat, ability-tree)
+until their gate (§19, §21).
+
+---
+
 ## Open questions (current)
 
 - **Metabolize screen — BUILT 2026-06-13 (WP3).** Each slot now reads as "what this
   organ becomes": ≥2 generalist options per essential slot, each feeding a real
   attribute via the organ-declared `feeds` field (see the WP3+4+5 entry above). The
-  *deeper* want — *situational best-in-slot*, where you spec a build optimal for a
-  specific activity/niche so branches earn their purpose — still goes to the
-  build-identity design session (below). The `feeds` field is the hook that session
-  builds on (e.g. per-niche attribute weightings).
+  *deeper* want — *situational best-in-slot* — was resolved by the **2026-06-14
+  mutation-under-selection reframe (above)**: activity/trophic role is the build axis,
+  niches get teeth (power = access, the niche's signature stat = throughput), role emerges
+  from the doll. The `feeds` field is the hook the Next-phase spine build uses for per-niche
+  attribute weightings (see ROADMAP.md).
 
 - **Phase 2 validation gate (WP7).** Web export to friend cohort; gate
   question: "does 'what should I fight' become a build decision players talk
@@ -872,25 +1024,30 @@ signal so tabs never reference the shell — no cyclic class deps), and
 Each needs a dedicated design session before any build; none is in Phase 3.5.
 Listed so the vision stays whole and the sessions have a home. Each will follow
 the CLAUDE.md §4 protocol (propose → Leon signs → canonize → DECISIONS entry).
+**Ordering now lives in ROADMAP.md (2026-06-14).**
 
-- **Active / "babysit" layer (touches VISION §12 — the red line).** Leon wants an
-  engagement-optional active layer that *can* improve progress (OSRS / IdleOn /
-  Idle Obelisk Miner combine idle + active well). Check-in decisions stay the core.
-  3.5 ships the *watchable* (no-earn-change) version; the *active-benefit* version
-  is the §4 change to design here, carefully, so it never becomes "log in or lose".
-- **Skills.** Strongly wanted. Candidate shapes: OSRS-style trained skills; a skill
-  tree; **active skills** that suit the TierZoo vibe and could carry the active
-  layer while staying automatable. Start small, plan thoroughly. May get a small
-  first build before deep validation.
+- **Active / "babysit" layer — DIRECTION RESOLVED 2026-06-14 (§12 reframed; build still
+  gated).** Active is now *core* (idle = complete floor, active = bounded fun ceiling, gap =
+  opportunity not loss — see the dated entry). Shape: **two axes** — Axis 1 optimize-the-loop
+  (Increlution), Axis 2 light combat-babysit (Iktah/Melvor). The *detail* of each axis is
+  still built carefully against the §12 litmus test.
+- **Skills — SEQUENCE RESOLVED 2026-06-14.** Skill-level first (gates + powers + a
+  guaranteed-progress floor; "level the skill, not the node"), in the Next rebuild. Then the
+  ability-tree (passive + a few simple actives), then active abilities (need combat depth).
+  Per-niche adaptation and grindy per-node mastery are later (Horizon). Build small.
 - **Living meta / coevolution.** The marquee differentiator and most on-theme with
   the Devs-are-natural-selection frame. Periodic patch-note rebalances that shift
   the meta; ties to the TierZoo tier-list. Old builds becoming *less* effective is
   acceptable to Leon ("maybe") but must avoid loss-aversion (§12) and
   overcomplication. Start small, expand.
-- **Build identity & situational best-in-slot.** Give builds/branches purpose:
-  niches/activities where you are efficient *only* with the right build (rhythm is
-  one lever; class-exclusive niches/benefits another). Strengthens `niche_mult`
-  into real identity. Connects to the metabolize-options work.
+- **Build identity & situational best-in-slot — RESOLVED 2026-06-14.** Folded into the
+  mutation-under-selection reframe: activity/trophic role is the build axis, niches get
+  teeth (power = access, role-stat = throughput), role emerges from the doll. See the
+  2026-06-14 entry + ROADMAP.md.
+- **Building-blocks brainstorm — RESOLVED 2026-06-14.** See the dated entry above:
+  reset-to-spine, §12 active-as-core, the two-axis active model, draft-against-budget +
+  chromosomes, niche unlock ladder, skills→ability-tree→active-abilities, combat = light
+  auto-battler, ecosystem-loop-as-buffs marquee. Ordering in ROADMAP.md.
 - **Splice catalogue & the splice-vs-drop distinction.** Leon is unsure how
   splicing differs from gene drops — because today both just add a `genes_known`
   copy and signature genes also appear in random drop tables. Intended difference
@@ -899,6 +1056,8 @@ the CLAUDE.md §4 protocol (propose → Leon signs → canonize → DECISIONS en
   **splice-only** (remove from random drop tables) so the catalogue is meaningful
   and "what should I fight" is a real targeted decision. Economy change → re-prove
   the harness.
-- **Combat depth.** 3.5 ships *visible* combat (clash render). Whether it becomes a
-  full OSRS/Melvor-style combat surface (abilities, an active-resolve option) is a
-  later design session — it overlaps the deferred Fight-encounter layer (VISION §19).
+- **Combat depth — SHAPE RESOLVED 2026-06-14; detail still a session.** 3.5 ships *visible*
+  combat (clash render). The decided shape: a **light auto-battler** (Iktah/Melvor) — idle
+  auto-resolve + active food/heal/buff/ability + pre-fight loadout, *not* a real-time
+  rotation; may be a *second core loop*. The payoff surface for active abilities (VISION §19
+  Fight-encounter layer). Detail (turn model, ability set) is its own later session.

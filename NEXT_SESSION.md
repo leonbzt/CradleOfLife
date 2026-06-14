@@ -1,107 +1,68 @@
 # NEXT_SESSION.md — Start here
 
-> **Temporary resume aid.** A seamless pickup point between sessions. Delete/replace
-> once the next design session produces a signed direction. Not canonical — if it
-> disagrees with VISION/IMPLEMENTATION/DECISIONS, those win.
+> **Temporary resume aid.** A seamless pickup point between sessions. Not canonical —
+> if it disagrees with VISION / IMPLEMENTATION / DECISIONS / ROADMAP, those win.
 
-## Where we are (2026-06-13)
+## Where we are (2026-06-14)
 
-- **Phase 3 — done & validated** (committed). Class tree, Option A slots,
-  cladogenesis, soft cap, 2-lineage roster.
-- **Phase 3.5 — in progress.** Thesis: *the check-in becomes a session you play.*
-  - **WP1 ✅** session loop — offline accrual applied on launch/resume + the
-    while-you-were-away **Dev dispatch** (lead with the rare drop, tally the rest).
-  - **WP2 ✅** the **do-now agenda** — derived "what's worth a tap" panel.
-  - **WP3 ✅** metabolize-as-choice — each slot reads "what this organ becomes";
-    ≥2 generalist options per essential slot, each feeding a real attribute via the
-    new organ-declared `feeds` field (Leon signed the small Option A engine tweak).
-  - **WP4 ✅** visible combat (World-tab **clash panel** from the resolve() math —
-    pen cracking armour, danger tax, splice window) + the **splice catalogue**
-    (signature gene · copies · express tier · reach) + rare+ loot beats.
-  - **WP5 ✅** tab IA — persistent roster+header over Home / Body / World / Class.
-  - **WP7** harness ✅ re-proven (curve byte-identical to pre-WP3). **Pending:**
-    WP6 map-unlock achievements (not built — out of this session's ask) and the
-    **WP7 playtest gate** (web export to cohort). Full spec: `PHASE3_5.md`.
-- **Gate 2/3 sign-off owed (Leon):** the 5 new generalist adaptations' flavor +
-  the new `bible/refs/shallow-benthos.md` rationale sections (science), and all new
-  UI strings (voice). The Storage Cecum → resilience claim is the most interpretive.
-- **UI is now split per tab:** `ui/main.gd` is a 455-line shell; tabs live in
-  `ui/tabs/*.gd` over shared `ui_util` / `ui_state` / `express_sheet`. Whole UI is
-  gdlint-clean.
-- Playtest feedback that drove 3.5: *"fun, but not a lot to do concretely; mainly
-  waiting with very short check-ins."* Eyeball the build with a web export (the DEV
-  **⏩ +8h** button raises the dispatch; the new tabs + clash + catalogue are live).
+- **RESET TO THE SPINE — the governing decision (signed 2026-06-14, building-blocks
+  brainstorm).** The 3.5 feature surface ran ahead of the core *feeling* (cohort: dull,
+  "random respec," "maxed upgrades without a gene"). So: **keep the engine + content
+  pipeline; rebuild the loop's *feel* — active verb + legible progression + the chase
+  landing — before re-accreting complexity.** Full record: DECISIONS.md 2026-06-14
+  "Building-blocks brainstorm"; ordering in **ROADMAP.md** (Now/Next/Horizon rewritten).
+  **Review the `git diff`.**
+- **§12 reframed (locked):** idle is the **complete floor**; **active is a bounded,
+  genuinely-fun ceiling and the primary way engaged players play** — gap = opportunity cost,
+  never loss/decay. Litmus test: if a player never touches an active feature, is the game
+  still complete and progressing? Yes → ship; No → cut. Active play = **two axes**
+  (optimize-the-loop · light combat-babysit). VISION §12 + "What's locked" edited in place.
+- **Vision spine (still current):** *mutation under selection — the lineage becomes what it
+  grinds* (§9, reframed 2026-06-14). Selection is now **draft-against-a-budget** (bounded
+  expression §7 + metabolic upkeep); **chromosomes = multi-affix genes, PoE-jewel slots**;
+  the chase is for the gene that *completes a combo*, not the rarest.
+- **Phase 3.5 — deprioritized behind the rebuild.** WP1–WP5 shipped. A player read on the
+  current build (old WP7) is still useful signal; map-unlock polish (old WP6) is parked.
+- **Sign-off owed (Leon):** gate 2/3 on the 5 new generalist adaptations' flavor + the new
+  `bible/refs/shallow-benthos.md` rationale (science) and all new UI strings (voice).
+- **UI is split per tab:** `ui/main.gd` shell; tabs in `ui/tabs/*.gd` over shared
+  `ui_util` / `ui_state` / `express_sheet`. gdlint-clean.
+- **One open pacing decision** for the rebuild: *at what level/timing gene-drafting enters*
+  — a live feel call, not yet decided.
 
 ## To resume any session
 
-Read `CLAUDE.md`, then the relevant part of `VISION.md` (always "What's locked"),
-the current phase in `IMPLEMENTATION.md`, and the tail of `DECISIONS.md` (incl. the
-**Design-session backlog** in its Open-questions section). Then this file.
+Read `CLAUDE.md`, then `VISION.md` ("What's locked" + §21 disciplines + §9 the spine), the
+current phase in `IMPLEMENTATION.md`, **`ROADMAP.md`** (the horizons), and the tail of
+`DECISIONS.md` (incl. the Design-session backlog). Then this file.
 
 ---
 
-## Recommended next design session — **Build identity & the activity-optimal build**
+## Recommended next — **scope the core-feel rebuild (ROADMAP "Next")**
 
-**Why this one first.** (1) It unblocks the very next build WP — WP3
-(metabolize-as-choice) should build the *right* options, not placeholders, and
-those options are exactly what this session decides. (2) Leon explicitly wants it
-("best-in-slot for a situation… spec a build to be optimal for a specific activity,
-so branches earn their purpose"). (3) It's foundational: skills, the active layer,
-and the living meta all need to know *what a build optimizes toward* — settle this
-first and those bigger sessions get much sharper.
+The building-blocks brainstorm is **RESOLVED** (DECISIONS.md 2026-06-14). What's next is to
+turn ROADMAP "Next" into a signed, formula-exact work order — the way PHASE2/PHASE3 were —
+but **smallest-first**, one self-standing piece at a time, each re-proving the chase harness:
 
-**The core question.** *What makes one lineage's build meaningfully different from
-another's, and where is each one uniquely good?* Today divergence is mostly stat
-flavour (predator vs filter-feeder) + a gentle `niche_mult` home buff. Leon wants
-stronger: places/activities where you're efficient **only** with the right build.
+1. **The active verb** (the missing core): Axis 1 optimize-the-loop + Axis 2 light
+   combat-babysit. This is the piece the cohort feedback most demands.
+2. **Skill-level progression** (guaranteed-progress floor; "level the skill, not the node").
+3. **Niches with teeth + sequential unlock ladder** (power = access, signature stat =
+   throughput; show only the next couple of locked nodes).
+4. **Chase lands early** (first gene in minutes).
+5. **Selection as draft-against-budget** + chromosomes — *timing TBD (the one open feel call).*
 
-**Already in place to build on:**
-- The doll + Option A slot→attribute routing (VISION §7).
-- Affix-keys gate niche *access* and pay specialization bonuses (§11).
-- `Resolve.niche_mult` — a class's at-home material/gene buff (currently ×1.2).
-- Classes unlock exclusive gear categories (raptorial / heavy_armor /
-  filter_apparatus); monotonic-safe, sticky.
+**Process per piece:** §4 propose → Leon signs → build small → re-prove harness → validate.
+Keep the engine; simplify the doll/affixes/classes freely where they don't serve the feel.
 
-**Open questions to resolve in the session:**
-1. How strong should "right build for the place" be? `niche_mult` is a soft buff
-   today — do we want harder build-gated efficiency (a wall, not just a bonus)
-   without crossing into trap-builds (§11) or loss-aversion (§12)?
-2. Is the axis *niche* (where you grind), *activity* (eat vs fight vs farm), or
-   *target* (which creature)? Or a mix? This decides what WP3's metabolize options
-   optimize toward.
-3. What are the 2–3 generalist metabolize options **per essential slot** (WP3),
-   and what trade-off does each express? (This is the concrete output WP3 needs.)
-4. How does this make a **2-lineage roster** feel like a portfolio with different
-   *rhythms* (the Phase-3 gate question), not two of the same?
-5. Does it touch the soft cap / breadth-led growth shape (§14)? (Probably not —
-   confirm.)
+## The design-session backlog (Leon drives the order)
 
-**Constraints (the reality check, CLAUDE.md §3):** no trap builds, synergies
-celebrated (§11); idle earns / attention spends, no loss-aversion (§12); depth from
-a *small* set of orthogonal primitives, not authored volume (§17); expressible as
-data + the one `resolve()` — new engine surface must be justified and signed (§4).
+Full framings in `DECISIONS.md` → Design-session backlog; ordering in `ROADMAP.md`.
 
-**Desired output:** a signed design direction (DECISIONS.md entry) + the concrete
-WP3 metabolize-option content spec, ready to implement. Possibly a small
-`niche_mult`/affix-key tuning note for the harness to re-prove.
-
----
-
-## The rest of the backlog (Leon drives the order)
-
-Full framings live in `DECISIONS.md` → Open questions → **Design-session backlog**.
-
-1. **Build identity & activity-optimal build** — *recommended next* (above);
-   unblocks WP3.
-2. **Splice catalogue & splice-vs-drop** — resolves Leon's "what's the difference?"
-   (drops = random mutation lottery; splice = targeted trait theft; likely fix:
-   signature genes become splice-only). Feeds WP4. Small, contained — could pair
-   with session 1.
-3. **Skills + the active / "babysit" layer** — the marquee. Leon's strongest want
-   (engagement-optional active play that improves progress, OSRS/IdleOn-style);
-   active skills are a likely carrier. **Touches the §12 red line** — design
-   deliberately so it never becomes "log in or lose." Sharper after #1.
-4. **Living meta / coevolution** — the biggest differentiator and most on-theme
-   (Devs patch the meta). Start small, expand. Strategic; not blocking.
-5. **Combat depth** — beyond WP4's visible clash: abilities / active-resolve.
-   Overlaps the deferred Fight-encounter layer (VISION §19). Latest.
+1. **Building-blocks brainstorm** — *recommended next* (above).
+2. **Skills / ability-tree shape** — one branch per lineage; the identity carrier (build
+   uniqueness + the carrier for active play & combat depth).
+3. **Active / "babysit" layer** — optional active benefit; touches §12, design carefully.
+4. **Splice-vs-drop economy** — make splicing targeted & distinct (likely splice-only genes).
+5. **Living meta / coevolution** — Devs shift the meta as opportunity, never loss.
+6. **Combat depth** — beyond the visible clash (abilities / active-resolve).

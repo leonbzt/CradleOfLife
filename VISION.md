@@ -16,7 +16,7 @@ The lens is **TierZoo / r/outside**: treat an organism's existence as an RPG wit
 
 ## 2. The frame — the Game of Life, literally
 
-The wry conceit that ties everything together: **life is a game, it always has been, and you're playing it.** This is the literal premise, not a metaphor the UI gestures at. r/outside and TierZoo already proved how good this frame feels; this game commits to it fully and renders it in RuneScape's interface grammar.
+**The substance is life and evolution; the frame is the flavour that makes it legible and funny.** The wry conceit that carries the flavour: **life is a game, it always has been, and you're playing it.** This is the literal premise, not a metaphor the UI gestures at. r/outside and TierZoo already proved how good this frame feels — but it is *seasoning on a real subject* (deep-time biology), not the foundation, and the voice should grow into our own rather than stay an impression. This game commits to the frame fully and renders it in RuneScape's interface grammar.
 
 **You are a Player.** Not a god, not a scientist — a player with a save file, grinding a lineage up the tiers of a living world. Your save is your **Tree of Life**. Your characters are your **lineages**. Your loot is **genes**. Your grind is **survival**.
 
@@ -126,9 +126,9 @@ Every adaptation carries a **tier** (weak → super), **affixes** (frost, venom,
 
 **The organ's name evolves with its build.** Tier climbs a weak→super name ladder and expressed genes prepend adjectives (a tier-3 venom mouthpart reads *Venomous Great Frontal Appendage*), with the precise tier/affix/rarity read kept just beneath. The signature pair stays **Splice** (take foreign genes from prey) → **Express** (switch a banked gene on as a trait on an organ).
 
-**Skills**, trained OSRS-style toward a cap and gating content: Foraging, Hunting, Fortitude, Metabolism, Instinct (more as ages open). One verb wearing different costumes — the RuneScape pattern where mine+smith or chop+fletch are mechanically one loop with different rewards.
+**Build is the doll; role emerges from it.** What an organism *is* — predator, grazer, filter-feeder — reads off the adaptations it builds, the RuneScape way (roles emerge from what you train; they aren't a mandated class you pick up front). v1 shows a **derived role** computed from the doll and keeps three light starting classes; the deep, chosen role system is not built until play proves the doll needs it.
 
-**The class tree** is specialization: a Generalist root descends through progressively specialized tiers toward a hyper-specialist, IdleOn-style tiered commitment gated by affix-keys and genes. It trades flexibility for in-niche power, and it's where a lineage earns its identity. It is a locked system, but it is also the most complex to author and balance, so it comes online *after* the core loop is validated — splicing alone already supplies build identity in the earliest builds (see the production plan).
+**Skills, abilities & the skill tree are the identity carrier** *(central; sequenced after the core loop)*. Skills train OSRS-style and gate content (Foraging, Hunting, Fortitude, Metabolism, Instinct; more as ages open) — one verb in many costumes. A lineage commits down **one branch** of a skill/ability tree, earning **individual abilities** — and *this* is where build **uniqueness** lives: gear trends toward convergent best-in-slot, so the branch + abilities + the selected genome are what make a lineage yours. One future system carries three wants at once — **active play, build uniqueness, and combat depth.** And because convergence is about **trait motifs** (many predators share a weapon, not a whole body), uniqueness survives in the *combination*.
 
 ## 8. The core loop — one verb, RPG-resolved
 
@@ -148,12 +148,14 @@ Every adaptation carries a **tier** (weak → super), **affixes** (frost, venom,
 
 Fight is *not* a second engine. It's the one loop aimed at things that hit back. A dedicated combat *encounter* (enemy stat blocks, abilities, an active-resolve option) is a deferred premium layer (§15), not core.
 
-## 9. The chase — loot, genes & splicing
+**One loop, chained into a web.** RuneScape's hugeness is one verb in twenty costumes that *feed each other* — ore→bar→weapon, fish→cook→heal. Here the same: niches yield different **materials**; metabolizing chains them (raw → refined → adaptation); stronger builds open deeper niches. The fun the design leans on is **using resources creatively and efficiently** — the build journey is an optimization puzzle, which is why a "solved" best-in-slot is fine: the joy is the efficient *path*, not the destination. Different lineages specialize in different parts of the web and **synergize** (a forager lifts a hunter), making the roster a division of labour — but synergy is always *upside*, never a required supply chain that could starve a lineage (that would break idle-earns, §12).
 
-Evolution **is** a rare-drop mechanic — beneficial mutations are vanishingly rare rolls against a defended world. Two drop streams, both rarity-coloured like RPG itemization:
+## 9. The chase — mutation under selection
 
-- **Materials** — common → rare, tiered and affixed. The reliable crafting economy.
-- **Genes** — rare → legendary. The jackpot: new adaptations and stacking affixes you *couldn't* craft.
+**Evolution is mutation under selection, and that is the engine of the whole game.** Your lineage throws up **mutations** (random variation); you and the niche **select** which stick; the accumulated **genome** is the lineage's growth, identity, and the fuel for everything else. *The lineage becomes what it grinds — and the rare innovation lets it outgrow that niche and rise to the next.* This must be **legible in-game**: the player watches cause (where and how you grind) become effect (what the lineage becomes). Two streams feed it, both rarity-coloured like RPG itemization:
+
+- **Materials** — common → rare, tiered and affixed. The reliable crafting economy that pays for expression.
+- **Genes (mutations)** — common → legendary. The accumulating genome: new adaptations and stacking affixes. The common tier surfaces on *every* grind so a check-in is never empty; the legendary tier is the brutal chase.
 
 ### 9a. The chase curve — locked as a shape
 
@@ -176,10 +178,10 @@ The thing that makes loot feel *evolutionary* rather than RPG-with-a-skin: **eat
 
 Beat the venom-toad enough times and you roll a chance to gain **Venom** yourself — horizontal gene transfer and endosymbiosis, which are biologically real and thematically perfect. Splicing means the world's creatures are also your gene catalogue: the monster you grind *is* the upgrade you're hunting. It turns "what should I fight" into a build decision and generates the best player stories ("I spliced frost off the deep-water thing and now my grazer one-shots the tundra").
 
-Two paths to a gene, so no playstyle is starved of jackpots:
+**Two distinct paths to a gene — vertical and horizontal, deliberately not the same:**
 
-- **Mutation rolls** — any grind has a tiny chance to spontaneously mutate a new gene.
-- **Splicing** — consuming a defended creature rolls a chance to absorb one of *its* traits.
+- **Mutation (vertical · common · the engine).** Your own lineage's variation, surfaced by every grind and *biased by where and how you grind* (grind the cold, cold-adaptations surface). You **select** which to fix. The cozy frequent stream, and the reason the lineage becomes what it grinds. *(Future experiment: most mutations arrive useless — like junk drops — and the play is to cull for the rare gem, which is also the resource-efficiency game §8. Worth prototyping, not yet locked.)*
+- **Splicing (horizontal · rare · targeted).** Eat a creature and *rarely* absorb its signature trait — real horizontal gene transfer / endosymbiosis. The targeted path: the creature you grind *is* a specific upgrade you hunt, so "what should I fight" is a build decision. Distinct from mutation — stolen-and-specific, not your-own-and-emergent.
 
 Per-niche and per-creature gene tables are a deliberately-open dial (§20): each trophic strategy gets its own jackpot table, plus pinnacle ultra-rares behind the hardest apex challenges.
 
@@ -187,23 +189,26 @@ Per-niche and per-creature gene tables are a deliberately-open dial (§20): each
 
 Not three competing economies. One:
 
-> **Drops unlock options → the class tree gates them by tier → Metabolize spends materials to build them.**
+> **Grind a part of the web → mutations surface (biased by the activity) + materials accrue → select & fix what sticks → metabolize materials to express it → the stronger build opens deeper web.**
 
-Genes and splices unlock *what's possible*; the class tree gates *what you can reach right now*; metabolizing materials is *how you actually pay for it*. Every drop feeds the same line.
+Mutations and splices unlock *what's possible*; your role/branch gates *what you can reach right now*; metabolizing materials is *how you pay for it*. Every grind feeds the same line. Longer-term this is an **internal, open-math economy substrate** — surplus materials, specialization, optimization, with the numbers shown (theorycraft is a feature, not a leak) — single-player first, the safe rehearsal for any future trading layer (§18).
 
 ## 11. Gates & matchups — power, keys, light affinity
 
 - **Power treadmill** is the spine. A bigger number progresses — the engine of every game in this lineage of references.
-- **Affix-keys** gate *access*, binary and legible: no tundra without cold-resistance. They also pay **specialization bonuses** — a frost build is best in frost zones and dead weight outside them, so builds specialize per-niche. (These keys are real ecological gates — thermoregulation, osmoregulation, oxygen tolerance — which is where the science backing pays off in legibility.)
+- **Affix-keys** gate *access*, binary and legible: no tundra without cold-resistance. Real ecological gates — thermoregulation, osmoregulation, oxygen tolerance — which is where the science backing pays off in legibility.
+- **Niches need teeth — steep, but never a penalty.** A build is clearly *best* where it fits and merely *fine* elsewhere — never dead weight (that would be a trap, and an off-home lineage must still earn idly, §12). The mechanism: **power is access, not throughput** — clearing a node's defense opens it, but *which stat pays out* is the niche's signature (metabolism in open water, resilience in the armored shallows, the gene-chase at the reef). A stronger generalist can *go* anywhere but *laps* no one; the specialist owns its stream at home. The gap is felt as opportunity cost, never loss. *(An outside playtester named this exactly — "niches need teeth or speciation collapses." It is load-bearing.)*
 - **Light affinity only** — soft multipliers as texture (stab / slash / crush, elemental weakness). **No hard balanced triangle.** A hard triangle removes decisions *and* carries a permanent balancing burden that fights the idle feel.
 
 **Build philosophy: no trap builds, synergies celebrated.** The target is not "every build is mathematically equal" — that's impossible to author, impossible to auto-generate, and it sands off the theorycraft that makes itemization fun. The target is **no strictly-dominated builds**: every kingdom has at least one top-tier path, nothing is a trap, but synergies and spikes are *allowed and celebrated*. Discovering that venom + metabolism stacks absurdly is a reward, not a bug to patch (though the Devs may *say* they'll patch it, and never do). This also slashes the balancing burden — critical for a small team.
 
 ## 12. The idle & attention model — *idle earns, attention spends*
 
-This is structural, not a dial. It's how the idle pillar stays #1.
+This is structural, not a dial. It's how the idle pillar stays #1 *while* active play carries the engagement — the cohort showed a check-in-only loop with nothing to *do* reads as dull, so active play is core, not a sprinkle.
 
-**Lineages earn at full rate offline.** Active attention does *not* out-earn idle. You never log in because you're losing money by being away — that loss-aversion stress is the babysitting anti-pattern, and it's banned here.
+**Idle is the complete floor.** Lineages earn the full baseline offline — always sufficient, never a loss, never decaying, never babysitting-required. You never log in because you're *losing* by being away, and progress never moves backward; that loss-aversion stress is the banned anti-pattern.
+
+**Active is a bounded, genuinely-fun ceiling — and the primary way engaged players play.** Active play (managing a fight, drafting and culling surfaced genes, optimizing a lineage's loop, stacking effects to spike) is *more efficient and more fun* than idling — but the edge is **capped and modest**, and the gap between floor and ceiling is felt as **opportunity cost, never loss or decay**. People play actively because it is the best part of the game, not to avoid falling behind. The litmus test for every active feature: *if a player never touches it, is the game still complete and are they still progressing well?* Yes → it is a ceiling; ship it. No → it is a §12 violation; cut it. The exact active mechanics (the two axes — optimize-the-loop and light combat-babysit) are their own careful design (ROADMAP.md), but they all answer to this test.
 
 **Attention is the spend and decision layer.** When you check in you make choices: tier-up decisions, reallocation, spending accumulated drops, splicing, branching new lineages, redirecting a lineage to a new node. These choices are interesting on their own merits — *which target to grind, which gene to chase, which trait to splice* is a fine, real decision — and we let players make as many as they want per session.
 
@@ -213,7 +218,7 @@ You start with ~2 active lineage slots and unlock more over time (capped natural
 
 ## 13. The roster — parallel lineages
 
-Your Tree is a **party** of lineages, every branch a viable, top-tier-capable, actively-built character. A healthy roster reads like an RPG party: an aggressive hunter, a resilient survivor, a fast opportunist — different builds, different decision rhythms, each filling a role, all earning idly in parallel.
+Your Tree is a **party** of lineages, every branch a viable, top-tier-capable, actively-built character. A healthy roster reads like an RPG party — an aggressive hunter, a resilient survivor, a fast opportunist — different builds with **different attention rhythms** (a low-touch open-water farmer vs a high-touch reef hunter), each filling a role, all earning idly in parallel. Over time the roster becomes an **interdependent ecosystem**: lineages specialize in parts of the production web and *synergize* (§8), so the Tree is a system you cultivate, not a list — and the differing rhythms are what make each lineage feel like its own character to check in on.
 
 **v1 is animals only.** Plants, fungi, and microbes as full kingdoms — each with its own offense/defense/support/utility role spread — are a 2–4× loop-and-content multiplier that fights the small-team content moat (§17). So **kingdoms-as-class-families is the first major expansion** — a future patch, in the Devs' parlance — not v1. Within animals there is already a full, scientifically real role spread — ambush predator, armored grazer, fast scavenger, toxic specialist, filter feeder — enough for a complete, varied roster. The discipline is to build one kingdom's worth of game *well* before promising four.
 
@@ -224,6 +229,8 @@ Your Tree is a **party** of lineages, every branch a viable, top-tier-capable, a
 But endless growth still needs a *shape*, or old content trivializes and per-lineage numbers explode. The shape comes from two coupled rules:
 
 **Growth is breadth-led.** A single lineage's power has gentle diminishing returns near its terminal tier — a **soft cap**. So total progress comes mainly from *breadth*: more lineages, more niches, more ages. This keeps per-lineage numbers bounded while the whole Tree grows without limit, and it naturally pushes players toward branching (which restarts fresh chases, §9a) rather than over-investing one hero.
+
+**Descent with inheritance — the Tree is the prestige layer, with no reset.** When you branch (cladogenesis), the daughter *inherits* the parent's genome as a starting point and diverges — so the Tree's accumulated evolution makes each new branch climb faster. This is the only "prestige" the game has, and it deletes nothing: the parent persists (graduated or still running, your choice), and the multiplier is the Tree's own history. **Growth runs in two directions:** a lineage *deepens* (specializes to its niche — becomes what it grinds) and *rises* (a rare innovation lets it outgrow the niche and unlock genuinely new systems and capabilities — the climb, §15).
 
 **Milestones come from ages, not from completion.** Because there's no endpoint, the felt structure is the **age-climb** (§15): each age is a celebrated *arrival* — a summit, a Dev expansion going live — not a finish line. You always have a next age to reach. This replaces "complete the Tree" with "reach the next shore," which is open-ended and never runs out.
 
@@ -239,11 +246,11 @@ This is how the shape protects *both* pillars without a completion gate: numbers
 - **Apex challenges** — hard, gated raid bosses (real apex predators, accurately statted) that hold the pinnacle genes which keep the chase ceiling moving.
 - **Patches & nerfs** — the Devs occasionally reshape the world (a climate shift, a new predator class moving in). In v1 these are flavor and content gates; real-stakes world events are deferred depth (§19).
 
-## 16. The mobile product
+## 16. The mobile product — a check-in floor with depth above it
 
-This is a phone game first, and that shapes the design as much as the loot loop does.
+This is a **phone game first** — a Melvor Idle / Idle Obelisk Miner shape: flat-but-deep systems, a **central number** (the genome / mutation), and a few clear resources, kept simple enough for one thumb. The form factor is mobile-first; if a system can't be expressed on a phone, it's too much.
 
-**The real product is the check-in session:** a 2–5 minute, one-handed, vertical-format loop. You open the app, read a **Dev dispatch** ("while you were away" → patch-note voice), make a handful of decisions, spend your drops, maybe branch or splice, and close it. The equipment doll is the screen you live on *during* that session. The lived-in desktop-MMO screen is not the product; the tight check-in is.
+**The check-in is a core focus, not the whole product.** A 2–5 minute, one-handed, vertical loop is the **engagement floor**: you open the app, read a **Dev dispatch**, make a handful of decisions, spend drops, maybe branch or splice, and close it — and *just checking in always moves you forward* (idle earns, §12). But the product is **more than the check-in**: deeper, active sessions — optimizing a lineage's loop, light combat-babysit, building the production web, speccing abilities — are the **active ceiling** where engaged players live (§12), above the complete idle floor. **The short loop hooks; the depth retains.** Neither is sacrificed: the game stays complete for the player who only ever checks in, and the depth never makes the short loop insufficient, never "log in or lose" (§12).
 
 **Re-engagement is the chase, not a nag.** What brings a player back is what carries the whole game: idle accrual ran while they were away, the chase ticked forward, and there's a rarer gene one roll out (§5, §9a). The game *earns* the return; it does not manufacture it. We deliberately do **not** build a re-engagement engine out of notifications — that path runs straight into the loss-aversion and babysitting anti-patterns this design bans (§12, §18).
 
@@ -297,7 +304,7 @@ Monetization is light, planned, and deferred until the core loop is validated in
 
 ## 19. Core vs deferred — the build focus
 
-Name the deferred depth so the vision stays whole, but **build no scaffolding, hooks, or "future-friendly" abstractions for it until the core is proven.**
+Name the deferred depth so the vision stays whole, but **build no scaffolding, hooks, or "future-friendly" abstractions for it until the core is proven.** The *ordered* sequence — what comes after the vertical slice, and in what order — lives in **ROADMAP.md** (a living doc, subject to change); this table is only the core/deferred split.
 
 | **Core — the focus** | **Deferred depth — named, not cut (future patches)** |
 |---|---|
@@ -305,16 +312,16 @@ Name the deferred depth so the vision stays whole, but **build no scaffolding, h
 | Character sheet + equipment doll | Dedicated Fight encounters + abilities |
 | One loop, RPG-resolved (Power vs defense → loot) | Apex bosses + legendary / pinnacle drops |
 | **The two-tier chase curve, never-flat (§9a)** | Plants / fungi / microbes as kingdoms (class families) |
-| Splicing + small orthogonal affix set | Real-stakes ecosystem sim among your own lineages |
+| **Mutation under selection** (§9) + splicing + affix set | Real-stakes ecosystem sim among your own lineages |
 | Cladogenesis (the respec valve) | World-event patches with real stakes (extinctions that bite) |
-| Class tree *(locked; comes online after the core loop)* | Ages beyond the sea (land, and onward) |
+| Role from the doll; skills/abilities tree = identity carrier *(after core loop; see ROADMAP.md)* | Ages beyond the sea (land, and onward) |
 | Roster (~2 slots), **animals only** | |
 | Skills + offline accrual | |
 | Soft cap + player-chosen graduation | |
 | Idle-earns / attention-spends | |
 | Mobile check-in + Dev-voice dispatches (notifications optional, §16) | |
 
-Notes on the deferred set: **history-overgrows-the-world** makes "your past selves populate the world" literal, with niche-local, diminishing lift so it speeds the re-climb without flattening challenge. The **real-stakes ecosystem sim** (predator-prey with actual loss among your own lineages) is a switch flipped much later, if ever.
+Notes on the deferred set: **history-overgrows-the-world** makes "your past selves populate the world" literal, with niche-local, diminishing lift so it speeds the re-climb without flattening challenge. The **real-stakes ecosystem sim** (predator-prey with actual loss among your own lineages) is a switch flipped much later, if ever. The **social / economy / trading → multiplayer** layer (theorycraft, comparison, community — the creator's deepest want) is the long-horizon north star: built as an *internal, single-player open-math economy* first (§10), opened to real players only once the game carries itself.
 
 ## 20. Open dials — tuning, not structure
 
@@ -335,6 +342,21 @@ These are explicitly open and meant to be tuned in playtest. They do **not** reo
 
 ---
 
+## 21. Build disciplines — how this vision becomes a game
+
+This document is **a guideline and inspiration source, not a build spec.** The vision is allowed to be aspirational; the *build* stays ruthlessly gated by the validation phases (ROADMAP.md / IMPLEMENTATION.md). Four disciplines keep an ambitious vision from collapsing into a doc that never ships:
+
+1. **Each increment is a complete, fun game by itself.** The vision is large — bigger than a small team ships quickly — so it is built as **many small, self-contained systems**, each shippable and enjoyable on its own, that *accrete* into the web. Treat each update as its own little sub-game (a new niche, a new skill, the mutation layer), not a load-bearing slice of one giant machine. If a piece isn't fun before the next piece exists, the plan is wrong.
+2. **Sequence the independent wins; never big-bang the co-dependent ones.** The near spine (mutation-under-selection · niches-with-teeth · legibility) decomposes cleanly and is built first. The horizon (the deep web · abilities · the economy · the Tree-as-graph) co-depends — sequence it carefully, never all at once.
+3. **The idle floor stays complete.** Depth is *optional on top of* a finished idle game (§16). The moment a check-in-only player feels hollow without engaging the depth, idle-earns is broken (§12). This is the central craft test of the whole depth-above-the-floor model.
+4. **Legibility is a requirement, not polish.** Cause must visibly become effect — you watch the lineage become what it grinds. A playtester calling progress "random respec with no rhyme or reason" is a failure of this discipline, not a tuning note.
+
+One honesty constraint on the science (§2): mutation-under-selection is **truer and more legible** than loot-drops, but it is still a *game-ified* model — you do not really choose your mutations, and real selection is brutal culling, not gentle picking. Frame it as "thematically true," never oversell it as literally rigorous; the biologist in the audience will notice.
+
+---
+
 ## What's locked
 
-The frame: **the Game of Life, literally** — you're a Player, the **Devs are natural selection**, content is **Patch Notes**, the world is **mythic Earth with rigorous TierZoo-accurate biology**, the tone is **wry & knowing** (§2). Idle · RPG · growth, in that order. The Tree, with lineages-as-RPG-characters. Monotonic growth, **no prestige reset and no completion endpoint** — growth is endless, with shape from soft cap + breadth. One loop (forage → metabolize), RPG-resolved (Power vs defense → loot). Equipment doll of phenotype slots with tier / affix / rarity. Class tree (online after the core loop). OSRS-style skills. Two drop streams (materials + genes). **The two-tier chase curve as the load-bearing engine of tension, locked as a never-flat shape (§5, §9a).** Splicing as the signature gene source. Power treadmill + affix-keys + light affinity, no hard triangle. No trap builds, synergies celebrated. Roster of parallel lineages, all top-tier-capable, **animals only in v1**. **Idle earns, attention spends — and decisions are never throttled as artificial scarcity.** Soft cap + player-chosen graduation, lineage persists as a named fixture. Breadth-led endless growth; milestones come from the open-ended age-climb, not completion. Authored-baseline wild. Ages as expansion patches. Mobile check-in + Dev-voice dispatches as the product shape; notifications optional, never a re-engagement engine. Retro-pixel art identity. **AI authors content data, never the engine; every row passes three gates — orthogonality, scientific accuracy, voice.** F2P, ethically monetized, light optional non-power buys deferred to post-validation; built as a professional indie product for long-term live operation, growing one patch at a time. The §19 core/deferred split.
+> *"Locked" means a stable default we don't churn casually, not immutable (CLAUDE.md §4). This summary was substantially reframed on 2026-06-14 around mutation-under-selection; see DECISIONS.md.*
+
+The frame as **flavour over substance**: the substance is **life & evolution**; the skin is **the Game of Life, literally** — you're a Player, the **Devs are natural selection**, content is **Patch Notes**, the world is **mythic Earth with TierZoo-true (legible, not pretend-rigorous) biology**, tone wry & knowing (§2). Idle · RPG · growth, in that order. **Attach to the lineage and the Tree** — lineages-as-RPG-characters, **descent with inheritance** (branching is the only "prestige," and it deletes nothing). Monotonic growth, **no reset, no completion endpoint**; shape from soft cap + breadth. **Mutation under selection is the engine** (§9): the lineage *becomes what it grinds* and *outgrows* it; mutation is vertical & common, **splicing is horizontal, rare & targeted**, the legendary chase locked never-flat (§9a). One loop (forage → metabolize) **chained into a production web**, RPG-resolved (Power vs defense → loot); using resources creatively & efficiently is a core joy. **Build is the doll; role emerges from it; skills/abilities/skill-tree are the identity carrier** (after the core loop) — where build uniqueness lives. Equipment doll of phenotype slots, tier / affix / rarity. **Niches need teeth — steep but never a penalty**: power is access, the niche's signature stat is throughput; affix-keys gate access; light affinity, no hard triangle; no trap builds, synergies celebrated. **Mobile-first** (Melvor / Idle-Obelisk shape: flat-but-deep, a central number, clear resources). **The check-in is a core focus, not the whole product**: the 2–5 min loop is the engagement floor (**idle is the complete floor** — full baseline, never decays, just checking in always progresses); **active play is a bounded, genuinely-fun ceiling and the primary way engaged players play** — modestly more efficient, the gap felt as opportunity cost, never loss/decay, never "log in or lose." Retention from **chase × unfold × mastery × endowment**, never loss / FOMO. Roster of parallel lineages with **different rhythms**, an interdependent ecosystem, **animals only in v1**. One economy, shown openly (theorycraft is a feature); an **internal economy substrate now, social / trading / multiplayer as the long-horizon north star.** Authored-baseline wild; ages as expansion patches. Retro-pixel art. **AI authors content data, never the engine; three gates — orthogonality, science, voice.** F2P, ethically monetized, **no pay-to-win**; light optional non-power buys post-validation. **This doc is a guideline, not a build spec; the build stays ruthlessly gated; each increment is a complete game (§21).** The §19 core/deferred split + the ROADMAP.md ordering.

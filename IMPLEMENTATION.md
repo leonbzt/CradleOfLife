@@ -150,58 +150,33 @@ The **science + voice bible** (`bible/`) is a Phase-0 deliverable: the world's s
 
 ---
 
-## 4. Production phases, gated on validation
+## 4. How we sequence — validation-gated; ordering owned by ROADMAP.md
 
-### Phase 0 — Model & bible (1–2 weeks)
+The original Phase 0→4 ladder did its job: it delivered a working prototype — the chase harness, the Power-vs-defense loop, the equipment doll, the seven orthogonal affix roles, splicing, a class tree, offline accrual, and a playable check-in session. It also taught us the lesson recorded in DECISIONS (2026-06-14): **the feature surface outran the core *feeling*** (the cohort read it as dull, illegible, the chase not landing). So the sequence is no longer a fixed phase ladder. It is the **reset-to-spine rebuild**, ordered as a *living* list in **ROADMAP.md** (Now / Next / Horizon) and governed by one rule that does **not** change:
 
-No UI. Two deliverables.
+> **Every increment ends on a validation gate** — a fun/quality question answered by real players, or, for any economy change, by the headless chase harness. Don't start the next increment until its gate passes or the increment is reworked to pass. *The gate discipline is stable; the ordering is adaptable.*
 
-1. **The chase-curve model.** `tests/economy_test.gd`, run with `godot --headless --script res://tests/economy_test.gd`, simulating a 6-week arc across 2 then 4 lineages using the *real* `resolve()`/`accrue()` (this is why they're Node-free). Log per day: materials, mutations, sessions-since-last-legendary, interesting-events-per-check-in. Dump CSV; chart it.
-2. **The science + voice bible** (§3): world spine, voice rules, starter references.
+**The current build approach (2026-06-14).** Keep the engine and the content pipeline; rebuild the loop's *feel* — an active verb, legible progression, and the chase landing — before re-accreting complexity. Each piece is a small, signed work order (the old PHASE2/PHASE3 style: propose → Leon signs → build → re-prove the harness → validate), and the work-order file is deleted on close with its decisions moved to DECISIONS.md. ROADMAP "Next" lists the pieces; the active verb leads.
 
-**Validation gate:** *Across 6 simulated weeks, does a check-in still produce a meaningful event most days, and is the next legendary always reachable-but-never-given?* This is the §9a never-flat property. If the curve decays at week 2, no UI saves it. Fix constants here, in numbers — the cheapest and most important milestone in the project.
+**The standing validation gates** (apply whenever the relevant system is touched, not phase-locked):
 
-### Phase 1 — Vertical slice: the thesis (3–4 weeks)
+- **The chase never goes flat** (the #1 gate) — the 6-week harness model still shows a meaningful event most check-ins and a legendary always reachable-but-never-given (vision §9a). Re-run on *every* economy change.
+- **Equipping feels good** — against a node that pushes back, getting a drop and choosing to express it is a dopamine beat (vision §7–8).
+- **Branches feel different** — two lineages read as different characters to check in on, not tap-claim-twice (niches need teeth, vision §11, §13).
+- **Active play earns its place** — it is *more fun* than idling, and the idle floor stays complete without it (the §12 litmus test).
+- **Returns happen without a nag** — D1/D7 hold on the cohort with no dark patterns (vision §16, §18).
 
-One **defended** node, Power-vs-defense roll, a rarity-coloured loot pop with juice, and an equipment doll with **three** slots where equipping measurably changes the next roll. No class tree, roster, or genes yet. This is the smallest build that tests the core thesis (vision §7–8).
-
-**Validation gate:** *Does getting a drop and choosing to equip it feel good when there's a defended node to feel the difference against?* Put it in front of the playtest cohort; watch first-equip reactions. If it fails, the loop is wrong — content will not save it. Iterate here.
-
-### Phase 2 — Splicing + the orthogonal affix set (3–4 weeks)
-
-Gene drop stream, splicing ("eat the venom-toad → roll to gain Venom"), all seven orthogonal roles made mechanically real behind all three gates (§3), affix-key gating on two new niches (pelagic, reef edge). The signed, formula-exact work order for this phase is `PHASE2.md` (temporary; deleted when the phase closes — decisions recorded in DECISIONS.md 2026-06-11).
-
-**Validation gate:** *Does "what should I fight" become a build decision players talk about?* The bar is the player story — "I spliced frost off the deep thing and now my grazer one-shots the tundra." If players aren't narrating splices, splicing isn't carrying its weight.
-
-### Phase 3 — The portfolio + class tree (4–5 weeks)
-
-Class/spec tree (now it comes online), cladogenesis-as-respec, a 2-slot roster, and a placeholder per-lineage **soft cap** (without it, breadth-led growth has no shape and the Phase-0 curve breaks at the top end). The signed, formula-exact work order is `PHASE3.md` (temporary; deleted when the phase closes — decisions recorded in DECISIONS.md 2026-06-11). A class is **stat mods + equipment/gene access by category + a light in-niche multiplier** (the monotonic-safe model: specializing only grows your allowed gear, so it never strands a build); **Option A** (doll slots become attribute subsystems) is folded in; classes are sticky and the respec valve is to branch.
-
-**Validation gate:** *With two animal lineages, does each feel like a different character to check in on, or is it tap-claim-twice?* If they feel identical, the v1 animal sub-roles aren't distinct enough — fix role variety (lean on real-biology differences) before adding slots.
-
-### Phase 4 — The mobile product (5–7 weeks)
-
-Closed-form offline accrual, the **Dev-dispatch** while-you-were-away summary, optional local notifications (§5), and the **land-fall summit** beat (vision §15 calls it make-or-break — over-build it). Add telemetry.
-
-**Validation gate:** *Do players return the next day without being nagged?* Measure D1/D7 on the cohort. This is the only retention test that counts pre-launch.
-
-### Soft launch (limited region / closed track)
-
-Release the vertical slice to a limited audience. Validate the Phase-0 chase model against *real* telemetry: does the in-the-wild event cadence match the prediction? Tune constants (vision §20), not structure. Hold the ethical line (vision §18) while reading retention honestly.
-
-### Live ops — ages as expansion patches
-
-Post-launch, the roadmap *is* the fiction: each new age ships as a Dev expansion patch on a sustainable cadence (a major age every few months, smaller content patches between). Kingdoms, apex bosses, dedicated Fight encounters, and the deferred depth (vision §19) become the patch pipeline. Build none of their scaffolding before launch.
+**Soft launch & live ops (unchanged in spirit).** When the spine feels good and the gates hold, release to a limited audience, validate the chase model against real telemetry (tune *constants*, not structure — vision §20), then ship ages as Dev expansion patches on a sustainable cadence (vision §15). Build no scaffolding for deferred depth (vision §19) before launch.
 
 ---
 
-## 5. Notifications in Godot (Phase 4)
+## 5. Notifications in Godot (a pre-launch checklist item, not a goal)
 
-Notifications are an **optional, opt-in convenience — never a re-engagement engine** (vision §16): build the game to retain without them, then layer these on. The one place Godot needs help — no built-in mobile notification API.
+Notifications are an **optional, opt-in convenience — never a re-engagement engine** (vision §16): build the game to retain without them, then layer these on near launch. The one place Godot needs help — no built-in mobile notification API.
 
-- **Local scheduled notifications** cover the common case. Because accrual is closed-form, you can compute when the next notable event lands and schedule a local notification for it. Use a maintained community local-notification addon (Android + iOS) or a thin GDExtension/JNI bridge. Bounded, known work — flag it early so Phase 4 doesn't surprise you.
+- **Local scheduled notifications** cover the common case. Because accrual is closed-form, you can compute when the next notable event lands and schedule a local notification for it. Use a maintained community local-notification addon (Android + iOS) or a thin GDExtension/JNI bridge. Bounded, known work — flag it early.
 - **Server push** is *not needed in v1*: nearly every honest trigger is locally predictable. Don't stand up a backend until something genuinely requires it.
-- Implement the vision §16 rules in code: Dev-voice good-news framing only, a hard daily cap, suppress if opened recently, never fire "chase ticked closer" unless the Phase-0 curve makes it true.
+- Implement the vision §16 rules in code: Dev-voice good-news framing only, a hard daily cap, suppress if opened recently, never fire "chase ticked closer" unless the harness curve makes it true.
 
 ---
 
@@ -209,35 +184,11 @@ Notifications are an **optional, opt-in convenience — never a re-engagement en
 
 - **Headless unit tests** for `resolve()` and `accrue()` run in CI on every push — the economy is the riskiest system and the easiest to test deterministically (seeded RNG).
 - **The three content gates** (§3) run on every content change; gate 1 in CI, gates 2–3 as a merge checklist.
-- **Playtest cohort** from Phase 1 onward — 5–10 honest testers, not friends-who-love-you; watch sessions, don't just read survey scores.
-- **Soft-launch telemetry** validates the Phase-0 model in the wild. The honest professional bar is real D1/D7 and session metrics, achieved *without* dark patterns — the design ethic (vision §18) forbids juicing them.
+- **Playtest cohort** — 5–10 honest testers, not friends-who-love-you; watch sessions, don't just read survey scores. (Leon playtests first, then ships web exports to the cohort.)
+- **Soft-launch telemetry** validates the harness model in the wild. The honest professional bar is real D1/D7 and session metrics, achieved *without* dark patterns — the design ethic (vision §18) forbids juicing them.
 
 ---
 
-## 7. Definition of the vertical slice (first releasable build)
+## 7. The first releasable build (the slice that ships)
 
-**Phase 1 + 2 + 3 + offline accrual + Dev-dispatch summary + optional notifications**, animals only, sea age only, ~6 affixes, ~15–25 nodes, 2 roster slots, a placeholder soft cap, all content through the three gates, and a chase curve that survived Phase 0. That is a complete, retainable idle RPG suitable for soft launch. Everything past it — ages, graduation polish, kingdoms, deferred depth — is live-ops expansion on a proven base.
-
----
-
-## 8. First steps — first sprint
-
-In order. The first three are roughly an afternoon each.
-
-1. **Initialize the repo and Godot 4 project** matching §2: empty `sim/`, `data/`, `ui/`, `tests/`, `bible/`; autoloads `state_store.gd` and `data_loader.gd` (the loader fails loudly on malformed JSON). Commit. Set up the CI runner to call Godot headless.
-
-2. **Write `sim/game_state.gd`, `sim/rng.gd` (seeded), and the `Resolve.resolve()` signature as stubs** — shapes only, with `resolve()` returning a hardcoded loot dict so the test runs.
-
-3. **Write `tests/economy_test.gd` and run it headless:**
-   ```bash
-   godot --headless --script res://tests/economy_test.gd
-   ```
-   Loop `resolve()` 10,000× against one stub node, print the loot distribution. This script is the spine of the project — it's how you'll validate the chase curve in Phase 0 and every economy change after. Wire it into CI now.
-
-4. **Draft the science + voice bible** (`bible/`): the age/niche spine, the voice do/don't list with a handful of example patch notes and creature blurbs, and a starter reference set for the first niche. This is gate 2 and gate 3's source of truth.
-
-5. **Stub `affixes.json` with the §3 schema and write `tests/validate_data.gd`.** Even with two affixes, get gate 1 running in CI so no synonym ever sneaks in later.
-
-6. **Build the Phase-0 chase model** on the test harness and answer its validation gate — *does the chase stay alive across 6 weeks?* — before opening the editor to build Phase 1's doll.
-
-The order is deliberate: prove the engine of tension in numbers and pin the world's ground truth in the bible, *then* spend weeks on pixels.
+The spine made to *feel* good, on the engine that already exists: the **active verb** (optimize-the-loop + light combat-babysit), **legible skill-level progression**, **niches with teeth + a sequential unlock ladder**, the **chase landing early**, and **selection as a draft against a budget** — animals only, sea age only, ~6 affixes, ~15–25 nodes, ~2 roster slots, a placeholder soft cap, all content through the three gates, and a chase curve that still survives the harness. That is a complete, retainable idle RPG suitable for soft launch. Everything past it — ages, the ability tree + combat depth, the ecosystem loop, kingdoms, the rest of vision §19 — is live-ops expansion on a proven base. The ordered list lives in ROADMAP.md.

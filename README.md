@@ -6,18 +6,21 @@ of Life**, a clade you grow, gear, and class up over deep time, while the Devs
 RPG · growth, built for long-term live operation.
 
 > **Read the docs first.** `VISION.md` (what the game is), `IMPLEMENTATION.md`
-> (how/when we build), `CLAUDE.md` (how we work), `DECISIONS.md` (why things
-> changed). The docs are the source of truth; the code must match them.
+> (architecture & process), `ROADMAP.md` (what we build next, in order),
+> `CLAUDE.md` (how we work), `DECISIONS.md` (why things changed). The docs are
+> the source of truth; the code must match them.
 
-## Status — Phase 1: the vertical slice (the thesis)
+## Status — reset to the spine (2026-06-14)
 
-Phase 0 passed its gate: the harness proved the two-tier chase shape holds
-across the 6-week model, and the rough balance was accepted (see
-`DECISIONS.md`). Phase 1 is the smallest build that tests the core thesis
-(`IMPLEMENTATION.md` §4): one screen with defended nodes, the Power-vs-defense
-roll, rarity-coloured loot pops, and a three-slot equipment doll where equipping
-measurably changes the next roll. Its gate is a playtest question: *does getting
-a drop and choosing to equip it feel good against a node that pushes back?*
+A working prototype shipped: the chase harness, the Power-vs-defense loop, the
+equipment doll, the orthogonal affix set, splicing, a class tree, offline
+accrual, and a playable check-in session. Cohort feedback showed the *engine* is
+sound but the *feel* isn't there yet — dull, illegible progression, the chase not
+landing. So the project **reset to the spine**: keep the engine and content
+pipeline, and rebuild the loop's feel — an **active verb**, legible progression,
+and the chase landing — before re-accreting complexity. Sequencing lives in
+**`ROADMAP.md`** (Now / Next / Horizon); the *why* is in `DECISIONS.md`
+(2026-06-14).
 
 ## Layout
 
