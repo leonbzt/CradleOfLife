@@ -240,7 +240,7 @@ func _fight_node(defense: float, danger: float = 0.0, splice_rate: float = 0.0) 
 		"gene_rate": 0.001,
 		"gene_table": [],
 		"splice_rate": splice_rate,
-		"spliceable": "gene_raptorial",
+		"spliceable": "gene_nematocyst",
 	}
 
 
@@ -429,9 +429,9 @@ func _test_accrue_determinism_with_splice(content: Content) -> void:
 
 func _test_forage_banks_genes(content: Content) -> void:
 	var state := _fresh_state(content)
-	# Run enough foraging actions against the trilobite that we're likely to get
+	# Run enough foraging actions against a defended node that we're likely to get
 	# at least one gene drop. Use a seed known to produce a drop early.
-	state.lineages[0].assigned_node = "trilobite_grazer"
+	state.lineages[0].assigned_node = "sea_anemone"
 	state.lineages[0].attributes["power"] = 20.0  # definitely winning
 	var rng := Rng.new(1234)
 	for _i in range(200):
@@ -552,33 +552,34 @@ func _test_rarity_escalation(content: Content) -> void:
 
 
 func _test_niche_key_gating(content: Content) -> void:
-	# pelagic requires uptime key; without it assign_node is rejected
-	var state := _fresh_state(content)
-
-	# Check meets_niche_keys directly
+	# The keyed niches (pelagic/reef) are parked in the reset; the affix-key gate
+	# MECHANISM stays for the rebuild (niches-with-teeth). Exercise it against a
+	# synthetic niche that requires a 'sustain' key.
+	var fake := Content.new()
+	fake.tables = content.tables.duplicate(true)
+	fake.tables["niches"] = [
+		{"id": "shallow_benthos", "name": "Shallow Benthos", "affix_keys": []},
+		{"id": "keyed", "name": "Keyed Niche", "affix_keys": ["sustain"]},
+	]
+	var state := _fresh_state(fake)
 	var l := state.lineages[0]
+
+	# A keyless niche is always met; the keyed niche fails for a bare lineage.
 	_check(
-		not Commands.meets_niche_keys(l, content, "pelagic"),
-		"niche key: bare lineage fails pelagic uptime key"
+		Commands.meets_niche_keys(l, fake, "shallow_benthos"), "niche key: keyless niche always met"
+	)
+	_check(
+		not Commands.meets_niche_keys(l, fake, "keyed"), "niche key: bare lineage fails sustain key"
 	)
 
-	# Equip an uptime affix → key met
-	var inst := AdaptationInstance.new("gill_branches", 1)
+	# Express a sustain affix (gill_minor) → key met.
 	state.inventory_materials["soft_tissue"] = 9999.0
-	Commands.metabolize(state, content, "main", "gill_branches")
+	Commands.metabolize(state, fake, "main", "gill_branches")
 	state.genes_known["gene_gill"] = 1
-	var gc: Dictionary = content.affix("gill_minor").get("express_cost", {})
+	var gc: Dictionary = fake.affix("gill_minor").get("express_cost", {})
 	state.inventory_materials[String(gc.get("material", ""))] = 9999.0
-	Commands.express(state, content, "main", "metabolic_core", "gill_minor")
-	_check(
-		Commands.meets_niche_keys(l, content, "pelagic"),
-		"niche key: uptime express meets pelagic key"
-	)
-
-	# Locked niche: assign_node to pelagic node fails without key
-	var state2 := _fresh_state(content)
-	var ok := Commands.assign_node(state2, content, "main", "plankton_bloom")
-	_check(not ok, "niche key: assign_node to locked niche rejected")
+	Commands.express(state, fake, "main", "metabolic_core", "gill_minor")
+	_check(Commands.meets_niche_keys(l, fake, "keyed"), "niche key: sustain express meets the key")
 
 
 func _test_migration_v1_to_v2() -> void:
@@ -608,7 +609,7 @@ func _test_migration_v1_to_v2() -> void:
 	_check(state.splice_offers is Array, "migration: splice_offers added")
 
 
-# -- Phase 3 WP1: Option A, class mods, soft cap, niche multiplier ------------
+# -- Per-slot doll routing, derived role, soft cap ---------------------------
 
 
 func _test_option_a_slot_routing(content: Content) -> void:
@@ -688,13 +689,13 @@ func _test_derived_role(content: Content) -> void:
 
 
 func _test_accrue_determinism_phase3(content: Content) -> void:
-	# Two accrue() runs with the same gap + seed must be identical under Option A /
-	# class mods / soft cap. Uses a lineage with a non-trivial doll.
+	# Two accrue() runs with the same gap + seed must be identical under per-slot
+	# routing + soft cap. Uses a lineage with a non-trivial doll on a defended node.
 	var state := GameState.new()
 	state.master_seed = 17
 	var l := Lineage.new("p", "P")
 	l.attributes["power"] = 6.0
-	l.assigned_node = "trilobite_grazer"
+	l.assigned_node = "sea_anemone"
 	var inst := AdaptationInstance.new("frontal_appendage", 2)
 	l.doll["mouthparts"] = inst
 	state.lineages.append(l)
@@ -780,19 +781,18 @@ func _test_express_cap(content: Content) -> void:
 	# Use mouthparts (cap 2) with two distinct mouthparts affixes, then a third.
 	var state := _fresh_state(content)
 	state.inventory_materials["biofilm"] = 9999.0
-	state.inventory_materials["chitin"] = 9999.0
 	state.inventory_materials["soft_tissue"] = 9999.0
 	state.inventory_materials["flesh"] = 9999.0
 	Commands.metabolize(state, content, "main", "frontal_appendage")  # mouthparts
 	state.genes_known["gene_gnathobase"] = 1  # penetration, fits mouthparts
-	state.genes_known["gene_raptorial"] = 1  # grasp_minor (control), fits mouthparts
-	state.genes_known["gene_nematocyst"] = 1  # venom_minor, fits mouthparts
+	state.genes_known["gene_nematocyst"] = 1  # venom_minor (affliction), fits mouthparts
+	state.genes_known["gene_great_appendage"] = 1  # control, fits mouthparts
 
 	var r1 := Commands.express(state, content, "main", "mouthparts", "gnathobase_minor")
 	_check(r1["ok"], "cap: 1st mouthparts affix accepted")
-	var r2 := Commands.express(state, content, "main", "mouthparts", "grasp_minor")
+	var r2 := Commands.express(state, content, "main", "mouthparts", "venom_minor")
 	_check(r2["ok"], "cap: 2nd mouthparts affix accepted (cap 2)")
-	var r3 := Commands.express(state, content, "main", "mouthparts", "venom_minor")
+	var r3 := Commands.express(state, content, "main", "mouthparts", "great_appendage")
 	_check(not r3["ok"], "cap: 3rd distinct mouthparts affix rejected (organ full)")
 
 	# Tiering up an affix already present is NOT blocked by the cap.
@@ -805,7 +805,7 @@ func _test_organ_naming(content: Content) -> void:
 	# Tier prefix climbs; affix adjective prepends; tech line carries the precise read.
 	var state := _fresh_state(content)
 	state.inventory_materials["biofilm"] = 9999.0
-	state.inventory_materials["chitin"] = 9999.0
+	state.inventory_materials["soft_tissue"] = 9999.0
 	for _i in range(3):
 		Commands.metabolize(state, content, "main", "frontal_appendage")
 	var l := state.lineages[0]
@@ -828,12 +828,9 @@ func _test_organ_naming(content: Content) -> void:
 
 
 func _test_niche_key_legibility(content: Content) -> void:
-	# The data the niche-gate panel renders: the key role resolves to a concrete
-	# generalist gene, and that gene has a discoverable source.
-	var pelagic := content.niche("pelagic")
-	var keys: Array = pelagic.get("affix_keys", [])
-	_check(keys.size() == 1 and String(keys[0]) == "sustain", "legibility: pelagic key is sustain")
-
+	# The data the niche-gate / codex panels render: an affix-key role resolves to a
+	# concrete gene, and that gene has a discoverable source. The keyed niches are
+	# parked (reset), but these legibility helpers stay live (VISION §11).
 	var options := content.key_affixes_for_role("sustain")
 	var has_gill := false
 	for opt: Dictionary in options:

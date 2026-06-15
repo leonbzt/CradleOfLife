@@ -14,38 +14,10 @@
     "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
   },
   {
-    "id": "chitin",
-    "name": "Chitin",
-    "rarity": "uncommon",
-    "flavor": "Mineralized plate cracked off a grazer. The armor meta, available as a crafting mat.",
-    "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
-  },
-  {
     "id": "flesh",
     "name": "Apex Flesh",
     "rarity": "rare",
     "flavor": "Tissue from something near the top of the ladder. You did not get this for free.",
     "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
-  },
-  {
-    "id": "plankton",
-    "name": "Plankton",
-    "rarity": "common",
-    "flavor": "The open water's baseline resource. Bottomless supply; the Devs pump it out constantly.",
-    "source": "bible/refs/pelagic.md#plankton-productivity"
-  },
-  {
-    "id": "calcite_lattice",
-    "name": "Calcite Lattice",
-    "rarity": "uncommon",
-    "flavor": "Archaeocyathid reef skeleton — early biomineralization in structural form. Good for express costs that want tensile strength.",
-    "source": "bible/refs/reef-edge.md#archaeocyathids"
-  },
-  {
-    "id": "lucent_flesh",
-    "name": "Lucent Flesh",
-    "rarity": "rare",
-    "flavor": "Near-transparent tissue from a glass drifter. The stealth meta, rendered as a crafting mat.",
-    "source": "bible/refs/pelagic.md#transparency-crypsis"
   }
 ]

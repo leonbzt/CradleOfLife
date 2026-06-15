@@ -1,48 +1,19 @@
 {
   "benthos_eat": [
-    { "gene": "gene_gill",         "weight": 50, "rarity": "common"    },
-    { "gene": "gene_compound_eye", "weight": 40, "rarity": "common"    },
-    { "gene": "gene_sclerite",     "weight":  9, "rarity": "uncommon"  },
-    { "gene": "gene_nematocyst",   "weight":  1, "rarity": "rare"      }
+    { "gene": "gene_gill",         "weight": 50, "rarity": "common"   },
+    { "gene": "gene_compound_eye", "weight": 40, "rarity": "common"   },
+    { "gene": "gene_sclerite",     "weight":  9, "rarity": "uncommon" },
+    { "gene": "gene_nematocyst",   "weight":  1, "rarity": "rare"     }
   ],
   "benthos_fight": [
-    { "gene": "gene_sclerite",         "weight": 40,  "rarity": "uncommon" },
-    { "gene": "gene_gnathobase",       "weight": 30,  "rarity": "uncommon" },
-    { "gene": "gene_nematocyst",       "weight": 20,  "rarity": "rare"     },
-    { "gene": "gene_raptorial",        "weight":  9,  "rarity": "rare"     },
-    { "gene": "gene_great_appendage",  "weight":  0.16,"rarity": "legendary"}
+    { "gene": "gene_gnathobase",      "weight": 45,   "rarity": "uncommon"  },
+    { "gene": "gene_nematocyst",      "weight": 30,   "rarity": "rare"      },
+    { "gene": "gene_glassy_tissue",   "weight": 15,   "rarity": "rare"      },
+    { "gene": "gene_great_appendage", "weight":  0.16, "rarity": "legendary" }
   ],
   "apex_anomalocaris": [
-    { "gene": "gene_raptorial",       "weight": 50, "rarity": "rare"      },
-    { "gene": "gene_compound_eye",    "weight": 30, "rarity": "common"    },
+    { "gene": "gene_nematocyst",      "weight": 55, "rarity": "rare"      },
+    { "gene": "gene_glassy_tissue",   "weight": 40, "rarity": "rare"      },
     { "gene": "gene_great_appendage", "weight":  5, "rarity": "legendary" }
-  ],
-  "pelagic_eat": [
-    { "gene": "gene_notochord",    "weight": 60, "rarity": "common"   },
-    { "gene": "gene_gill",         "weight": 30, "rarity": "common"   },
-    { "gene": "gene_filter_combs", "weight": 10, "rarity": "uncommon" }
-  ],
-  "pelagic_fight": [
-    { "gene": "gene_notochord",       "weight": 40, "rarity": "common"    },
-    { "gene": "gene_filter_combs",    "weight": 30, "rarity": "uncommon"  },
-    { "gene": "gene_glassy_tissue",   "weight": 20, "rarity": "rare"      },
-    { "gene": "gene_great_appendage", "weight":  1, "rarity": "legendary" }
-  ],
-  "reef_eat": [
-    { "gene": "gene_notochord",  "weight": 60, "rarity": "common"   },
-    { "gene": "gene_spine_rows", "weight": 30, "rarity": "uncommon" },
-    { "gene": "gene_proboscis",  "weight": 10, "rarity": "uncommon" }
-  ],
-  "reef_fight": [
-    { "gene": "gene_spine_rows",      "weight": 40, "rarity": "uncommon" },
-    { "gene": "gene_proboscis",       "weight": 30, "rarity": "uncommon" },
-    { "gene": "gene_ambush_instinct", "weight": 20, "rarity": "epic"     },
-    { "gene": "gene_great_appendage", "weight":  1, "rarity": "legendary"}
-  ],
-  "apex_lurker": [
-    { "gene": "gene_ambush_instinct", "weight": 50, "rarity": "epic"     },
-    { "gene": "gene_proboscis",       "weight": 25, "rarity": "uncommon" },
-    { "gene": "gene_spine_rows",      "weight": 15, "rarity": "uncommon" },
-    { "gene": "gene_great_appendage", "weight":  1, "rarity": "legendary"}
   ]
 }

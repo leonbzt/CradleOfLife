@@ -3,7 +3,6 @@
     "id": "frontal_appendage",
     "name": "Frontal Appendage",
     "slot": "mouthparts",
-    "category": "generalist",
     "feeds": "power",
     "tier_prefix": ["", "Honed", "Great"],
     "build_cost": { "material": "biofilm", "base": 60, "growth": 3.0 },
@@ -12,46 +11,20 @@
     "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
   },
   {
-    "id": "filter_basket",
-    "name": "Filtering Basket",
-    "slot": "mouthparts",
-    "category": "generalist",
-    "feeds": "metabolism",
-    "tier_prefix": ["", "Fine", "Dense"],
-    "build_cost": { "material": "soft_tissue", "base": 60, "growth": 3.0 },
-    "max_tier": 3,
-    "flavor": "Mesh-like feeding appendages that strain food from the water rather than seizing it — throughput over force.",
-    "source": "bible/refs/shallow-benthos.md#mouthpart-strategies"
-  },
-  {
     "id": "calcite_carapace",
     "name": "Calcite Carapace",
     "slot": "integument",
-    "category": "generalist",
     "feeds": "resilience",
     "tier_prefix": ["", "Reinforced", "Fortified"],
-    "build_cost": { "material": "chitin", "base": 50, "growth": 3.0 },
+    "build_cost": { "material": "soft_tissue", "base": 50, "growth": 3.0 },
     "max_tier": 3,
     "flavor": "A mineralized shell that turns the first strike.",
     "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
   },
   {
-    "id": "permeable_cuticle",
-    "name": "Permeable Cuticle",
-    "slot": "integument",
-    "category": "generalist",
-    "feeds": "metabolism",
-    "tier_prefix": ["", "Thin", "Diffusive"],
-    "build_cost": { "material": "soft_tissue", "base": 50, "growth": 3.0 },
-    "max_tier": 3,
-    "flavor": "A thin body wall that breathes — gas exchange across the skin instead of stopping power. Cheap to wear, easy to pierce.",
-    "source": "bible/refs/shallow-benthos.md#cuticle-strategies"
-  },
-  {
     "id": "swimming_flaps",
     "name": "Swimming Flaps",
     "slot": "locomotion",
-    "category": "generalist",
     "feeds": "power",
     "tier_prefix": ["", "Powered", "Sweeping"],
     "build_cost": { "material": "soft_tissue", "base": 50, "growth": 3.0 },
@@ -60,46 +33,20 @@
     "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
   },
   {
-    "id": "walking_legs",
-    "name": "Walking Legs",
-    "slot": "locomotion",
-    "category": "generalist",
-    "feeds": "metabolism",
-    "tier_prefix": ["", "Jointed", "Striding"],
-    "build_cost": { "material": "chitin", "base": 50, "growth": 3.0 },
-    "max_tier": 3,
-    "flavor": "Jointed legs that work the sea floor at a steady, economical pace — less burst, more sustained foraging.",
-    "source": "bible/refs/shallow-benthos.md#locomotion-strategies"
-  },
-  {
     "id": "stalked_eyes",
     "name": "Stalked Eyes",
     "slot": "sensory",
-    "category": "generalist",
     "feeds": "instinct",
     "tier_prefix": ["", "Keen", "Panoramic"],
-    "build_cost": { "material": "chitin", "base": 80, "growth": 3.0 },
+    "build_cost": { "material": "soft_tissue", "base": 80, "growth": 3.0 },
     "max_tier": 3,
     "flavor": "Raised compound eyes with a wide field of view.",
     "source": "bible/refs/shallow-benthos.md#compound-eyes"
   },
   {
-    "id": "sensory_antennae",
-    "name": "Sensory Antennae",
-    "slot": "sensory",
-    "category": "generalist",
-    "feeds": "instinct",
-    "tier_prefix": ["", "Long", "Sweeping"],
-    "build_cost": { "material": "soft_tissue", "base": 80, "growth": 3.0 },
-    "max_tier": 3,
-    "flavor": "Long chemo- and mechanosensory antennae that read the water by scent and touch — sight's blind-spot cover.",
-    "source": "bible/refs/shallow-benthos.md#sensory-strategies"
-  },
-  {
     "id": "gill_branches",
     "name": "Gill Branches",
     "slot": "metabolic_core",
-    "category": "generalist",
     "feeds": "metabolism",
     "tier_prefix": ["", "Broad", "Plumose"],
     "build_cost": { "material": "soft_tissue", "base": 80, "growth": 3.0 },
@@ -108,63 +55,14 @@
     "source": "bible/refs/shallow-benthos.md#gill-surface-area"
   },
   {
-    "id": "storage_cecum",
-    "name": "Storage Cecum",
-    "slot": "metabolic_core",
-    "category": "generalist",
-    "feeds": "resilience",
-    "tier_prefix": ["", "Lined", "Distended"],
-    "build_cost": { "material": "biofilm", "base": 80, "growth": 3.0 },
-    "max_tier": 3,
-    "flavor": "A digestive pouch that banks reserves against the lean patches — endurance bought with stored energy rather than armour.",
-    "source": "bible/refs/shallow-benthos.md#metabolic-strategies"
-  },
-  {
     "id": "nematocyst_gland",
     "name": "Nematocyst Gland",
     "slot": "gland",
-    "category": "generalist",
     "feeds": "",
     "tier_prefix": ["", "Charged", "Volatile"],
     "build_cost": { "material": "flesh", "base": 60, "growth": 3.0 },
     "max_tier": 3,
     "flavor": "A reservoir of stinging cells, primed to fire.",
     "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
-  },
-  {
-    "id": "raptorial_claw",
-    "name": "Raptorial Claw",
-    "slot": "mouthparts",
-    "category": "raptorial",
-    "feeds": "power",
-    "tier_prefix": ["", "Barbed", "Hooked"],
-    "build_cost": { "material": "flesh", "base": 100, "growth": 3.0 },
-    "max_tier": 3,
-    "flavor": "The anomalocaridid strike arm: a segmented, spined raptorial appendage that folds on contact and does not let go.",
-    "source": "bible/refs/classes.md#predator"
-  },
-  {
-    "id": "fused_dorsal_plating",
-    "name": "Fused Dorsal Plating",
-    "slot": "integument",
-    "category": "heavy_armor",
-    "feeds": "resilience",
-    "tier_prefix": ["", "Layered", "Ironclad"],
-    "build_cost": { "material": "calcite_lattice", "base": 100, "growth": 3.0 },
-    "max_tier": 3,
-    "flavor": "Isolated sclerites fused into a contiguous dorsal shield — the Wiwaxia endgame, a carapace that absorbs what the calcite carapace merely deflects.",
-    "source": "bible/refs/classes.md#armored_grazer"
-  },
-  {
-    "id": "ciliary_fan",
-    "name": "Ciliary Fan",
-    "slot": "metabolic_core",
-    "category": "filter_apparatus",
-    "feeds": "metabolism",
-    "tier_prefix": ["", "Wide", "Laminar"],
-    "build_cost": { "material": "soft_tissue", "base": 100, "growth": 3.0 },
-    "max_tier": 3,
-    "flavor": "A Tamisiocaris-grade frontal filtering fan: comb-like spines that sweep plankton from the water column and push output directly into metabolism.",
-    "source": "bible/refs/classes.md#filter_feeder"
   }
 ]
