@@ -29,28 +29,21 @@ This is what keeps the long-term role vision (below) from corrupting v1.
 
 ---
 
-## Now — reset to the spine
+## Now — the rebuild, on a clean spine
 
-**The governing decision (2026-06-14, signed).** The 3.5 prototype proved the *feature
-surface* (doll, 7 affixes, 4 classes, splice, soft cap) ran ahead of the *core feeling* —
-the cohort read it as dull, illegible ("random respec"), with the chase never landing. So
-we **reset to the spine: keep the engine and content pipeline; rebuild the loop's *feel* —
-an active verb + legible progression + the chase landing — before re-accreting any
-complexity.** Each re-added system must earn its place by making the core better, validated
-one at a time (VISION §21). This is *not* a smaller vision; it is how the big one ships.
+**The reset is done (2026-06-15 — Phases R1–R6, DECISIONS).** The class tree is parked (role
+derives from the doll), content is trimmed to a clean single-niche starter, the never-flat
+chase is re-proven on the clean core, and **`SPINE.md`** is the one-page source of truth for
+*what the code is*. The base is small, legible, and vision-agnostic — the trailhead the
+rebuild climbs from.
 
-- **Execute the reset *aggressively* (signed 2026-06-14):** **keep** the vision-agnostic
-  architecture — Node-free `sim/`, seeded RNG, closed-form accrual, `resolve()` structure,
-  the chase harness, the data + three-gates pipeline, the doll, the soft cap, the session
-  frame. **Park** the old feature/content gravity — the **class tree in full** (role derives
-  from the doll) and **most affix/gene/niche/node DATA** (trimmed to a clean starter). Old
-  code is biasing; parking (git-recoverable) frees the new vision. Steps: `WORKORDER_RESET.md`.
-- **Active play is now core, not a sprinkle** — VISION §12 reframed: idle is the complete
-  floor, active is a bounded fun ceiling, the gap is opportunity cost, never loss/decay.
-- **Validation still pays:** a player read on the current build (the old WP7) is useful
-  signal; map-unlock polish (old WP6) is deprioritized behind the spine rebuild. *(The old
-  "Phase 4 — mobile product" is dissolved; its parts shipped in 3.5 or are a pre-launch
-  checklist.)*
+- **Live now:** the one loop (Power vs defense → materials + the chase), the doll (role
+  derived, no class), the 7-role affix framework, closed-form accrual, the session/check-in
+  frame, the harness. Content is placeholder (one niche, 3 nodes, 7 affixes/genes).
+- **Active play is core, not a sprinkle** — VISION §12: idle is the complete floor, active is
+  a bounded fun ceiling, the gap is opportunity cost, never loss/decay.
+- **The discipline holds:** each rebuild piece is small and signed, built **from the vision,
+  not the parked code** (SPINE.md), re-proving the harness on every economy change.
 
 ## Next — the core-feel rebuild (the spine, made to *feel* good)
 

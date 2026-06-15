@@ -1,26 +1,27 @@
 # Cradle of Life
 
 Evolution as an idle RPG. You don't play one creature — you play its whole **Tree
-of Life**, a clade you grow, gear, and class up over deep time, while the Devs
+of Life**, a clade you grow, gear, and specialize over deep time, while the Devs
 (natural selection) ship patches that reshape the world. Mobile-first, idle ·
 RPG · growth, built for long-term live operation.
 
-> **Read the docs first.** `VISION.md` (what the game is), `IMPLEMENTATION.md`
-> (architecture & process), `ROADMAP.md` (what we build next, in order),
-> `CLAUDE.md` (how we work), `DECISIONS.md` (why things changed). The docs are
-> the source of truth; the code must match them.
+> **Read the docs first.** `VISION.md` (what the game is), `SPINE.md` (what the
+> code is now), `IMPLEMENTATION.md` (architecture & process), `ROADMAP.md` (what
+> we build next, in order), `CLAUDE.md` (how we work), `DECISIONS.md` (why things
+> changed). The docs are the source of truth; the code must match them.
 
-## Status — reset to the spine (2026-06-14)
+## Status — clean spine; rebuilding (2026-06-15)
 
-A working prototype shipped: the chase harness, the Power-vs-defense loop, the
-equipment doll, the orthogonal affix set, splicing, a class tree, offline
-accrual, and a playable check-in session. Cohort feedback showed the *engine* is
-sound but the *feel* isn't there yet — dull, illegible progression, the chase not
-landing. So the project **reset to the spine**: keep the engine and content
-pipeline, and rebuild the loop's feel — an **active verb**, legible progression,
-and the chase landing — before re-accreting complexity. Sequencing lives in
-**`ROADMAP.md`** (Now / Next / Horizon); the *why* is in `DECISIONS.md`
-(2026-06-14).
+A working prototype was built (chase harness, Power-vs-defense loop, equipment
+doll, the 7-role affix set, splicing, offline accrual, a playable check-in).
+Cohort feedback showed the *engine* is sound but the *feel* wasn't there yet —
+dull, illegible progression, the chase not landing. So the project **reset to the
+spine** (done 2026-06-15): the class tree is parked (role derives from the doll),
+content is trimmed to a clean single-niche starter, and the never-flat chase is
+re-proven on the clean core. **`SPINE.md`** describes the base; the rebuild — an
+**active verb**, legible progression, the chase landing — is sequenced in
+**`ROADMAP.md`** "Next", built from the vision, not the parked code. The *why* is
+in `DECISIONS.md`.
 
 ## Layout
 

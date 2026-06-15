@@ -1063,6 +1063,42 @@ Next is the rebuild (ROADMAP "Next"), starting from the clean base, not the park
 
 ---
 
+## 2026-06-15 — VISION.md re-drafted ground-up; doc-regeneration method added to CLAUDE.md
+
+**What.** Re-drafted VISION.md ground-up so it reads as one fresh document rather than the
+previous loot-RPG-with-classes framing with reframes patched on. **Section numbering
+preserved** (1–21 + 2a + 9a–9d) so the ~90 forward cross-references (and ~110 in this log)
+stay valid. Added **CLAUDE.md §1a** ("Regenerating a canonical doc") — the reusable
+grounding / kill-list / keep-list / cite-source method. No code changed.
+
+**Why.** Leon: VISION still felt rooted in the pre-reframe version. The
+mutation-under-selection reframe (2026-06-14), the §12 active-as-core reframe, and the
+class-tree park had been layered onto old prose. Old text is gravity — AI preserves
+overthrown framing unless directed not to (CLAUDE §1a is the guard).
+
+**Content changes (framing, not the locked structure):**
+- Lead/fantasy now lead with **mutation-under-selection + the active contract**, not loot.
+- **No class system** — role emerges from the doll (matches the executed reset); an explicit
+  archetype/class layer is named only as a **horizon possibility** for lineage identity
+  (Leon's request — TierZoo/RPG flavour, *if* role-from-doll + ability-tree proves insufficient).
+- New **§9d** — selection as a draft against a metabolism budget + chromosomes (the
+  combination chase). **§12** carries the full active contract (two axes, the spike contract,
+  phasic bursts). **§11** adds the sequential niche/node progression ladder.
+- This-session directions tagged inline `[direction]`/`[horizon]`; **"What's locked"
+  rewritten as a scannable list**.
+
+**Replaces** the prior VISION.md (in git history + tag `prototype-v3.5`). Per CLAUDE §1,
+history lives in git + this log — **not** a parallel "old vision" file (that would be the
+gravity we are removing).
+
+**Cleanup (state clear to work forward, no old gravity):** deleted the staging draft;
+**removed `WORKORDER_ACTIVE_VERB.md`** — a pre-reset work order referencing the now-parked
+class tree / `niche_mult`; its decisions live in the 2026-06-14 building-blocks entry and it
+will be re-authored at its turn against the clean spine (SPINE.md). Refreshed ROADMAP "Now",
+NEXT_SESSION, and README to reflect the reset as **done**.
+
+---
+
 ## Open questions (current)
 
 - **Metabolize screen — BUILT 2026-06-13 (WP3).** Each slot now reads as "what this
