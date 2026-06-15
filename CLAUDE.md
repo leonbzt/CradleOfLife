@@ -27,6 +27,15 @@ There are exactly these canonical documents. Each *owns* a domain. If a fact abo
 - **DECISIONS.md is the one history.** Append a dated entry whenever a design or plan decision changes: *what changed, why, what it replaced.* This is so the human never has to reconstruct "why did we do X?" from chat logs — and so the working docs never accumulate sediment.
 - **Docs and code never drift.** If a change alters a design decision or the plan, update the owning doc **in the same session** as the code. A doc that lies about the code is worse than no doc.
 
+### 1a. Regenerating a canonical doc (grounding & guardrails)
+
+When a doc has drifted so far that patching won't fix it — the reframes outran the prose and it reads as "old version with patches" — re-draft it **ground-up**. But old text is *gravity*: AI (and humans) will preserve overthrown framing unless explicitly directed not to. The method that prevents both hallucination and re-locking onto dead concepts:
+
+- **Ground in DECISIONS.md + ROADMAP.md + the live session — not the old doc.** Regenerate *from* the dated, signed history. Treat the doc being rewritten as **suspect (possibly stale), never the template**; mine it only for concepts on the keep-list.
+- **Write two explicit lists first.** A **kill-list** of overthrown concepts that must not reappear (read them off the "replaced / supersedes" clauses in DECISIONS), and a **keep-list** of locked concepts that must survive (this guards against over-correcting the good parts away).
+- **Cite-source or flag.** Every substantive claim traces to a DECISIONS/ROADMAP source, or is marked `[NEW — needs sign-off]`. No silent invention; the human signs the NEW flags.
+- **Fresh draft, not edit-in-place.** Write a new draft file (e.g. `VISION_DRAFT.md`), diff it against the old, get section-by-section sign-off, then replace the canonical file and delete the draft (one canonical file per purpose). Record the rewrite in DECISIONS.
+
 ---
 
 ## 2. How we work — core principles
