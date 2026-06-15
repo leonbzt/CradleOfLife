@@ -32,16 +32,23 @@ built well before any other is promised.
 
 ### Niches
 
-| Niche | id | What it is | Key | Status |
-|---|---|---|---|---|
-| The Shallow Benthos | `shallow_benthos` | Sunlit sea floor: microbial mats, slow grazers, and the first predators. | none | **v1** |
-| The Open Water | `pelagic` | The column above the floor — fast, exposed, nowhere to hide. | `uptime` | **v1** |
-| The Reef Edge | `reef_edge` | Structure and shelter; ambush country. | `stealth` | **v1** |
+This table is the **authored target** for Age I. After the reset-to-spine
+(DECISIONS.md 2026-06-15) only **The Shallow Benthos** is in the current build —
+The Open Water and The Reef Edge are *parked* and return in the rebuild
+(niches-with-teeth, ROADMAP "Next"). For what actually ships in the base, see
+`SPINE.md`.
 
-The Shallow Benthos is the **starter niche**; The Open Water and The Reef Edge
-are Phase 2 niches gated by affix-key builds. A fresh lineage grazes the microbial
-mats, gears up, and eventually progresses to the new niches once the right affix
-build is in place.
+| Niche | id | What it is | Key (role) | Build status |
+|---|---|---|---|---|
+| The Shallow Benthos | `shallow_benthos` | Sunlit sea floor: microbial mats, slow grazers, and the first predators. | none | **in the base** |
+| The Open Water | `pelagic` | The column above the floor — fast, exposed, nowhere to hide. | `sustain` | parked → rebuild |
+| The Reef Edge | `reef_edge` | Structure and shelter; ambush country. | `stealth` | parked → rebuild |
+
+The Shallow Benthos is the **starter niche**. The Open Water and The Reef Edge are
+affix-key-gated: a fresh lineage grazes the microbial mats, gears up, and (once
+niches-with-teeth is rebuilt) progresses to them when the right affix build is in
+place. The gate mechanism (`meets_niche_keys`) is kept in code as the seam those
+niches rebuild on.
 
 ### The apex of the launch meta
 

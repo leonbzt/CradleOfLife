@@ -1011,6 +1011,58 @@ niches-with-teeth, chase-lands-early, mutation-under-selection, the active verb.
 
 ---
 
+## 2026-06-15 — Reset to the spine: executed (Phase R1–R6)
+
+**What.** Executed the aggressive reset (decided 2026-06-14, above) as Phase R of
+`WORKORDER_RESET.md`. The work-order file is deleted on close; its decisions live here.
+Result: a clean, legible base committed on `main` (the recovery net is tag
+`prototype-v3.5`). New one-page `SPINE.md` describes the actual base.
+
+**Done, per step (each its own green commit on `main`):**
+- **R1 snapshot** — tag `prototype-v3.5` already existed; main clean; harness green first.
+- **R2 park the class tree** — deleted `class_tree.json` + `ui/tabs/class_tab.gd`; stripped
+  `niche_mult` + class `stat_mods` from `resolve` (`effective_attributes` is now purely
+  per-slot doll contributions), `pick_class`/`unmet_class_requirement` + the category gates
+  from `commands`, `class_node`/`allowed_categories` from `content`, the class-tree/category
+  validators from `validation`, the class objective from `agenda`, the `class_node` field
+  from `Lineage`, and the related UI/view-state/store. **Role now derives from the doll**
+  (`Resolve.derived_role` — a pure display read of the dominant fed attribute; no engine
+  effect), shown on roster chips.
+- **R3 trim content** — one niche (`shallow_benthos`); 3 nodes (microbial_mat / sea_anemone
+  DEF 2 / anomalocaris DEF 9 apex); **one affix per orthogonal role (7)** + their 7 genes
+  (common→legendary ladder); 6 adaptations (one per doll slot); 3 materials. Parked
+  pelagic/reef + their content. Throwaway placeholder scaffolding, not a curated final set.
+- **R4 re-prove §9a** — economy was already clean-core after R2; re-tuned one placeholder
+  constant (apex legendary weight 5 → 0.4, which had become a fountain once a lineage cracks
+  DEF 9 via penetration). Harness (single lineage, 6 wk): never-flat week means 20.5→28.2;
+  cozy ~25 events/check-in (only the cold-start check-in empty); legendary dry-streak
+  **p50=14** (band [10,25]), p90=30, 7 legendaries / 42 days.
+- **R5/R6** — `SPINE.md` written; `bible/world_spine.md` niche-table drift fixed (it had
+  marked pelagic/reef "v1" while parking them); committed + tagged.
+
+**Notable execution decisions (deviations / calls made in-session, Leon signed the forks):**
+- **Kept one affix per role (7), not the work-order's "~2–3".** The KEEP list protects the
+  locked 7-role framework; one-per-role is the minimal set that keeps all 7 framework roles
+  live, gate-1 maximally meaningful, and the engine's 7 resolve terms under test. Genes are
+  1:1 with affixes here, and the harness needs the full common→legendary gene ladder, so the
+  "~4–5 genes" floor drove the count up to 7.
+- **Harness Part B = a single representative lineage, §9a-shape only** (Leon's call). The
+  class+niche "divergence / branches-feel-different" checks are parked until the rebuild —
+  that surface (niches-with-teeth) no longer exists on the clean base. The policy grinds the
+  hardest `shallow_benthos` node it can crack, so it survives content trims unedited.
+- **Executed on `main`** (Leon's call), tag as the net — no `reset-spine` branch.
+
+**Known, deferred to the rebuild (not reset scope):** the greedy harness lineage reaches the
+DEF-9 apex by ~day 2 (real progression pacing arrives with skills/slower power growth); the
+soft cap is correct but unexercised at this small content scale (power maxes ~7, knee 12).
+The `meets_niche_keys` affix-key mechanism stays in code (tested via a synthetic keyed niche)
+even though no shipped niche has keys yet — it is the seam niches-with-teeth rebuilds on.
+
+**Replaces** nothing in the vision; this is the *execution* of the 2026-06-14 reset decision.
+Next is the rebuild (ROADMAP "Next"), starting from the clean base, not the parked code.
+
+---
+
 ## Open questions (current)
 
 - **Metabolize screen — BUILT 2026-06-13 (WP3).** Each slot now reads as "what this
