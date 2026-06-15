@@ -51,6 +51,7 @@ static func validate(content: Content) -> Array[String]:
 	errors.append_array(validate_drop_tables(content))
 	errors.append_array(validate_niches(content))
 	errors.append_array(validate_nodes(content))
+	errors.append_array(validate_skills(content))
 	return errors
 
 
@@ -240,6 +241,9 @@ static func validate_adaptations(content: Content) -> Array[String]:
 				errors.append("adaptation '%s' build_cost.growth must be >= 1" % id)
 		if int(row.get("max_tier", 0)) < 1:
 			errors.append("adaptation '%s' max_tier must be >= 1" % id)
+		errors.append_array(
+			_validate_requires(row.get("requires", {}), content, "adaptation '%s'" % id)
+		)
 	return errors
 
 
@@ -313,6 +317,53 @@ static func validate_nodes(content: Content) -> Array[String]:
 			errors.append("node '%s' has splice_rate > 0 but no spliceable" % node_id)
 		if spliceable != "" and content.gene(spliceable).is_empty():
 			errors.append("node '%s' spliceable '%s' is not a known gene" % [node_id, spliceable])
+		errors.append_array(
+			_validate_requires(node.get("requires", {}), content, "node '%s'" % node_id)
+		)
+		if node.has("ladder_order") and typeof(node["ladder_order"]) not in [TYPE_INT, TYPE_FLOAT]:
+			errors.append("node '%s' ladder_order must be numeric" % node_id)
+	return errors
+
+
+## Skills (WORKORDER_PROGRESSION_SPINE.md): unique id; governs a real node kind;
+## boosts a known axis; sourced. Skills gate/scale activities and never declare a
+## role term (that stays a gene's job), so there is no orthogonality overlap to check.
+static func validate_skills(content: Content) -> Array[String]:
+	var errors: Array[String] = []
+	var seen_ids: Dictionary = {}
+	var kinds: Array[String] = ["eat", "fight"]
+	var boosts: Array[String] = ["yield", "danger"]
+	for row: Dictionary in content.tables.get("skills", []):
+		var id := String(row.get("id", ""))
+		if id == "":
+			errors.append("skill row missing 'id': " + JSON.stringify(row))
+			continue
+		if seen_ids.has(id):
+			errors.append("duplicate skill id: " + id)
+		seen_ids[id] = true
+		if not kinds.has(String(row.get("governs_kind", ""))):
+			errors.append("skill '%s' governs_kind must be one of %s" % [id, kinds])
+		if not boosts.has(String(row.get("boosts", ""))):
+			errors.append("skill '%s' boosts must be one of %s" % [id, boosts])
+		if not row.has("source"):
+			errors.append("skill '%s' missing 'source' (gate 2)" % id)
+	return errors
+
+
+## Shared check for a node/adaptation `requires {skill, level}` block (WP2): the
+## skill must exist and the level be >= 1. Absent requires is fine (the node/organ
+## is ungated). Skills gating access is the ladder + organ-gating mechanic.
+static func _validate_requires(
+	requires: Dictionary, content: Content, owner: String
+) -> Array[String]:
+	var errors: Array[String] = []
+	if requires.is_empty():
+		return errors
+	var sid := String(requires.get("skill", ""))
+	if content.skill(sid).is_empty():
+		errors.append("%s requires unknown skill '%s'" % [owner, sid])
+	if int(requires.get("level", 0)) < 1:
+		errors.append("%s requires.level must be >= 1" % owner)
 	return errors
 
 

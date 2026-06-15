@@ -1,0 +1,29 @@
+[
+  {
+    "id": "foraging",
+    "name": "Foraging",
+    "family": "gathering",
+    "governs_kind": "eat",
+    "boosts": "yield",
+    "flavor": "Working the passive sources — mats, films, drifting particles. The gather grind: every level strips a richer harvest from the same patch.",
+    "source": "bible/world_spine.md"
+  },
+  {
+    "id": "hunting",
+    "name": "Hunting",
+    "family": "combat",
+    "governs_kind": "fight",
+    "boosts": "yield",
+    "flavor": "Taking living, defended prey. It doesn't crack their armour — that's your body — but a trained hunter strips far more from every kill.",
+    "source": "bible/world_spine.md"
+  },
+  {
+    "id": "fortitude",
+    "name": "Fortitude",
+    "family": "resilience",
+    "governs_kind": "fight",
+    "boosts": "danger",
+    "flavor": "Hardened by everything that bit back and failed. Blunts the retaliation tax so a dangerous node stops shredding your throughput.",
+    "source": "bible/world_spine.md"
+  }
+]

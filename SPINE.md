@@ -52,6 +52,24 @@ the dominant fed attribute) — there is no class system. Affixes have **slot
 affinity** (a gene only expresses on anatomically valid organs) and a **per-organ
 expression cap** (an organ is venomous *or* armoured, not everything).
 
+## Skills (the proficiency layer — VISION §7)
+
+Three skills — **Foraging** (eat nodes), **Hunting** (fight nodes), **Fortitude**
+(fight danger) — train by working a node (XP integrates closed-form like materials,
+banked per lineage in `lineage.skills`). A skill **gates access** and **scales activity
+throughput**, never power: the doll is the body (power → access & the chase), the skill
+is how well you work it — `performance = body × skill`. Yield-skills multiply their node
+kind's **material** rate (NOT gene rate — the chase stays doll + genes); Fortitude blunts
+the danger tax. **Skills are *activities*, a distinct axis from the 7 capability-roles** —
+a skill never re-implements a role term, so they layer, never double-count. Nodes and
+organs declare `requires {skill, level}`; **unlock is derived** from skill level (no saved
+state). Within a niche, nodes form a **sequential ladder** (`ladder_order`) showing only
+the next couple of locked rungs (show-next-few). Data-driven from `data/skills.json` (no
+skill ids in the engine). Curve / XP rate / yield K / Fortitude K are placeholders, tuned
+at the harness. The three starters are umbrella branch-roots — Horizon specialises them
+into feeding guilds (Grazing/Filtration, Pursuit/Ambush/Parasitism, Thermo-/Osmoregulation
+which double as the age affix-keys).
+
 ## The chase (VISION §9a — the locked shape, protected above almost everything)
 
 Two reward tiers, both rarity-coloured:
@@ -68,13 +86,16 @@ check-ins (target band [10,25]). The constants are placeholders.
 
 ## What ships in the base (the clean starter — throwaway scaffolding)
 
-One niche **`shallow_benthos`** · 3 nodes (`microbial_mat` eat, `sea_anemone`
-fight DEF 2, `anomalocaris` apex fight DEF 9) · **one affix per orthogonal role
-(7)** + their 7 genes (a common→legendary ladder) · 6 adaptations (one per slot) ·
-3 materials (`biofilm`, `soft_tissue`, `flesh`). The session frame (offline
-dispatch, do-now agenda, the Home/Body/World UI shell) is intact. Cladogenesis
-(branching) is the respec valve. This content is *placeholder*, replaced by real
-authored content in the rebuild (ROADMAP "Next").
+One niche **`shallow_benthos`** · **5 nodes on a skill-gated ladder** (`microbial_mat`
+eat → `sea_anemone` fight DEF 2 → `detrital_ooze` eat (Foraging 4) → `trilobite`
+"Olenoides" fight DEF 5 (Hunting 4) → `anomalocaris` apex fight DEF 9 (Hunting 10)) ·
+**3 skills** (Foraging / Hunting / Fortitude) · **one affix per orthogonal role (7)** +
+their 7 genes (common→legendary) · 6 adaptations (one per slot; Calcite Carapace =
+Fortitude 2, Nematocyst Gland = Hunting 3 are skill-gated organs) · 3 materials
+(`biofilm`, `soft_tissue`, `flesh`). The session frame (offline dispatch, do-now agenda,
+the Home/Body/World shell with the skill readout + show-next-few ladder) is intact.
+Cladogenesis (branching) is the respec valve. Content is still a *starter set* —
+niches-with-teeth and material diversity arrive next (ROADMAP "Next").
 
 ## What is parked (recoverable via tag `prototype-v3.5`)
 
@@ -89,9 +110,13 @@ authored content in the rebuild (ROADMAP "Next").
 
 ## What is NOT built yet
 
-Everything in ROADMAP "Next": the clean niche/node progression ladder, skill-level
-progression, niches-with-teeth (power = access, signature stat = throughput),
-chase-lands-early, mutation-under-selection (the selection decision), and the
-active verb. **Build each from the vision, not from the parked code.** Each piece:
-propose → Leon signs → build the smallest version → re-prove the harness →
-validate the feel → next.
+The rest of ROADMAP "Next", in dependency order: **(1) chase-lands-early** (first gene,
+epic-flavored, in the first session — the natural next, tuned against the new skill
+pacing), (2) niches-with-teeth (power = access, signature stat = throughput) + the
+affix-key gate, (3) selection-as-a-draft (the §9d decision), (4) splice made distinct,
+(5) the active verb's Axis 1 (Axis 2 ships with combat depth, Horizon). **Build each from
+the vision, not from the parked code**, as a signed work order (CLAUDE.md §5a): propose →
+Leon signs → build the smallest version → re-prove the harness → validate the feel → next.
+
+**Done (2026-06-15):** the progression spine — skills (Foraging / Hunting / Fortitude) +
+the skill-gated node ladder + organ-gating (WP1 engine, WP2 ladder/UI; §9a re-proven).

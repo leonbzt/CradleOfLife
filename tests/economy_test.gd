@@ -204,36 +204,23 @@ func _part_b_chase_arc(content: Content) -> void:
 			% ("YES" if state.lineage_by_id("main").assigned_node != "microbial_mat" else "NO")
 		)
 	)
+	var lm := state.lineage_by_id("main")
+	var skill_bits: Array = []
+	for s: Dictionary in content.skills():
+		var sid := String(s.get("id", ""))
+		skill_bits.append("%s L%d" % [String(s.get("name", sid)), Resolve.skill_level(lm, sid)])
+	print("  main skills: " + ", ".join(skill_bits))
 
 	_write_csv("user://chase.csv", rows)
 	print("  per-check-in CSV: " + ProjectSettings.globalize_path("user://chase.csv"))
 	print("    chart it: python3 tools/chart_chase.py <that path>")
 
 
-## Credit materials and events from one accrual batch to the live state.
+## Credit one accrual batch to the live state. Delegates to the shared command so
+## the harness applies materials, gene/splice events, AND skill XP exactly the way
+## the real offline path does — one application path, no drift.
 func _apply_batch(state: GameState, batch: Dictionary) -> void:
-	for mat_id: String in batch["materials"] as Dictionary:
-		state.inventory_materials[mat_id] = (
-			float(state.inventory_materials.get(mat_id, 0.0))
-			+ float((batch["materials"] as Dictionary)[mat_id])
-		)
-	for ev: Dictionary in batch["events"] as Array:
-		match String(ev.get("kind", "")):
-			"gene":
-				var gid := String(ev.get("gene", ""))
-				if gid != "":
-					state.genes_known[gid] = int(state.genes_known.get(gid, 0)) + 1
-			"splice":
-				(
-					state
-					. splice_offers
-					. append(
-						{
-							"gene": String(ev.get("gene", "")),
-							"node": String(ev.get("node", "")),
-						}
-					)
-				)
+	Commands.apply_accrual_batch(state, batch)
 
 
 ## True if the live stash can pay every material in `cost` (empty cost → false).
@@ -346,6 +333,9 @@ func _hardest_clearable_benthos_node(content: Content, l: Lineage) -> String:
 	var best_def := -1.0
 	for n: Dictionary in content.tables.get("nodes", []):
 		if String(n.get("niche", "")) != "shallow_benthos":
+			continue
+		# The ladder: a node must be skill-UNLOCKED as well as power-crackable.
+		if not Commands.meets_skill_requirement(l, n.get("requires", {})):
 			continue
 		if ep <= Resolve.effective_defense(n, totals):
 			continue

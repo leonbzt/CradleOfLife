@@ -35,6 +35,8 @@ static func assign_node(
 	var niche_id := String(node.get("niche", ""))
 	if niche_id != "" and not meets_niche_keys(l, content, niche_id):
 		return false
+	if not meets_skill_requirement(l, node.get("requires", {})):
+		return false
 	l.assigned_node = node_id
 	return true
 
@@ -65,6 +67,27 @@ static func meets_niche_keys(lineage: Lineage, content: Content, niche_id: Strin
 	return true
 
 
+## True if the lineage's skill levels satisfy a node/adaptation `requires`
+## {skill, level}. Absent/empty requires → always true. Unlock is DERIVED from the
+## skill level — there is no saved unlock state (WORKORDER_PROGRESSION_SPINE.md WP2).
+static func meets_skill_requirement(lineage: Lineage, requires: Dictionary) -> bool:
+	if requires.is_empty():
+		return true
+	var sid := String(requires.get("skill", ""))
+	if sid == "":
+		return true
+	return Resolve.skill_level(lineage, sid) >= int(requires.get("level", 0))
+
+
+## A player-facing "requires Hunting 3" label for a `requires` block (UI + reasons).
+static func requirement_label(content: Content, requires: Dictionary) -> String:
+	if requires.is_empty():
+		return ""
+	var sid := String(requires.get("skill", ""))
+	var sname := String(content.skill(sid).get("name", sid))
+	return "requires %s %d" % [sname, int(requires.get("level", 0))]
+
+
 ## One foraging action of `dt` seconds. Gene drops add to genes_known counts.
 ## Splice offers are banked in state.splice_offers (Phase 2 fix: Phase 1 dropped
 ## them on the floor — see DECISIONS.md 2026-06-11).
@@ -89,6 +112,10 @@ static func forage(
 	var offer := String(loot["splice_offer"])
 	if offer != "":
 		state.splice_offers.append({"gene": offer, "node": String(node.get("id", ""))})
+	# Award skill XP for the activity (same rates the offline batch uses).
+	var sx := Resolve.skill_xp_for_node(node, content)
+	for sid: String in sx:
+		l.skills[sid] = float(l.skills.get(sid, 0.0)) + float(sx[sid]) * dt
 	return loot
 
 
@@ -125,6 +152,16 @@ static func apply_accrual_batch(state: GameState, batch: Dictionary) -> void:
 				state.splice_offers.append(
 					{"gene": String(ev.get("gene", "")), "node": String(ev.get("node", ""))}
 				)
+	# Skill XP earned over the gap (per lineage), mirroring the live forage award.
+	var skill_xp: Dictionary = batch.get("skill_xp", {})
+	for lid: String in skill_xp:
+		var l := state.lineage_by_id(lid)
+		if l == null:
+			continue
+		for sid: String in skill_xp[lid] as Dictionary:
+			l.skills[sid] = (
+				float(l.skills.get(sid, 0.0)) + float((skill_xp[lid] as Dictionary)[sid])
+			)
 
 
 ## Elapsed offline seconds, clamped to [0, cap] (Phase 3.5 WP1, decision D6).
@@ -239,6 +276,8 @@ static func metabolize(
 	var def := content.adaptation(adaptation_id)
 	if def.is_empty():
 		return {"ok": false, "reason": "no such adaptation"}
+	if not meets_skill_requirement(l, def.get("requires", {})):
+		return {"ok": false, "reason": requirement_label(content, def.get("requires", {}))}
 
 	var tier := next_tier(l, def)
 	if tier == 0:

@@ -28,6 +28,7 @@ extends RefCounted
 static func accrue(state: GameState, content: Content, dt: float, rng: Rng) -> Dictionary:
 	var materials: Dictionary = {}
 	var events: Array[Dictionary] = []
+	var skill_xp: Dictionary = {}  # lineage_id -> {skill_id -> xp}
 
 	for lineage: Lineage in state.lineages:
 		if lineage.graduated or lineage.assigned_node == "":
@@ -40,6 +41,14 @@ static func accrue(state: GameState, content: Content, dt: float, rng: Rng) -> D
 		if mat_id != "":
 			var gained := Resolve.material_rate(lineage, node, content) * dt
 			materials[mat_id] = float(materials.get(mat_id, 0.0)) + gained
+
+		# Skill XP integrates closed-form like materials (rate · dt), per lineage.
+		var sx := Resolve.skill_xp_for_node(node, content)
+		if not sx.is_empty():
+			var per: Dictionary = {}
+			for sid: String in sx:
+				per[sid] = float(sx[sid]) * dt
+			skill_xp[lineage.id] = per
 
 		var gene_rate := Resolve.gene_rate(lineage, node, content)
 		var gene_stream := "gene_accrue:" + lineage.id
@@ -81,4 +90,4 @@ static func accrue(state: GameState, content: Content, dt: float, rng: Rng) -> D
 				ts += rng.exp_interval(splice_stream, splice_rate)
 
 	events.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["t"] < b["t"])
-	return {"materials": materials, "events": events}
+	return {"materials": materials, "events": events, "skill_xp": skill_xp}

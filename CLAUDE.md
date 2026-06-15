@@ -107,6 +107,24 @@ The point: your early decisions are a *starting position*, not a cage. The mecha
 
 ---
 
+## 5a. The Work Order Protocol — how an AI builds an increment without drift
+
+Every build increment (a ROADMAP "Next" piece, an age, any multi-step change) runs as a **work order**: a temporary `WORKORDER_<name>.md`, signed before code, deleted on close with its decisions moved to DECISIONS.md. This names and hardens the pattern PHASE2 / PHASE3 / WORKORDER_RESET already used. Its purpose is narrow and important: let AI implement a lot, across many iterations, **without hallucinating or drifting back into overthrown concepts** — while you still steer mid-build. Copy `WORKORDER_TEMPLATE.md` to start one.
+
+1. **Ground it before you write it (kills hallucination).** The work order opens with a **grounding contract**: cite the VISION §§, the ROADMAP item, and the DECISIONS entries it derives from, and **list the exact code symbols/files it will touch, verified by reading them.** Never "I think there's an X" — open the file. Every substantive claim traces to a doc or the code, or is tagged `[NEW — needs sign-off]` and you sign it (the §1a rule, applied to building).
+
+2. **Write a keep-list and a kill-list (kills drift — the load-bearing guard).** Old prose and **parked code are gravity**; AI re-locks onto overthrown framing unless explicitly told not to (§1a). So each order names, up front: a **keep-list** (locked concepts that must survive — from VISION "What's locked") and a **kill-list** (parked/overthrown concepts that must not reappear — e.g. the class tree, `niche_mult`, loot-as-gear, "active out-earns idle," a new affix role). The standing rule **"build from the vision, not the parked code"** goes in every order — `prototype-v3.5` is one checkout away and is the most dangerous gravity in the repo.
+
+3. **The oracles, not opinions (so heavy iteration can't rot the economy).** "It compiles" and "it looks right" are not evidence. Truth is: the **harness** re-proves §9a on every economy change; the **three gates** clear every content row; **headless sim tests** ship with the change. These don't tire over fifty iterations the way review does.
+
+4. **Build in small WPs with feedback at the seams (your steering, without derailment).** Sequence: **design-sign** (no code) → build one WP (one concern) → show the diff + the harness/test result → you react → next WP. The anti-derail rule: **feedback that changes design goes back through design-sign and updates the work order's design section** (the doc never lies about the build); a feedback *tweak* applies inline. You never open the editor to a surprise (§2).
+
+5. **Canonize on close (so the next session starts clean).** When the gate passes: update the owning docs in place, **delete the superseded concept**, append the DECISIONS entry (what changed, why, what it replaced), refresh SPINE.md to match the new code, and **delete the work-order file**. History lives in DECISIONS + git, never in a parallel doc.
+
+**The three altitudes this anchors.** ROADMAP = the long-term living plan (re-ordered as we learn). The work order = the signed short-term increment. The WP = the step. Each altitude grounds in the one above **plus the code** — which is how the same plan governs both the next commit and the multi-year roadmap.
+
+---
+
 ## 6. Testing & validation (specifics in IMPLEMENTATION.md)
 
 - **Headless economy tests** for `resolve()` / `accrue()`, deterministic via seeded RNG, run in CI on every push. The 6-week chase-curve model (Phase 0) is the most important test in the project — re-run it whenever economy constants change and confirm the curve still never flattens.

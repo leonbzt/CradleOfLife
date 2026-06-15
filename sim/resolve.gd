@@ -45,6 +45,18 @@ const DANGER_TAX_K: float = 0.15
 const DANGER_FACTOR_FLOOR: float = 0.2
 const AMBUSH_CAP: float = 0.75
 
+## Skill spine (WORKORDER_PROGRESSION_SPINE.md). Skills are the PROFICIENCY layer:
+## they earn XP from working a node, multiply that activity's throughput, and (WP2)
+## gate access. They never touch power (the doll) or a gene's role-term — so
+## body × skill = performance, and skills never double-count with the 7 affix roles.
+## Placeholders, tuned at the harness re-prove; Leon signs the numbers.
+const SKILL_XP_RATE: float = 0.01  # base skill XP per second of working a node
+const SKILL_XP_BASE: float = 60.0  # XP to go from level 1 -> 2
+const SKILL_XP_GROWTH: float = 1.3  # per-level XP multiplier
+const SKILL_LEVEL_CAP: int = 20  # sea-age cap
+const SKILL_YIELD_K: float = 0.04  # per-level material-yield bonus (yield-boost skills)
+const SKILL_FORT_K: float = 0.4  # per-level danger mitigation (danger-boost skills)
+
 ## Display-only role labels (derived_role): the dominant fed attribute → a label.
 const ROLE_BY_ATTRIBUTE: Dictionary = {
 	"power": "Predator",
@@ -105,6 +117,95 @@ static func soft_cap(p: float) -> float:
 ## content is required — no default arg so the compiler catches every call site.
 static func effective_power(lineage: Lineage, content: Content) -> float:
 	return soft_cap(float(effective_attributes(lineage, content).get("power", 1.0)))
+
+
+# -- Skills (the proficiency layer) --------------------------------------------
+# Data-driven from data/skills.json via content.skills(). A skill engages a node
+# by its declared `governs_kind` (eat / fight) and `boosts` (yield / danger):
+# yield-skills multiply that node kind's material rate; danger-skills mitigate its
+# retaliation tax. Power stays the doll; gene rate is untouched (the chase is doll +
+# genes), so skills layer cleanly with the 7 affix roles instead of doubling them.
+
+
+## The level a given XP total reaches (level 1 = untrained), capped at SKILL_LEVEL_CAP.
+static func level_for_xp(xp: float) -> int:
+	var lvl := 1
+	var need := SKILL_XP_BASE
+	var acc := 0.0
+	while lvl < SKILL_LEVEL_CAP and xp >= acc + need:
+		acc += need
+		need *= SKILL_XP_GROWTH
+		lvl += 1
+	return lvl
+
+
+## A lineage's current level in a skill (reads its per-lineage XP bank).
+static func skill_level(lineage: Lineage, skill_id: String) -> int:
+	return level_for_xp(float(lineage.skills.get(skill_id, 0.0)))
+
+
+## Cumulative XP required to reach level `n` (level 1 = 0). Inverse of level_for_xp.
+static func xp_for_level(n: int) -> float:
+	var acc := 0.0
+	var need := SKILL_XP_BASE
+	for _i in range(1, n):
+		acc += need
+		need *= SKILL_XP_GROWTH
+	return acc
+
+
+## {level, frac, capped} for a skill — the level, the 0..1 fraction toward the next
+## level, and whether it is at the cap. Powers the World-tab skill readout bars.
+static func skill_progress(lineage: Lineage, skill_id: String) -> Dictionary:
+	var xp := float(lineage.skills.get(skill_id, 0.0))
+	var lvl := level_for_xp(xp)
+	if lvl >= SKILL_LEVEL_CAP:
+		return {"level": lvl, "frac": 1.0, "capped": true}
+	var here := xp_for_level(lvl)
+	var nxt := xp_for_level(lvl + 1)
+	var frac := 0.0 if nxt <= here else clampf((xp - here) / (nxt - here), 0.0, 1.0)
+	return {"level": lvl, "frac": frac, "capped": false}
+
+
+## XP per second each skill earns from working `node` (skill_id -> rate). Yield
+## skills scale with node difficulty (1 + defense); danger skills with the danger.
+static func skill_xp_for_node(node: Dictionary, content: Content) -> Dictionary:
+	var out: Dictionary = {}
+	var kind := String(node.get("kind", "eat"))
+	for s: Dictionary in content.skills():
+		if String(s.get("governs_kind", "")) != kind:
+			continue
+		var basis := (
+			float(node.get("danger", 0.0))
+			if String(s.get("boosts", "")) == "danger"
+			else 1.0 + float(node.get("defense", 0.0))
+		)
+		var rate := SKILL_XP_RATE * basis
+		if rate > 0.0:
+			out[String(s.get("id", ""))] = rate
+	return out
+
+
+## Activity-throughput multiplier (>= 1.0) from the yield-boosting skills that govern
+## this node kind; level 1 = no bonus. Folds into the material rate.
+static func skill_yield_mult(lineage: Lineage, node: Dictionary, content: Content) -> float:
+	var kind := String(node.get("kind", "eat"))
+	var mult := 1.0
+	for s: Dictionary in content.skills():
+		if String(s.get("governs_kind", "")) == kind and String(s.get("boosts", "")) == "yield":
+			mult += SKILL_YIELD_K * float(skill_level(lineage, String(s.get("id", ""))) - 1)
+	return mult
+
+
+## Danger mitigation from the danger-boosting skills (e.g. Fortitude) that govern
+## this node kind — subtracted from the danger tax, layered atop resilience + guard.
+static func skill_danger_mitigation(lineage: Lineage, node: Dictionary, content: Content) -> float:
+	var kind := String(node.get("kind", "eat"))
+	var mit := 0.0
+	for s: Dictionary in content.skills():
+		if String(s.get("governs_kind", "")) == kind and String(s.get("boosts", "")) == "danger":
+			mit += SKILL_FORT_K * float(skill_level(lineage, String(s.get("id", ""))) - 1)
+	return mit
 
 
 ## Sums every grafted affix's contribution per math_term. Returns all keys
@@ -289,6 +390,7 @@ static func _danger_factor(
 				float(node.get("danger", 0.0))
 				- float(eff_attrs.get("resilience", 1.0))
 				- float(totals.get("guard", 0.0))
+				- skill_danger_mitigation(lineage, node, content)
 			)
 		)
 	)
@@ -316,4 +418,5 @@ static func _material_rate_inner(
 	var metab := float(eff_attrs.get("metabolism", 1.0))
 	var eff := _eff(lineage, node, totals, content)
 	var danger := _danger_factor(lineage, node, totals, content)
-	return base * metab * eff * (1.0 + float(totals.get("uptime_bonus", 0.0))) * danger
+	var skill_mult := skill_yield_mult(lineage, node, content)
+	return base * metab * eff * (1.0 + float(totals.get("uptime_bonus", 0.0))) * danger * skill_mult

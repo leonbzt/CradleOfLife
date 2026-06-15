@@ -17,8 +17,14 @@
 - **§12 (locked):** idle is the complete floor; active is a bounded, genuinely-fun ceiling and
   the primary way engaged players play — gap = opportunity cost, never loss/decay; bursts phasic.
 - **Open pacing call** for the rebuild: when / at what level gene-drafting + chromosomes enter.
-- **Rebuild lead to confirm:** ROADMAP "Next" leads with the active verb; SPINE lists the
-  niche/node ladder first — Leon to set the first piece.
+- **Progression spine — SHIPPED 2026-06-15 (DECISIONS; first-glance pass).** Skills (Foraging /
+  Hunting / Fortitude) + the skill-gated node ladder + organ-gating; §9a re-proven (p50=14).
+  Pending Leon's closer check: gate 2/3 on the two new creatures + skill-constant feel-tuning.
+- **Rebuild order** (dependency-first): the active verb moves last and splits (Axis 1 in Next,
+  Axis 2 with combat depth on the Horizon).
+- **AI Work Order Protocol — canonized** (CLAUDE.md §5a + `WORKORDER_TEMPLATE.md`): grounding
+  contract, keep/kill lists, objective oracles, small WPs with feedback at the seams, canonize
+  on close. Every build increment now runs as a signed work order.
 
 ## To resume any session
 
@@ -28,19 +34,18 @@ build), and the tail of `DECISIONS.md`. Then this file.
 
 ---
 
-## Recommended next — start the rebuild (ROADMAP "Next")
+## Recommended next — chase-lands-early (the next ROADMAP "Next" item)
 
-The reset and the vision are done. Next is the first rebuild piece. Each is small and signed:
-**propose → Leon signs → build the smallest version → re-prove the harness → validate → next**,
-built **from the vision, not the parked code** (SPINE.md). The pieces (ROADMAP "Next"; confirm
-the lead):
+The progression spine shipped (skills + the ladder + organ-gating). The next increment is **the
+chase lands early**: the #1 system must be *felt* immediately — first gene (epic-flavored, not
+legendary) within the first session, tuned against the new skill pacing. Cures the 6/14 "maxed
+upgrades, never saw a gene." Likely a small economy change (early drop-table / gene-rate
+constants + maybe a scripted first-gene beat) → re-prove the harness. Run it as a signed work
+order (CLAUDE §5a; copy `WORKORDER_TEMPLATE.md`): propose → Leon signs → build → re-prove →
+validate → canonize.
 
-- the clean **niche/node progression ladder** (sequential unlocks, show-next-few)
-- **niches with teeth** (power = access, signature stat = throughput)
-- **skill-level progression** (the guaranteed-progress floor)
-- **chase lands early** (first gene in minutes)
-- **mutation-under-selection** (the selection decision)
-- the **active verb** (two axes: optimize-the-loop · light combat-babysit)
-
-Deeper design sessions still queued (ordering in ROADMAP; framings in DECISIONS → Design-session
-backlog): ability-tree shape · combat depth (light auto-battler) · living-meta · splice-vs-drop.
+The rest of "Next" after it: niches-with-teeth · selection-as-a-draft · splice-made-distinct ·
+the active verb (Axis 1). Deeper design sessions still queued (framings in DECISIONS →
+Design-session backlog): ability-tree shape · combat depth (light auto-battler) · living-meta ·
+splice-vs-drop. **Before more building, Leon may want to close the spine (gate 2/3 + constants)
+and/or ship a cohort web export to test the legibility cure in the wild.**

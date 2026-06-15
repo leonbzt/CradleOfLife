@@ -14,6 +14,7 @@ const FILES: Array[String] = [
 	"niches",
 	"nodes",
 	"drop_tables",
+	"skills",
 ]
 
 # Parsed tables, keyed by the file stem above. Lists of row dicts, except
@@ -45,6 +46,17 @@ func material(material_id: String) -> Dictionary:
 
 func niche(niche_id: String) -> Dictionary:
 	return _row("niches", niche_id)
+
+
+func skill(skill_id: String) -> Dictionary:
+	return _row("skills", skill_id)
+
+
+## All skill rows (data/skills.json). The engine reads these to drive XP, the
+## yield multiplier, and danger mitigation — there are no hardcoded skill ids in
+## resolve(); skills are content (VISION §17).
+func skills() -> Array:
+	return tables.get("skills", [])
 
 
 func affix(affix_id: String) -> Dictionary:

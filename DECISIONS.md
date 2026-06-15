@@ -1099,7 +1099,124 @@ NEXT_SESSION, and README to reflect the reset as **done**.
 
 ---
 
+## 2026-06-15 — Rebuild order resolved; the AI Work Order Protocol canonized
+
+**What.** Set the first rebuild increment and the order of ROADMAP "Next," and canonized a
+reusable **Work Order Protocol** for AI-assisted implementation. Signed by Leon (two forks, in
+session). VISION untouched; ROADMAP "Next" reordered, SPINE "NOT built yet" realigned, CLAUDE.md
+gains §5a, plus a new `WORKORDER_TEMPLATE.md` and the first work order
+`WORKORDER_PROGRESSION_SPINE.md`. **No game code changed.**
+
+### Rebuild order — dependency-first; the active verb demoted to last and split
+
+**Decision (Leon).** "Next" is ordered by **dependency**, not by most-wanted: (1) skill-level
+progression + the skill-gated node ladder *(the lead)*, (2) chase-lands-early, (3)
+niches-with-teeth + the affix-key gate, (4) selection-as-a-draft, (5) splice made distinct, (6)
+the **active verb's Axis 1** only. **Axis 2 (combat-babysit) moves to Horizon, shipped with
+combat depth** — it needs the light auto-battler and must never precede it.
+
+**Why.** ROADMAP led with the active verb (by importance); SPINE listed it last (by
+dependency); NEXT_SESSION flagged the conflict for Leon. The active verb is the most-wanted
+outcome but the **most co-dependent** piece — Axis 2 needs Horizon combat depth, Axis 1 needs a
+loop (skills, teeth, a selection budget) *to* optimize. Leading with it repeats the exact
+mistake the reset cured ("the feature surface outran the core feeling," 2026-06-14). The ladder
+also moved up to pair with skills: a ladder gated on *power* is the illegible thing the cohort
+hated; gated on *skill level* it is the cure — so skills and the ladder are one increment, not
+two.
+
+**What it replaced.** ROADMAP "Next" leading with the active verb and the "the active verb
+leads" framing (IMPLEMENTATION §4's line now reads as *priority outcome*, not build order); and
+SPINE's "ladder then skills" sequencing. Both docs now agree.
+
+### The AI Work Order Protocol — CLAUDE.md §5a (+ a template)
+
+**Decision (Leon).** Formalize the PHASE2 / PHASE3 / WORKORDER_RESET pattern into a standing
+**Work Order Protocol** (CLAUDE.md §5a) with a reusable `WORKORDER_TEMPLATE.md`. Its job: let AI
+implement heavily across many iterations **without hallucinating or drifting into parked
+concepts**, while Leon steers mid-build. Five rules: (1) a **grounding contract** — cite the
+docs + verify the code symbols by reading them, NEW-flag the rest; (2) a per-order **keep-list +
+kill-list** — the load-bearing anti-drift guard, since parked code (tag `prototype-v3.5`) is
+gravity; (3) **objective oracles** — the harness, the three gates, the sim tests, not "it looks
+right"; (4) **small WPs with feedback at the seams** — design-sign → WP → diff+harness → react,
+design-changing feedback re-signs the order; (5) **canonize on close** — docs + DECISIONS + SPINE
+refreshed, work-order file deleted. Anchors three altitudes: ROADMAP (long-term) → work order
+(increment) → WP (step).
+
+**Why.** Leon asked for an efficient, robust way to drive AI implementation that avoids
+hallucination and concept-drift yet allows mid-build feedback, anchored for reuse. The practice
+existed ad hoc; naming and hardening it (kill-lists, the grounding contract, the re-sign rule)
+makes it repeatable and binding.
+
+**What it replaced.** The implicit, per-phase ad-hoc version of the same pattern.
+
+---
+
+## 2026-06-15 — Progression spine shipped: skills + the skill-gated ladder (WP1+WP2)
+
+**What.** Built the lead rebuild increment (ROADMAP "Next" #1): the skill **proficiency
+layer** and the **skill-gated node ladder + organ-gating**. Designed and signed in the
+(now-deleted) `WORKORDER_PROGRESSION_SPINE.md`; this entry is the permanent record. Gate:
+Leon's self-playtest — **first-glance PASS 2026-06-15** (closer check + constant-tuning +
+gate 2/3 on the two new creatures still to come; see Open questions). Schema stayed v2 (the
+`lineage.skills` hook was already serialized).
+
+**The signed skill model:**
+- **Three layers, no overlap** — stat-block = the doll's effective attributes (the TierZoo
+  build); capabilities = genes/affixes (the 7 role-terms); **proficiency = skills** (trained
+  levels that gate access + scale activity throughput). **Performance = body × skill** (the
+  OSRS equip-requirement; biologically, morphological capacity vs learned performance).
+- **Skills are a DIFFERENT axis from the 7 roles** — activities/strategies, not capabilities.
+  **No-doubling guardrail:** a skill may gate access or scale activity throughput but **never
+  re-implements a role's effect** (only a gene touches a role term) — so skills and roles
+  layer, never double. Do not map skills 1:1 to roles. (Resolves Leon's doubling worry.)
+- **Three starter umbrella skills** (branch-roots; Horizon specialises them into feeding
+  guilds — Grazing/Filtration/Scavenging · Pursuit/Ambush/Parasitism/Durophagy ·
+  Thermo-/Osmoregulation, the last doubling as age affix-keys): **Foraging** (eat, boosts
+  yield), **Hunting** (fight, boosts yield — strips more per kill, does NOT crack defenses;
+  that is power), **Fortitude** (fight, boosts danger-mitigation).
+
+**WP1 — the engine (economy change; §9a re-proven).** XP integrates closed-form like
+materials (per-lineage in `lineage.skills`), through the same `resolve`/`accrue` path (one
+economy). Level curve `xp(n→n+1)=BASE·GROWTH^(n-1)` (level 1 = untrained, sea-age cap ~20);
+yield-skills add `YIELD_K·(level-1)` to the **material** rate of their node kind (NOT gene
+rate — the chase stays doll + genes, no overlap with the `find` affix); Fortitude subtracts
+`FORT_K·(level-1)` from the danger tax. Fully data-driven from `data/skills.json` (no skill
+ids in the engine). Harness `_apply_batch` now delegates to `Commands.apply_accrual_batch`
+(one application path, no drift).
+
+**WP2 — the ladder + organ-gating (pacing change).** Nodes declare `requires {skill, level}`
++ `ladder_order`; organs (adaptations) declare `requires` too. `meets_skill_requirement`
+gates `assign_node` + `metabolize`; **unlock is derived from skill level** (no saved state).
+Two new shallow-benthos rungs (`detrital_ooze` Foraging 4 · `trilobite`/"Olenoides" Hunting
+4) make the Hunting ladder anemone→trilobite→Anomalocaris, the apex now gated at Hunting 10 —
+fixing "reaches apex by ~day 2" (DECISIONS R4). Reused existing materials/drop-tables, so the
+economy is unchanged. World UI: a skill readout (3 bars) + the show-next-few ladder (locked
+rungs name their key). Body UI: organ options grey out with their requirement. Two organs
+gated (Calcite Carapace = Fortitude 2, Nematocyst Gland = Hunting 3).
+
+**Verification.** gdformat + gdlint clean; validate_data PASS (gate 1 extended to skills +
+`requires`); sim_test PASS; new `tests/skill_test.gd` PASS (curve · XP award · yield mult ·
+Fortitude mitigation · node-gate · organ-gate) + a CI step; **economy_test §9a re-proven**
+(week means 20.1→28.2 never-flat; legendary p50=14 in band); boot smoke clean. The chase
+metrics are essentially unchanged from the pre-skill R4 baseline — by design, skills are
+orthogonal to the gene chase.
+
+**Replaces** the "skills are a dead hook" / "no node ladder" / "apex crackable by ~day 2"
+state. **VISION §7 / §11 unchanged** — they already specified skills gate-and-power, "level
+the skill not the node," and the sequential ladder; the build now matches the vision. The
+3-layer model + no-doubling guardrail live here and in SPINE.md as an implementation
+invariant, not a new vision pillar.
+
+---
+
 ## Open questions (current)
+
+- **Progression-spine close-out — first-glance PASS 2026-06-15; closer check pending.**
+  (a) **Gate 2/3** on the two new creatures — `detrital_ooze` (deposit-feeding) and
+  `trilobite`/"Olenoides" (gnathobases) — Leon's science + voice review before they are
+  final. (b) **Skill constants** (XP rate, curve, `YIELD_K`, `FORT_K`) feel-tuned in
+  playtest — on the harness the hunter caps Hunting/Fortitude fast, the lever to slow the
+  climb if it feels too quick.
 
 - **Metabolize screen — BUILT 2026-06-13 (WP3).** Each slot now reads as "what this
   organ becomes": ≥2 generalist options per essential slot, each feeding a real

@@ -31,6 +31,9 @@ jobs:
       - name: Sim commands — forage / metabolize / equip
         run: godot --headless --script res://tests/sim_test.gd
 
+      - name: Skill spine — xp / level / yield / fortitude
+        run: godot --headless --script res://tests/skill_test.gd
+
       - name: Economy harness — chase-curve model
         run: godot --headless --script res://tests/economy_test.gd
 

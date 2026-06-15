@@ -18,7 +18,8 @@
     "tier_prefix": ["", "Reinforced", "Fortified"],
     "build_cost": { "material": "soft_tissue", "base": 50, "growth": 3.0 },
     "max_tier": 3,
-    "flavor": "A mineralized shell that turns the first strike.",
+    "requires": { "skill": "fortitude", "level": 2 },
+    "flavor": "A mineralized shell that turns the first strike. You learn to wear armour by surviving the hits that make you want it.",
     "source": "bible/refs/shallow-benthos.md#biomineralized-exoskeletons"
   },
   {
@@ -62,7 +63,8 @@
     "tier_prefix": ["", "Charged", "Volatile"],
     "build_cost": { "material": "flesh", "base": 60, "growth": 3.0 },
     "max_tier": 3,
-    "flavor": "A reservoir of stinging cells, primed to fire.",
+    "requires": { "skill": "hunting", "level": 3 },
+    "flavor": "A reservoir of stinging cells, primed to fire — a predator's organ, earned by hunting.",
     "source": "bible/refs/shallow-benthos.md#cnidarian-nematocysts"
   }
 ]

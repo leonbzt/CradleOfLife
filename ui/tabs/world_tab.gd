@@ -5,6 +5,10 @@ extends VBoxContainer
 ## combat CLASH panel for the assigned node, the node cards, the splice-offer queue,
 ## and the splice catalogue. Reads UiState/Store; acts via Store + the ExpressSheet.
 
+## Show-next-few (VISION §11/§16): reveal every unlocked rung + only this many of the
+## next locked ones, so the ladder always shows a next step and never an overwhelm.
+const SHOW_LOCKED_RUNGS: int = 2
+
 var _ui: UiState
 var _pop_layer: Control
 var _express: ExpressSheet
@@ -16,6 +20,8 @@ var _clash_lines: VBoxContainer
 var _cards: Dictionary = {}  # node_id -> {card, btn, name_lbl, matchup_lbl, danger_lbl}
 var _splice_list: VBoxContainer
 var _splice_catalogue: VBoxContainer
+var _skill_panel: VBoxContainer
+var _skill_rows: Dictionary = {}  # skill_id -> {level: Label, bar: ProgressBar}
 
 
 func setup(ui: UiState, pop_layer: Control, express: ExpressSheet) -> void:
@@ -33,7 +39,9 @@ func setup(ui: UiState, pop_layer: Control, express: ExpressSheet) -> void:
 
 	add_child(UiUtil.section_label("CURRENT CLASH"))
 	_build_clash_panel()
-	add_child(UiUtil.section_label("THE WILD  ·  tap a creature to work it"))
+	add_child(UiUtil.section_label("YOUR SKILLS  ·  level the skill, not the node"))
+	_build_skill_panel()
+	add_child(UiUtil.section_label("THE WILD  ·  work the ladder; the next rungs show their key"))
 	_build_node_cards()
 	add_child(UiUtil.section_label("SPLICE OFFERS  ·  claim a copied gene"))
 	_splice_list = VBoxContainer.new()
@@ -53,6 +61,7 @@ func refresh() -> void:
 	_refresh_niche_selector(l, content)
 	_refresh_niche_gate(l, content)
 	_refresh_clash(l, content)
+	_refresh_skills(l)
 	_refresh_node_cards(l, content)
 	_refresh_splice_offers()
 	_refresh_splice_catalogue(l, content)
@@ -359,6 +368,56 @@ func _clash_line(text: String, color: Color, font_size: int) -> Label:
 	return l
 
 
+# -- skills readout -----------------------------------------------------------
+
+
+func _build_skill_panel() -> void:
+	_skill_panel = VBoxContainer.new()
+	_skill_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_skill_panel.add_theme_constant_override("separation", 8)
+	add_child(_skill_panel)
+	for s: Dictionary in Data.content.skills():
+		var sid := String(s.get("id", ""))
+		var row := VBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_constant_override("separation", 1)
+		_skill_panel.add_child(row)
+
+		var head := HBoxContainer.new()
+		row.add_child(head)
+		var name_lbl := Label.new()
+		name_lbl.text = String(s.get("name", sid))
+		name_lbl.add_theme_font_size_override("font_size", 17)
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.add_child(name_lbl)
+		var lvl_lbl := Label.new()
+		lvl_lbl.add_theme_font_size_override("font_size", 16)
+		lvl_lbl.add_theme_color_override("font_color", UiUtil.DIM)
+		head.add_child(lvl_lbl)
+
+		var bar := ProgressBar.new()
+		bar.show_percentage = false
+		bar.max_value = 1.0
+		bar.custom_minimum_size = Vector2(0, 6)
+		row.add_child(bar)
+
+		_skill_rows[sid] = {"level": lvl_lbl, "bar": bar}
+
+
+func _refresh_skills(l: Lineage) -> void:
+	for sid: String in _skill_rows:
+		var prog := Resolve.skill_progress(l, sid)
+		var refs: Dictionary = _skill_rows[sid]
+		var lvl_lbl := refs["level"] as Label
+		var bar := refs["bar"] as ProgressBar
+		if bool(prog.get("capped", false)):
+			lvl_lbl.text = "Level %d · maxed" % int(prog["level"])
+			bar.value = 1.0
+		else:
+			lvl_lbl.text = "Level %d" % int(prog["level"])
+			bar.value = float(prog["frac"])
+
+
 # -- node cards ---------------------------------------------------------------
 
 
@@ -430,66 +489,94 @@ func _build_node_cards() -> void:
 
 
 func _refresh_node_cards(l: Lineage, content: Content) -> void:
+	# Hide every card; the ladder below reveals the active niche's rungs.
+	for node_id: String in _cards:
+		(_cards[node_id]["card"] as Control).visible = false
+
+	# The active niche's nodes, ordered by ladder_order (the sequential ladder).
+	var ladder: Array = []
 	for node_id: String in _cards:
 		var node := content.node(node_id)
-		var refs: Dictionary = _cards[node_id]
-		var card: Control = refs["card"]
-		var click_btn := refs["btn"] as Button
-		var node_niche := String(node.get("niche", ""))
-		card.visible = node_niche == _ui.active_niche
-		if not card.visible:
-			continue
+		if String(node.get("niche", "")) == _ui.active_niche:
+			ladder.append(node)
+	ladder.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			return float(a.get("ladder_order", 0)) < float(b.get("ladder_order", 0))
+	)
 
-		var niche_locked := not Commands.meets_niche_keys(l, content, node_niche)
-		click_btn.disabled = niche_locked
-		if niche_locked:
-			var keys: Array = content.niche(node_niche).get("affix_keys", [])
-			card.tooltip_text = (
-				(
-					"Locked — express a %s gene to enter (see the panel above)."
-					% String(keys[0]).capitalize()
-				)
-				if not keys.is_empty()
-				else ""
-			)
-		else:
-			card.tooltip_text = ""
+	var niche_locked := not Commands.meets_niche_keys(l, content, _ui.active_niche)
+	var locked_shown := 0
+	for node: Dictionary in ladder:
+		var refs: Dictionary = _cards[String(node.get("id", ""))]
+		var skill_locked := not Commands.meets_skill_requirement(l, node.get("requires", {}))
+		# show-next-few: reveal every unlocked rung + only the next SHOW_LOCKED_RUNGS locked.
+		if skill_locked:
+			if locked_shown >= SHOW_LOCKED_RUNGS:
+				continue
+			locked_shown += 1
+		(refs["card"] as Control).visible = true
+		_render_node_card(l, content, node, refs, skill_locked, niche_locked)
 
-		var active := l.assigned_node == node_id
-		(refs["name_lbl"] as Label).text = (
-			String(node.get("name", node_id)) + (" · working" if active else "")
-		)
-		card.modulate = (
-			Color(1, 1, 1, 0.45)
-			if niche_locked
-			else (Color.WHITE if active else Color(1, 1, 1, 0.72))
-		)
 
-		var danger := float(node.get("danger", 0.0))
-		var danger_lbl := refs["danger_lbl"] as Label
-		if danger > 0:
-			danger_lbl.text = "  DANGER %d" % int(danger)
-			danger_lbl.visible = true
-		else:
-			danger_lbl.visible = false
+## Render one ladder card: working/locked state, danger, and either the matchup
+## verdict (unlocked) or the skill / niche requirement that gates it (locked).
+func _render_node_card(
+	l: Lineage,
+	content: Content,
+	node: Dictionary,
+	refs: Dictionary,
+	skill_locked: bool,
+	niche_locked: bool
+) -> void:
+	var node_id := String(node.get("id", ""))
+	var locked := skill_locked or niche_locked
+	(refs["btn"] as Button).disabled = locked
 
-		var margin := Resolve.effective_power(l, content) - float(node.get("defense", 0.0))
-		var verdict := "outgeared"
-		var color := UiUtil.BAD
-		if margin > 2.0:
-			verdict = "free farm"
-			color = UiUtil.GOOD
-		elif margin > 0.0:
-			verdict = "winning matchup"
-			color = UiUtil.GOOD
-		elif is_zero_approx(margin):
-			verdict = "even matchup"
-			color = UiUtil.DIM
-		var matchup_lbl := refs["matchup_lbl"] as Label
+	var active := l.assigned_node == node_id
+	(refs["name_lbl"] as Label).text = (
+		("🔒 " if locked else "")
+		+ String(node.get("name", node_id))
+		+ (" · working" if active else "")
+	)
+	(refs["card"] as Control).modulate = (
+		Color(1, 1, 1, 0.4) if locked else (Color.WHITE if active else Color(1, 1, 1, 0.72))
+	)
+
+	var danger_lbl := refs["danger_lbl"] as Label
+	var danger := float(node.get("danger", 0.0))
+	danger_lbl.visible = danger > 0 and not locked
+	if danger_lbl.visible:
+		danger_lbl.text = "  DANGER %d" % int(danger)
+
+	var matchup_lbl := refs["matchup_lbl"] as Label
+	if skill_locked:
+		matchup_lbl.text = "🔒 %s" % Commands.requirement_label(content, node.get("requires", {}))
+		matchup_lbl.add_theme_color_override("font_color", UiUtil.BAD)
+		return
+	if niche_locked:
+		var keys: Array = content.niche(_ui.active_niche).get("affix_keys", [])
 		matchup_lbl.text = (
-			"%s · yield ×%.1f" % [verdict, Resolve.yield_efficiency(l, node, content)]
+			"locked — express a %s gene (see the key panel)" % String(keys[0]).capitalize()
+			if not keys.is_empty()
+			else "locked"
 		)
-		matchup_lbl.add_theme_color_override("font_color", color)
+		matchup_lbl.add_theme_color_override("font_color", UiUtil.BAD)
+		return
+
+	var margin := Resolve.effective_power(l, content) - float(node.get("defense", 0.0))
+	var verdict := "outgeared"
+	var color := UiUtil.BAD
+	if margin > 2.0:
+		verdict = "free farm"
+		color = UiUtil.GOOD
+	elif margin > 0.0:
+		verdict = "winning matchup"
+		color = UiUtil.GOOD
+	elif is_zero_approx(margin):
+		verdict = "even matchup"
+		color = UiUtil.DIM
+	matchup_lbl.text = "%s · yield ×%.1f" % [verdict, Resolve.yield_efficiency(l, node, content)]
+	matchup_lbl.add_theme_color_override("font_color", color)
 
 
 # -- splice offers + catalogue ------------------------------------------------

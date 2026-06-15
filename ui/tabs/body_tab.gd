@@ -178,6 +178,17 @@ func _refresh_option_btn(
 	var attr_tag := attr.capitalize() if attr != "" else "affix host"
 	btn.modulate = Color.WHITE
 
+	# Organ-gating (WP2): a skill unlocks the body part. Skills only rise, so an
+	# already-built organ always still qualifies — only build/switch can be locked.
+	if not Commands.meets_skill_requirement(l, def.get("requires", {})):
+		btn.text = (
+			"🔒 %s — %s" % [def_name, Commands.requirement_label(content, def.get("requires", {}))]
+		)
+		btn.disabled = true
+		btn.modulate = Color(1, 1, 1, 0.6)
+		btn.tooltip_text = ""
+		return
+
 	var is_current := inst != null and inst.def_id == String(def.get("id", ""))
 	if is_current:
 		var tier := Commands.next_tier(l, def)

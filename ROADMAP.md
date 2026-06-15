@@ -48,24 +48,25 @@ rebuild climbs from.
 ## Next — the core-feel rebuild (the spine, made to *feel* good)
 
 Each is independently buildable and testable; together they cure the 6/14 feedback. Each
-economy change re-proves the chase harness.
+economy change re-proves the chase harness. **Ordered by dependency — foundation first, the
+active verb last** (signed 2026-06-15; DECISIONS): the active verb is the most-wanted outcome
+but the most co-dependent piece, so it sits *on top of* the loop it optimizes, never under it.
+Each ships as a signed work order (CLAUDE.md §5a).
 
-- **The active verb (two axes).** *Axis 1 — optimize the loop:* set up each lineage's
-  activity loop + tune the doll/genome build against a budget; it auto-runs at the idle
-  floor (Increlution-style). *Axis 2 — light combat-babysit:* idle auto-resolves a fight at
-  the floor; actively you eat/heal, pre-buff, and pop an ability for a better, capped
-  outcome (Iktah / Melvor shape). Cures "nothing to *do* but time-skip."
-- **Legible progression — skill-level first.** A skill level per (lineage × verb) that gates
-  and powers (OSRS/Iktah), giving a guaranteed-progress floor every check-in ("level the
-  skill, not the node"). Cures "random respec, no rhyme or reason." (Per-niche *adaptation*
-  and, later, grindy per-node *mastery* are on the Horizon.)
-- **Niches with teeth + a sequential unlock ladder.** Power = access, the niche's signature
-  stat = throughput (steep, never a penalty, VISION §11); and nodes within a niche become a
-  *sequential ladder* you unlock (mat-tier 1→2→3…), showing only the next couple of locked
-  nodes (Iktah UX). Cures "branches don't feel different" + adds the unfold dopamine.
-- **The chase lands early.** First gene (epic-flavored, not legendary) within minutes; the
-  chase is the #1 system and must be *felt* immediately. Cures "maxed upgrades, never saw a
-  gene."
+- **Legible progression — skill-level first + the node ladder** *(the lead increment;
+  `WORKORDER_PROGRESSION_SPINE.md`)*. A skill level per (lineage × verb) that **gates** and
+  **powers** (OSRS/Iktah), giving a guaranteed-progress floor every check-in ("level the skill,
+  not the node"); and the nodes within a niche become a *sequential ladder* you unlock by skill
+  level (mat-tier 1→2→3…), showing only the next couple of locked rungs (Iktah UX). Cures
+  "random respec, no rhyme or reason" + "nothing to do" + adds the unfold dopamine. (Per-niche
+  *adaptation* and grindy per-node *mastery* are Horizon; this is the minimal skill spine, not
+  the ability-tree.)
+- **The chase lands early.** First gene (epic-flavored, not legendary) within minutes, tuned
+  against the new skill pacing; the chase is the #1 system and must be *felt* immediately. Cures
+  "maxed upgrades, never saw a gene."
+- **Niches with teeth.** Power = access, the niche's signature stat = throughput (steep, never
+  a penalty, VISION §11); the affix-key gate goes live. Cures "branches don't feel different."
+  (Needs a second niche un-parked to *feel* — its content arrives here.)
 - **Selection as a draft against a budget.** Surfaced mutations are *drafted* (à la Slay the
   Spire / Loop Hero / Niche), bounded by **expression** (§7 slot limit) *and* **metabolic
   upkeep** (Thrive, the draft budget) — you *can't keep all*. **Chromosomes = multi-affix
@@ -74,6 +75,11 @@ economy change re-proves the chase harness.
   made live during the rebuild.*
 - **Splice = rare, targeted, distinct from mutation** — likely signature genes become
   splice-only (its own session). *Economy change → re-prove.*
+- **The active verb — Axis 1 (optimize the loop)** *(last in Next)*. Set up each lineage's
+  activity loop + tune the doll/genome build against a budget; it auto-runs at the idle floor
+  (Increlution-style). Now there is a loop — progression, teeth, a chase, a selection budget —
+  *to* optimize. Cures "nothing to *do* but time-skip." **Axis 2 (light combat-babysit) ships
+  with combat depth (Horizon) — it needs the auto-battler and must never precede it.**
 
 ## Horizon — the spine's bigger systems (sequence carefully, never big-bang)
 
