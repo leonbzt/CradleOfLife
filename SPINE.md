@@ -45,8 +45,11 @@ Six body-part slots — `mouthparts · integument · locomotion · sensory ·
 metabolic_core · gland` — each holding one **adaptation** (tier 1→3, a rarity
 colour, and grafted **affixes**). Each adaptation declares which attribute its
 tier `feeds` (power / resilience / metabolism / instinct; the gland feeds none —
-it's a pure affix host). `effective_attributes` = base + per-slot contributions;
-`effective_power` soft-caps the result (diminishing returns above the knee).
+it's a pure affix host). **Expressed genes feed attributes too** (an affix may carry
+a `feeds`, added at a smaller per-tier weight) — so the doll *and* its genes build the
+niche's throughput stat. `effective_attributes` = base + per-slot doll contributions +
+expressed-gene feeds; `effective_power` soft-caps the result (diminishing returns above
+the knee).
 **Role is derived from the doll** (`Resolve.derived_role`, a display-only read of
 the dominant fed attribute) — there is no class system. Affixes have **slot
 affinity** (a gene only expresses on anatomically valid organs) and a **per-organ
@@ -70,6 +73,20 @@ at the harness. The three starters are umbrella branch-roots — Horizon special
 into feeding guilds (Grazing/Filtration, Pursuit/Ambush/Parasitism, Thermo-/Osmoregulation
 which double as the age affix-keys).
 
+## Niches with teeth (VISION §11)
+
+A niche declares a **signature attribute** = its throughput multiplier (`material_rate`
+multiplies by the worked node's-niche signature). **Power stays universal access** (the
+power-vs-defense margin/gate); the signature is one of the non-power attributes, and — since
+genes feed attributes — your doll + genes + skills all drive how hard you lap your home
+niche. **Off-home floors at 1.0, so it is the baseline, never a penalty.** Only **resilience**
+and **metabolism** are clean signatures (power = access, instinct = the chase, both excluded —
+instinct would double-dip the gene rate). Some niches are **affix-key-gated** (`meets_niche_keys`
+requires an expressed gene of a role) — the cost of admission, which is itself the build that
+then dominates inside. Two niches ship: **The Shallow Benthos** (signature resilience, no key —
+the tank/armour home) and **The Open Water** (signature metabolism, key `sustain` — the
+filter-feeder's farm, where the efficient build laps everything).
+
 ## The chase (VISION §9a — the locked shape, protected above almost everything)
 
 Two reward tiers, both rarity-coloured:
@@ -80,43 +97,51 @@ Two reward tiers, both rarity-coloured:
   interesting events per check-in stays roughly constant; a legendary is always
   *reachable-but-never-given*.
 
+**The first gene is guaranteed** — the very first action on an empty codex always drops a
+gene (`first_gene`), presented as an emphatic **"First mutation!"** beat, so the #1 system is
+felt in the first minute. One-time onboarding only (keyed off an empty codex), **not pity** —
+the ongoing legendary chase stays pure independent rolls.
+
 Current harness shape (single representative lineage, 6-week arc): never-flat
 week means ~20→28 (no decay); ~25 events/check-in; legendary dry-streak **p50≈14**
 check-ins (target band [10,25]). The constants are placeholders.
 
-## What ships in the base (the clean starter — throwaway scaffolding)
+## What ships now (the clean base + the first rebuild increments)
 
-One niche **`shallow_benthos`** · **5 nodes on a skill-gated ladder** (`microbial_mat`
-eat → `sea_anemone` fight DEF 2 → `detrital_ooze` eat (Foraging 4) → `trilobite`
-"Olenoides" fight DEF 5 (Hunting 4) → `anomalocaris` apex fight DEF 9 (Hunting 10)) ·
-**3 skills** (Foraging / Hunting / Fortitude) · **one affix per orthogonal role (7)** +
-their 7 genes (common→legendary) · 6 adaptations (one per slot; Calcite Carapace =
-Fortitude 2, Nematocyst Gland = Hunting 3 are skill-gated organs) · 3 materials
-(`biofilm`, `soft_tissue`, `flesh`). The session frame (offline dispatch, do-now agenda,
-the Home/Body/World shell with the skill readout + show-next-few ladder) is intact.
-Cladogenesis (branching) is the respec valve. Content is still a *starter set* —
-niches-with-teeth and material diversity arrive next (ROADMAP "Next").
+**Two niches.** **The Shallow Benthos** (signature resilience, no key) — **5 nodes on a
+skill-gated ladder**: `microbial_mat` eat → `sea_anemone` fight DEF 2 → `detrital_ooze` eat
+(Foraging 4) → `trilobite` "Olenoides" fight DEF 5 (Hunting 4) → `anomalocaris` apex fight
+DEF 9 (Hunting 10). **The Open Water** (`pelagic`, signature metabolism, key `sustain`) —
+2 nodes: `plankton_bloom` eat (Foraging 1, the filter farm) → `glass_drifter` fight DEF 3
+(Hunting 3, splices the stealth gene). **3 skills** (Foraging / Hunting / Fortitude) · **one
+affix per orthogonal role (7)** + their 7 genes (common→legendary), two of which now carry a
+`feeds` (gill→metabolism, plating→resilience) · 6 adaptations (one per slot; Calcite Carapace =
+Fortitude 2, Nematocyst Gland = Hunting 3 are skill-gated organs) · 3 materials (`biofilm`,
+`soft_tissue`, `flesh`) · 4 drop tables. The session frame (offline dispatch, do-now agenda,
+the Home/Body/World shell with the skill readout, show-next-few ladder, per-niche
+signature/key line, and the Body-tab EFFECTIVE STATS stat-block) is intact. Cladogenesis
+(branching) is the respec valve. Pelagic content traces to `bible/refs/pelagic.md`; the rest
+is still a starter set — more nodes/creatures + material diversity grow from here.
 
 ## What is parked (recoverable via tag `prototype-v3.5`)
 
 - **The class tree, in full** — `class_tree.json`, class math (`niche_mult`,
   `stat_mods`), category gating, the Class tab. Role derives from the doll instead.
-- **Most affix/gene/niche/node/material DATA** — the `pelagic` and `reef_edge`
-  niches and their creatures, and everything keyed to them, trimmed to the starter
-  above. The **7-role framework** stays; only the data shrank.
-- **Seams kept for the rebuild, intentionally unexercised:** the affix-key gate
-  (`meets_niche_keys`) — no shipped niche has keys yet; it is what niches-with-teeth
-  rebuilds on. The soft cap — correct, but builds at this scale don't reach the knee.
+- **The `reef_edge` niche** + its creatures (and the pelagic *build tree* — `filter_combs`,
+  `notochord_flick`, `lucent_flesh`, documented in `bible/refs/pelagic.md` but not yet built;
+  YAGNI). The **7-role framework** stays; pelagic itself is now un-parked (above).
+- **The soft cap** — correct, but builds at this scale don't reach the knee. (The affix-key
+  gate `meets_niche_keys` is no longer a dormant seam — The Open Water exercises it.)
 
 ## What is NOT built yet
 
-The rest of ROADMAP "Next", in dependency order: **(1) chase-lands-early** (first gene,
-epic-flavored, in the first session — the natural next, tuned against the new skill
-pacing), (2) niches-with-teeth (power = access, signature stat = throughput) + the
-affix-key gate, (3) selection-as-a-draft (the §9d decision), (4) splice made distinct,
-(5) the active verb's Axis 1 (Axis 2 ships with combat depth, Horizon). **Build each from
-the vision, not from the parked code**, as a signed work order (CLAUDE.md §5a): propose →
-Leon signs → build the smallest version → re-prove the harness → validate the feel → next.
+The rest of ROADMAP "Next", in dependency order: **(1) selection-as-a-draft** (the §9d
+decision), **(2) splice made distinct**, **(3) the active verb's Axis 1** (Axis 2 ships with
+combat depth, Horizon). **Build each from the vision, not from the parked code**, as a signed
+work order (CLAUDE.md §5a): propose → Leon signs → build the smallest version → re-prove the
+harness → validate the feel → next.
 
-**Done (2026-06-15):** the progression spine — skills (Foraging / Hunting / Fortitude) +
-the skill-gated node ladder + organ-gating (WP1 engine, WP2 ladder/UI; §9a re-proven).
+**Done (2026-06-15):** the progression spine — skills + the skill-gated ladder + organ-gating.
+**Done (2026-06-16):** chase-lands-early (guaranteed, emphatic first gene) · niches-with-teeth
+(signature attribute = throughput; genes feed attributes; The Open Water un-parked; the
+niche-info line + the Body stat-block). Each re-proved §9a (p50=14, never-flat).

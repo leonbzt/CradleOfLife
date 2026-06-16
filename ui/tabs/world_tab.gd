@@ -14,6 +14,7 @@ var _pop_layer: Control
 var _express: ExpressSheet
 
 var _niche_buttons: Dictionary = {}  # niche_id -> Button
+var _niche_info: Label
 var _niche_gate_panel: VBoxContainer
 var _clash_panel: PanelContainer
 var _clash_lines: VBoxContainer
@@ -59,6 +60,7 @@ func refresh() -> void:
 	var l := _ui.active_lineage()
 	var content := Data.content
 	_refresh_niche_selector(l, content)
+	_refresh_niche_info(content)
 	_refresh_niche_gate(l, content)
 	_refresh_clash(l, content)
 	_refresh_skills(l)
@@ -95,12 +97,16 @@ func on_loot(loot: Dictionary) -> void:
 	if not gene.is_empty():
 		var gene_row := Data.content.gene(String(gene.get("id", "")))
 		var rarity := String(gene.get("rarity", "common"))
+		# The first gene a player ever gets is an emphatic beat regardless of rarity
+		# (WORKORDER_CHASE_EARLY): the chase, felt immediately.
+		var first := bool(loot.get("first_gene", false))
+		var emphatic := first or UiUtil.rarity_rank(rarity) >= UiUtil.rarity_rank("rare")
 		LootPop.spawn(
 			_pop_layer,
 			at + Vector2(0.0, 30.0),
-			"Gene: %s" % String(gene_row.get("name", "")),
+			("First mutation!  %s" if first else "Gene: %s") % String(gene_row.get("name", "")),
 			RarityColors.of(rarity),
-			UiUtil.rarity_rank(rarity) >= UiUtil.rarity_rank("rare")
+			emphatic
 		)
 
 	var offer := String(loot["splice_offer"])
@@ -131,6 +137,35 @@ func _build_niche_selector() -> void:
 		btn.pressed.connect(func() -> void: _ui.set_active_niche(niche_id))
 		row.add_child(btn)
 		_niche_buttons[niche_id] = btn
+
+	# Always-on "why this niche rewards your build" line (niches-with-teeth WP3): the
+	# signature attribute that multiplies throughput here + the entry key, if any.
+	_niche_info = Label.new()
+	_niche_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_niche_info.custom_minimum_size = Vector2(1, 0)
+	_niche_info.add_theme_font_size_override("font_size", 16)
+	add_child(_niche_info)
+
+
+## The active niche's signature stat (its throughput multiplier) + its entry key —
+## so the player reads WHY their build laps one niche and not another.
+func _refresh_niche_info(content: Content) -> void:
+	var niche := content.niche(_ui.active_niche)
+	var parts: Array[String] = []
+	var sig := String(niche.get("signature", ""))
+	if sig != "":
+		parts.append(
+			"Signature: %s — its level multiplies everything you gather here" % sig.capitalize()
+		)
+	var keys: Array = niche.get("affix_keys", [])
+	if keys.is_empty():
+		parts.append("starter niche · no entry key")
+	else:
+		var key_names: Array[String] = []
+		for k: Variant in keys:
+			key_names.append(String(k).capitalize())
+		parts.append("Entry key: a %s gene" % " + ".join(key_names))
+	_niche_info.text = "  ·  ".join(parts)
 
 
 func _refresh_niche_selector(l: Lineage, content: Content) -> void:

@@ -1209,6 +1209,102 @@ invariant, not a new vision pillar.
 
 ---
 
+## 2026-06-16 — Chase lands early: the first gene is felt in the first minute (ROADMAP "Next" #2)
+
+**What.** Built the second rebuild increment from the (now-deleted) `WORKORDER_CHASE_EARLY.md`.
+A new player now SEES and FEELS their first beneficial mutation within the first minute of live
+play. Gate: Leon's self-playtest — **first-glance PASS**. Schema unchanged (keyed off existing
+`genes_known`). Forks resolved: **FORK 1 = yes** (guaranteed first gene is one-time onboarding,
+not pity); **FORK 2 = (a)** (emphatic *presentation* of whatever real gene rolls — no new epic
+content this increment).
+
+**Mechanism.**
+- **Guaranteed first gene — one-time, NOT pity.** In `Commands.forage`, when `genes_known` is
+  empty and the action's gene gate is open but no gene rolled, force the node's own table to
+  drop one (`first_gene` flag set). Fires once per account, ever → the ongoing legendary chase
+  stays pure independent rolls and the **no-pity decision (2026-06-10) is untouched**.
+- **Early-stream bump.** `microbial_mat` `gene_rate` 0.00015 → **0.0003** — a few more small
+  genes flow in early live play. The early eat table holds no legendary, so this enriches the
+  cozy stream **without moving the legendary p50** (confirmed by the re-prove).
+- **The emphatic beat.** The World tab floats the first gene as **"First mutation!"** with the
+  big `LootPop`, emphatic regardless of rarity (the "epic-flavored" feel via presentation).
+
+**Verification.** §9a re-proven — legendary dry-streak **p50=14**, week means never-flat
+(20.6→28.2), unchanged from the spine baseline (the bump touches only the no-legendary early
+stream). sim_test extended (first forage on an empty codex always yields a gene, exactly once);
+gdformat/gdlint clean; boot smoke clean.
+
+**Replaces** the cold-start gap the 6/14 cohort named — "maxed upgrades without ever seeing a
+gene." The idle floor already landed a gene on first return; this fixes the *live* first
+minutes. **No vision change** (§9a already said "first gene epic-flavored, within minutes").
+
+---
+
+## 2026-06-16 — Niches with teeth: signature attribute = throughput; The Open Water un-parked (#3)
+
+**What.** Built the third rebuild increment from the (now-deleted) `WORKORDER_NICHE_TEETH.md`
+(WP1 mechanic + WP2 second niche + WP3 UI). Signed by Leon across the build (Option B + "the key
+gene improves the attribute," then "implement wp2 + wp3 + a body stat screen"). Two niches now
+each reward a different build. Gate: Leon's playtest (do two builds each clearly have a home?).
+Schema stayed v2.
+
+**The signed mechanic (WP1).**
+- **Each niche pays out a SIGNATURE attribute as its throughput multiplier** (VISION §11),
+  replacing the pre-teeth *universal metabolism* multiplier in `_material_rate_inner`. Power
+  stays **universal access** (the margin/gate); the signature is one of the non-power attributes.
+  `shallow_benthos` = **resilience**.
+- **Genes feed attributes too** ("the key gene improves the attribute"): an affix may carry a
+  `feeds`, summed into `effective_attributes` like a doll organ at a smaller per-tier weight
+  (`AFFIX_FEED_WEIGHT 0.5`). Signature mappings: **guard→resilience, sustain→metabolism**. So
+  **doll + genes + skills all drive niche throughput.**
+- **Only resilience + metabolism are clean signatures** — the WP1 harness caught that feeding
+  **instinct** (perception→instinct) *double-dips the chase* (instinct also multiplies gene
+  rate), knocking p50 out of band. Dropped. Power = access and instinct = the chase are
+  **excluded** from being throughput signatures (penetration/affliction/control/stealth stay
+  pure combat). **Reef's planned instinct signature is therefore OPEN** — it needs a non-chase
+  signature or special handling when un-parked (deferred; reef is Age-II/parked).
+- **Off-home is the baseline, never a penalty** — attributes floor at 1.0, so an off-signature
+  build yields the bare baseline elsewhere, never below it (proven by test).
+
+**The contrast (WP2) — `pelagic` un-parked.** Pure data (the mechanic + the `meets_niche_keys`
+seam already existed → **no engine change**); every row traces to `bible/refs/pelagic.md`
+(gate 2 pre-written).
+- **The Open Water** (`pelagic`): `signature: metabolism`, `affix_keys: ["sustain"]`. **Elegant
+  loop: the key to the metabolism niche is itself a metabolism gene** — gill (`sustain`) `feeds`
+  metabolism — so opening pelagic and dominating pelagic are the same investment.
+- **`plankton_bloom`** (eat, Foraging 1 — the key is the gate): the filter-feeder's farm, highest
+  material rate (biofilm), low gene rate (a material farm; the legendary chase stays in benthos).
+- **`glass_drifter`** (fight, Hunting 3): invented transparent ambusher (flagged invented in the
+  bible), DEF 3 / danger 2, splices `gene_glassy_tissue` (homes the stealth gene). Makes pelagic
+  a *place* and exercises all three skills there.
+- **Reused all genes / affixes / materials**; added only two drop tables (`pelagic_eat`,
+  `pelagic_fight`). **Deferred (bible-documented, YAGNI):** `filter_combs` (Tamisiocaris),
+  `notochord_flick` (Haikouichthys), `lucent_flesh` — the pelagic *build tree*, a later layer;
+  the signature mechanic makes teeth felt without them.
+
+**Surfacing the teeth (WP3).**
+- **World tab:** an always-on niche-info line — the active niche's **signature attribute** (its
+  throughput multiplier) + its **entry key** (the locked-key panel already existed).
+- **Body tab:** an **EFFECTIVE STATS** block — numbers + bars for the four doll-fed attributes
+  (Power soft-capped, Resilience, Metabolism, Instinct, each with a hint tying it to a niche or
+  the chase), the TierZoo stat-block the rest of the tab edits. Skills (proficiency) are mirrored
+  compactly so the screen reads "doll × skills" as Leon asked. *[Assumption: skills also live in
+  World; trim here if redundant.]*
+
+**Verification.** §9a re-proven — **p50=14**, never-flat (20.6→28.2), *identical* to the
+pre-teeth baseline: the economy policy grinds `shallow_benthos` only, so pelagic is isolated
+from the chase by construction. teeth_test extended with the **two-builds-two-homes** mirror (a
+metabolism build out-yields in the open water; a resilience build out-yields in the benthos);
+validate_data / sim_test / skill_test / teeth_test all PASS + the new test wired into CI;
+gdformat/gdlint clean; boot smoke clean.
+
+**Replaces** the universal-metabolism throughput multiplier (every niche paid the same stat) and
+pelagic's "parked" status (`world_spine.md` niche table + SPINE.md updated to "in the base").
+**VISION §11 unchanged** — it already specified power = access, the signature stat = throughput,
+steep but never a penalty; the build now realizes it.
+
+---
+
 ## Open questions (current)
 
 - **Progression-spine close-out — first-glance PASS 2026-06-15; closer check pending.**
@@ -1217,6 +1313,20 @@ invariant, not a new vision pillar.
   final. (b) **Skill constants** (XP rate, curve, `YIELD_K`, `FORT_K`) feel-tuned in
   playtest — on the harness the hunter caps Hunting/Fortitude fast, the lever to slow the
   climb if it feels too quick.
+
+- **Niches-with-teeth close-out — built & green 2026-06-16; Leon's check pending.**
+  (a) **Gate 2/3** on the two new pelagic creatures — `plankton_bloom` (filter-feeding the
+  plankton bloom) and `glass_drifter` (invented transparent ambusher) — science + voice
+  review before final. (b) **The felt gate:** do two builds each clearly have a home — a
+  metabolism/filter build that laps The Open Water, a resilience/tank build that laps the
+  Shallow Benthos? (c) **Balance feel:** the signature multiplier is uncapped; watch that a
+  maxed home-niche build doesn't run away (the harness can't see it — it grinds benthos only).
+  (d) **Body stat-screen:** the EFFECTIVE STATS block mirrors skills as well as attributes —
+  trim the skill mirror if it reads redundant against the World tab.
+
+- **Reef Edge signature — OPEN (deferred to un-park).** The reef's planned `instinct`
+  signature double-dips the chase (instinct multiplies gene rate); it needs a non-chase
+  signature or special handling. Decide when the reef is un-parked (Age-II/Horizon scope).
 
 - **Metabolize screen — BUILT 2026-06-13 (WP3).** Each slot now reads as "what this
   organ becomes": ≥2 generalist options per essential slot, each feeding a real

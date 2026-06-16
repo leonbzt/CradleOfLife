@@ -39,7 +39,8 @@ rebuild climbs from.
 
 - **Live now:** the one loop (Power vs defense → materials + the chase), the doll (role
   derived, no class), the 7-role affix framework, closed-form accrual, the session/check-in
-  frame, the harness. Content is placeholder (one niche, 3 nodes, 7 affixes/genes).
+  frame, the harness — **plus the first three Next increments** (skills + ladder, chase-early,
+  niches-with-teeth). Content has grown to two niches / 7 nodes (see `SPINE.md`).
 - **Active play is core, not a sprinkle** — VISION §12: idle is the complete floor, active is
   a bounded fun ceiling, the gap is opportunity cost, never loss/decay.
 - **The discipline holds:** each rebuild piece is small and signed, built **from the vision,
@@ -53,20 +54,20 @@ active verb last** (signed 2026-06-15; DECISIONS): the active verb is the most-w
 but the most co-dependent piece, so it sits *on top of* the loop it optimizes, never under it.
 Each ships as a signed work order (CLAUDE.md §5a).
 
-- **Legible progression — skill-level first + the node ladder** *(the lead increment;
-  `WORKORDER_PROGRESSION_SPINE.md`)*. A skill level per (lineage × verb) that **gates** and
+- **✓ Done (2026-06-15) — Legible progression — skill-level first + the node ladder**. A skill level per (lineage × verb) that **gates** and
   **powers** (OSRS/Iktah), giving a guaranteed-progress floor every check-in ("level the skill,
   not the node"); and the nodes within a niche become a *sequential ladder* you unlock by skill
   level (mat-tier 1→2→3…), showing only the next couple of locked rungs (Iktah UX). Cures
   "random respec, no rhyme or reason" + "nothing to do" + adds the unfold dopamine. (Per-niche
   *adaptation* and grindy per-node *mastery* are Horizon; this is the minimal skill spine, not
   the ability-tree.)
-- **The chase lands early.** First gene (epic-flavored, not legendary) within minutes, tuned
-  against the new skill pacing; the chase is the #1 system and must be *felt* immediately. Cures
-  "maxed upgrades, never saw a gene."
-- **Niches with teeth.** Power = access, the niche's signature stat = throughput (steep, never
-  a penalty, VISION §11); the affix-key gate goes live. Cures "branches don't feel different."
-  (Needs a second niche un-parked to *feel* — its content arrives here.)
+- **✓ Done (2026-06-16) — The chase lands early.** First gene guaranteed + emphatic ("First
+  mutation!") within the first minute; one-time onboarding, not pity. Cures "maxed upgrades,
+  never saw a gene."
+- **✓ Done (2026-06-16) — Niches with teeth.** Power = access, the niche's signature stat =
+  throughput (steep, never a penalty, VISION §11); genes feed attributes; the affix-key gate is
+  live. **The Open Water** un-parked (signature metabolism, key sustain) as the contrast. Cures
+  "branches don't feel different." (Reef signature still OPEN — instinct double-dips the chase.)
 - **Selection as a draft against a budget.** Surfaced mutations are *drafted* (à la Slay the
   Spire / Loop Hero / Niche), bounded by **expression** (§7 slot limit) *and* **metabolic
   upkeep** (Thrive, the draft budget) — you *can't keep all*. **Chromosomes = multi-affix

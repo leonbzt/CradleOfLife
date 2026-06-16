@@ -101,6 +101,16 @@ static func forage(
 	if node.is_empty():
 		return {}
 	var loot := Resolve.resolve(l, node, dt, rng, content)
+	# Chase lands early (WORKORDER_CHASE_EARLY): guarantee the very FIRST gene a player ever
+	# gets, so the #1 system is felt in the first minute. One-time, keyed off an empty codex —
+	# NOT ongoing pity (the legendary chase stays pure rolls, DECISIONS 2026-06-10).
+	if (
+		state.genes_known.is_empty()
+		and (loot["gene"] as Dictionary).is_empty()
+		and Resolve.gene_rate(l, node, content) > 0.0
+	):
+		loot["gene"] = Resolve.roll_gene(node, rng)
+		loot["first_gene"] = true
 	for mat_id: String in loot["materials"] as Dictionary:
 		var have: float = float(state.inventory_materials.get(mat_id, 0.0))
 		state.inventory_materials[mat_id] = have + float(loot["materials"][mat_id])

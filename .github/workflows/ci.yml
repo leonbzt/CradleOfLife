@@ -34,6 +34,9 @@ jobs:
       - name: Skill spine — xp / level / yield / fortitude
         run: godot --headless --script res://tests/skill_test.gd
 
+      - name: Niche teeth — signature throughput / genes feed attributes
+        run: godot --headless --script res://tests/teeth_test.gd
+
       - name: Economy harness — chase-curve model
         run: godot --headless --script res://tests/economy_test.gd
 

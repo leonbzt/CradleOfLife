@@ -15,5 +15,14 @@
     { "gene": "gene_nematocyst",      "weight": 55,  "rarity": "rare"      },
     { "gene": "gene_glassy_tissue",   "weight": 45,  "rarity": "rare"      },
     { "gene": "gene_great_appendage", "weight":  0.4, "rarity": "legendary" }
+  ],
+  "pelagic_eat": [
+    { "gene": "gene_gill",         "weight": 60, "rarity": "common" },
+    { "gene": "gene_compound_eye", "weight": 40, "rarity": "common" }
+  ],
+  "pelagic_fight": [
+    { "gene": "gene_compound_eye", "weight": 50, "rarity": "common" },
+    { "gene": "gene_gill",         "weight": 35, "rarity": "common" },
+    { "gene": "gene_glassy_tissue", "weight": 15, "rarity": "rare"  }
   ]
 }

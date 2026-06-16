@@ -4,7 +4,17 @@
     "name": "The Shallow Benthos",
     "age": "sea",
     "affix_keys": [],
+    "signature": "resilience",
     "flavor": "Sunlit sea floor. Microbial mats, slow grazers, and the first things that learned to bite back.",
     "source": "bible/world_spine.md#age-i-the-sea"
+  },
+  {
+    "id": "pelagic",
+    "name": "The Open Water",
+    "age": "sea",
+    "affix_keys": ["sustain"],
+    "signature": "metabolism",
+    "flavor": "The column above the floor — fast, exposed, nowhere to hide. The water teems with drifting food, but you only reach it once your gills can carry the work. Here the efficient build laps everything.",
+    "source": "bible/refs/pelagic.md#the-open-water"
   }
 ]

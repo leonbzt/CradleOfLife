@@ -6,6 +6,19 @@ extends VBoxContainer
 ## Express shortcut — plus the gene codex. Owned genes get an Express ▸ in the codex
 ## so there's always an obvious place to put a gene you just earned.
 
+## The doll-fed attributes shown in the EFFECTIVE STATS block — the TierZoo stat-block
+## (VISION §7) the rest of this tab edits. Vitality is omitted (nothing feeds it this phase).
+const STAT_ATTRS: Array[String] = ["power", "resilience", "metabolism", "instinct"]
+## What each attribute DOES — ties the stat-block to the niches (teeth) and the chase.
+const ATTR_HINT: Dictionary = {
+	"power": "access & damage — clears defense, drives the yield margin",
+	"resilience": "armour + the Shallow Benthos throughput signature",
+	"metabolism": "sustain + the Open Water throughput signature",
+	"instinct": "the gene chase — multiplies mutation find-rate",
+}
+## Bar reference: a strong sea-age value. The number is the truth; the bar is a glance.
+const STAT_BAR_MAX: float = 8.0
+
 var _ui: UiState
 var _pop_layer: Control
 var _express: ExpressSheet
@@ -14,6 +27,9 @@ var _express: ExpressSheet
 var _slot_cards: Dictionary = {}
 # gene_id -> {row, count_lbl, express_btn, slots:Array}
 var _gene_rows: Dictionary = {}
+# attribute/skill id -> {value_lbl, bar} for the EFFECTIVE STATS block
+var _stat_rows: Dictionary = {}
+var _stat_skill_rows: Dictionary = {}
 
 
 func setup(ui: UiState, pop_layer: Control, express: ExpressSheet) -> void:
@@ -23,6 +39,10 @@ func setup(ui: UiState, pop_layer: Control, express: ExpressSheet) -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 14)
 
+	add_child(
+		UiUtil.section_label("EFFECTIVE STATS  ·  your body plan (doll + genes) × proficiency")
+	)
+	_build_stats_panel()
 	add_child(
 		UiUtil.section_label(
 			"THE BUILD  ·  choose what each organ becomes, then express genes onto it"
@@ -34,12 +54,105 @@ func setup(ui: UiState, pop_layer: Control, express: ExpressSheet) -> void:
 
 
 func refresh() -> void:
+	_refresh_stats()
 	_refresh_body_slots()
 	_refresh_gene_codex()
 	# An agenda "tier up" jump pulses the organ it pointed at, once.
 	if _ui.focus_slot != "" and _slot_cards.has(_ui.focus_slot):
 		UiUtil.pulse(_slot_cards[_ui.focus_slot]["card"] as Control)
 		_ui.focus_slot = ""
+
+
+# -- effective stats (the doll × proficiency stat-block) ----------------------
+
+
+func _build_stats_panel() -> void:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_child(card)
+	var pad := MarginContainer.new()
+	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+		pad.add_theme_constant_override(side, 12)
+	card.add_child(pad)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	pad.add_child(box)
+
+	# The four doll-fed attributes — the build's stat-block.
+	for attr: String in STAT_ATTRS:
+		_stat_rows[attr] = _build_stat_row(box, attr.capitalize(), String(ATTR_HINT.get(attr, "")))
+
+	# Proficiency (skills) — a separate axis; mirrored here so the screen reads doll × skills.
+	var prof := Label.new()
+	prof.text = "PROFICIENCY  ·  level the skill, not the node"
+	prof.add_theme_color_override("font_color", UiUtil.DIM)
+	prof.add_theme_font_size_override("font_size", 15)
+	box.add_child(prof)
+	for s: Dictionary in Data.content.skills():
+		var sid := String(s.get("id", ""))
+		var hint := (
+			"%s — %s yield" % [String(s.get("family", "")), String(s.get("governs_kind", ""))]
+		)
+		_stat_skill_rows[sid] = _build_stat_row(box, String(s.get("name", sid)), hint)
+
+
+## One labelled stat: a name + a right-aligned value, a thin bar, and a dim hint.
+## Returns {value_lbl, bar}; the caller fills them (attribute value, or skill level).
+func _build_stat_row(box: VBoxContainer, title: String, hint: String) -> Dictionary:
+	var row := VBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 1)
+	box.add_child(row)
+
+	var head := HBoxContainer.new()
+	row.add_child(head)
+	var name_lbl := Label.new()
+	name_lbl.text = title
+	name_lbl.add_theme_font_size_override("font_size", 17)
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(name_lbl)
+	var value_lbl := Label.new()
+	value_lbl.add_theme_font_size_override("font_size", 17)
+	head.add_child(value_lbl)
+
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.max_value = 1.0
+	bar.custom_minimum_size = Vector2(0, 6)
+	row.add_child(bar)
+
+	if hint != "":
+		var hint_lbl := Label.new()
+		hint_lbl.text = hint
+		hint_lbl.add_theme_color_override("font_color", UiUtil.DIM)
+		hint_lbl.add_theme_font_size_override("font_size", 15)
+		hint_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hint_lbl.custom_minimum_size = Vector2(1, 0)
+		row.add_child(hint_lbl)
+
+	return {"value_lbl": value_lbl, "bar": bar}
+
+
+func _refresh_stats() -> void:
+	var l := _ui.active_lineage()
+	var content := Data.content
+	var attrs := Resolve.effective_attributes(l, content)
+	for attr: String in _stat_rows:
+		var refs: Dictionary = _stat_rows[attr]
+		# Power shows its soft-capped value (what the economy actually uses); the rest raw.
+		var v := (
+			Resolve.effective_power(l, content) if attr == "power" else float(attrs.get(attr, 1.0))
+		)
+		(refs["value_lbl"] as Label).text = "%.1f" % v
+		(refs["bar"] as ProgressBar).value = clampf(v / STAT_BAR_MAX, 0.0, 1.0)
+	for sid: String in _stat_skill_rows:
+		var prog := Resolve.skill_progress(l, sid)
+		var refs: Dictionary = _stat_skill_rows[sid]
+		var capped := bool(prog.get("capped", false))
+		(refs["value_lbl"] as Label).text = (
+			"Lvl %d%s" % [int(prog["level"]), " · max" if capped else ""]
+		)
+		(refs["bar"] as ProgressBar).value = float(prog["frac"])
 
 
 # -- per-slot cards -----------------------------------------------------------

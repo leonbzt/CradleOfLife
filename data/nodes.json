@@ -9,7 +9,7 @@
     "defense": 0.0,
     "material": "biofilm",
     "material_rate": 1.8,
-    "gene_rate": 0.00015,
+    "gene_rate": 0.0003,
     "drop_table": "benthos_eat",
     "flavor": "A carpet of cyanobacteria. Doesn't fight back; barely notices you.",
     "source": "bible/refs/shallow-benthos.md#microbial-mats"
@@ -82,5 +82,38 @@
     "drop_table": "apex_anomalocaris",
     "flavor": "S-tier apex of the launch meta. Compound eyes that actually resolve the murk. Holds the pinnacle drop. You are not beating this on day one — or before Hunting 10.",
     "source": "bible/refs/shallow-benthos.md#raptorial-appendages"
+  },
+  {
+    "id": "plankton_bloom",
+    "name": "Plankton Bloom",
+    "niche": "pelagic",
+    "kind": "eat",
+    "ladder_order": 1,
+    "requires": { "skill": "foraging", "level": 1 },
+    "defense": 0.0,
+    "material": "biofilm",
+    "material_rate": 2.0,
+    "gene_rate": 0.0002,
+    "drop_table": "pelagic_eat",
+    "flavor": "Open water thick with drifting acritarchs and cyanobacteria — the richest passive harvest in the sea, if your gills can keep you here to sieve it. The efficient build's promised land.",
+    "source": "bible/refs/pelagic.md#plankton-productivity"
+  },
+  {
+    "id": "glass_drifter",
+    "name": "Glass Drifter",
+    "niche": "pelagic",
+    "kind": "fight",
+    "ladder_order": 2,
+    "requires": { "skill": "hunting", "level": 3 },
+    "defense": 3.0,
+    "danger": 2,
+    "material": "soft_tissue",
+    "material_rate": 1.2,
+    "gene_rate": 0.00015,
+    "splice_rate": 0.00012,
+    "spliceable": "gene_glassy_tissue",
+    "drop_table": "pelagic_fight",
+    "flavor": "You don't see it until it moves — a near-invisible drifter that hangs in the open column and lets prey swim into reach. Crack one and the trick of transparency is yours to copy.",
+    "source": "bible/refs/pelagic.md#transparency-crypsis"
   }
 ]

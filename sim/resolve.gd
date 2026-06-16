@@ -33,6 +33,11 @@ const SLOT_ATTRIBUTE: Dictionary = {
 }
 const SLOT_TIER_WEIGHT: float = 1.0
 
+## Genes feed attributes too (niches-with-teeth): an expressed affix with a `feeds`
+## adds to that attribute at a smaller per-tier weight than a doll organ — genes are a
+## secondary boost on the body plan. Placeholder, tuned at the harness.
+const AFFIX_FEED_WEIGHT: float = 0.5
+
 ## Soft-cap constants — placeholders, WP6 tunes and Leon signs the numbers.
 ## Knee must sit above the Age-I beat threshold (Anomalocaris DEF 9).
 const SOFT_CAP_KNEE: float = 12.0
@@ -75,6 +80,15 @@ static func effective_attributes(lineage: Lineage, content: Content) -> Dictiona
 		var a := attribute_for_def(content.adaptation(inst.def_id), slot)
 		if a != "":
 			attrs[a] = float(attrs.get(a, 0.0)) + SLOT_TIER_WEIGHT * float(inst.tier)
+		# Genes feed attributes too: each expressed affix with a `feeds` adds to that
+		# attribute (scaled by its tier), so doll + genes both build the niche's
+		# signature-attribute throughput (VISION §11, niches-with-teeth).
+		for graft: Dictionary in inst.affixes:
+			var fed := String(content.affix(String(graft.get("id", ""))).get("feeds", ""))
+			if fed != "":
+				attrs[fed] = (
+					float(attrs.get(fed, 0.0)) + AFFIX_FEED_WEIGHT * float(graft.get("tier", 1))
+				)
 	return attrs
 
 
@@ -92,6 +106,12 @@ static func derived_role(lineage: Lineage, content: Content) -> String:
 			best_over = over
 			best = a
 	return String(ROLE_BY_ATTRIBUTE.get(best, "Generalist")) if best != "" else "Generalist"
+
+
+## The attribute a node's niche pays out as throughput (VISION §11: the signature
+## stat). Defaults to metabolism (the pre-teeth universal) when a niche declares none.
+static func niche_signature(node: Dictionary, content: Content) -> String:
+	return String(content.niche(String(node.get("niche", ""))).get("signature", "metabolism"))
 
 
 ## The attribute an adaptation `def` feeds: its declared `feeds`, falling back to
@@ -415,8 +435,10 @@ static func _material_rate_inner(
 	eff_attrs: Dictionary,
 ) -> float:
 	var base := float(node.get("material_rate", 0.0))
-	var metab := float(eff_attrs.get("metabolism", 1.0))
+	# The niche's SIGNATURE attribute is the throughput multiplier (VISION §11): a build
+	# laps in its home niche, baseline elsewhere (attributes floor at 1.0 → never a penalty).
+	var sig := float(eff_attrs.get(niche_signature(node, content), 1.0))
 	var eff := _eff(lineage, node, totals, content)
 	var danger := _danger_factor(lineage, node, totals, content)
 	var skill_mult := skill_yield_mult(lineage, node, content)
-	return base * metab * eff * (1.0 + float(totals.get("uptime_bonus", 0.0))) * danger * skill_mult
+	return base * sig * eff * (1.0 + float(totals.get("uptime_bonus", 0.0))) * danger * skill_mult

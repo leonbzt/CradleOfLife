@@ -33,22 +33,24 @@ built well before any other is promised.
 ### Niches
 
 This table is the **authored target** for Age I. After the reset-to-spine
-(DECISIONS.md 2026-06-15) only **The Shallow Benthos** is in the current build —
-The Open Water and The Reef Edge are *parked* and return in the rebuild
-(niches-with-teeth, ROADMAP "Next"). For what actually ships in the base, see
-`SPINE.md`.
+(DECISIONS.md 2026-06-15) and the niches-with-teeth rebuild (2026-06-16), **The Shallow
+Benthos** and **The Open Water** are in the current build; **The Reef Edge** is still
+*parked* and returns later. For what actually ships in the base, see `SPINE.md`.
 
-| Niche | id | What it is | Key (role) | Build status |
-|---|---|---|---|---|
-| The Shallow Benthos | `shallow_benthos` | Sunlit sea floor: microbial mats, slow grazers, and the first predators. | none | **in the base** |
-| The Open Water | `pelagic` | The column above the floor — fast, exposed, nowhere to hide. | `sustain` | parked → rebuild |
-| The Reef Edge | `reef_edge` | Structure and shelter; ambush country. | `stealth` | parked → rebuild |
+| Niche | id | What it is | Key (role) | Signature | Build status |
+|---|---|---|---|---|---|
+| The Shallow Benthos | `shallow_benthos` | Sunlit sea floor: microbial mats, slow grazers, and the first predators. | none | resilience | **in the base** |
+| The Open Water | `pelagic` | The column above the floor — fast, exposed, nowhere to hide. | `sustain` | metabolism | **in the base** |
+| The Reef Edge | `reef_edge` | Structure and shelter; ambush country. | `stealth` | OPEN* | parked → rebuild |
 
-The Shallow Benthos is the **starter niche**. The Open Water and The Reef Edge are
-affix-key-gated: a fresh lineage grazes the microbial mats, gears up, and (once
-niches-with-teeth is rebuilt) progresses to them when the right affix build is in
-place. The gate mechanism (`meets_niche_keys`) is kept in code as the seam those
-niches rebuild on.
+\*Reef signature is OPEN — the obvious `instinct` choice double-dips the gene chase, so it
+needs a non-chase signature or special handling when un-parked (DECISIONS 2026-06-16).
+
+The Shallow Benthos is the **starter niche** (no key). The Open Water is **affix-key-gated**
+on `sustain`: a fresh lineage grazes the microbial mats, builds gills (the `sustain` key,
+which itself `feeds` metabolism — the open water's signature), and graduates to the
+plankton-rich column where the efficient build laps everything. The gate mechanism is
+`meets_niche_keys`; The Reef Edge rebuilds on the same seam.
 
 ### The apex of the launch meta
 

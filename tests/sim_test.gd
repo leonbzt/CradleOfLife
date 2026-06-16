@@ -20,6 +20,7 @@ func _initialize() -> void:
 	# Phase 1 baseline mechanics
 	_test_starter_lineage(content)
 	_test_forage(content)
+	_test_chase_lands_early(content)
 	_test_metabolize(content)
 	_test_equip_changes_the_roll(content)
 	_test_assign_node(content)
@@ -122,6 +123,21 @@ func _test_forage(content: Content) -> void:
 	idle.lineages[0].assigned_node = ""
 	var none := Commands.forage(idle, content, "main", 60.0, Rng.new(7))
 	_check(none.is_empty(), "forage: unassigned lineage yields nothing")
+
+
+## Chase lands early: the very first gene is guaranteed (a one-time onboarding beat),
+## then pure rolls resume — the ongoing chase is not pitied (DECISIONS 2026-06-10).
+func _test_chase_lands_early(content: Content) -> void:
+	var state := _fresh_state(content)  # empty codex, on microbial_mat (gene gate open)
+	_check(state.genes_known.is_empty(), "chase-early: a fresh codex is empty")
+	var loot := Commands.forage(state, content, "main", 2.5, Rng.new(123))
+	_check(
+		not (loot["gene"] as Dictionary).is_empty(), "chase-early: first forage guarantees a gene"
+	)
+	_check(bool(loot.get("first_gene", false)), "chase-early: the first gene is flagged")
+	_check(not state.genes_known.is_empty(), "chase-early: the first gene banked")
+	var loot2 := Commands.forage(state, content, "main", 2.5, Rng.new(123))
+	_check(not bool(loot2.get("first_gene", false)), "chase-early: the guarantee fires only once")
 
 
 func _test_metabolize(content: Content) -> void:
@@ -291,14 +307,16 @@ func _test_affix_mitigation(content: Content) -> void:
 	var df_bare := rate_bare / eff_bare  # == danger_factor (uptime_bonus=0, metabolism=1)
 	_check(is_equal_approx(df_bare, 0.55), "mitigation: danger 4, resilience 1, guard 0 → df 0.55")
 
-	# with plating_minor tier 1 (amount 2) → guard 2 → tax = 0.15*(4-1-2) = 0.15 → df = 0.85
-	# Uses mouthparts slot (→ power, not resilience) so only guard, not slot tier, affects df.
+	# plating_minor tier 1: guard 2 AND feeds resilience +0.5 (genes feed attributes,
+	# niches-with-teeth) → eff. resilience 1.5 → tax = 0.15*(4-1.5-2) = 0.075 → df = 0.925.
 	var l_plated := _lineage_with_express("frontal_appendage", "mouthparts", "plating_minor", 1)
 	l_plated.attributes["resilience"] = 1.0
 	var rate_plated := Resolve.material_rate(l_plated, node, content)
 	var eff_plated := Resolve.yield_efficiency(l_plated, node, content)
 	var df_plated := rate_plated / eff_plated
-	_check(is_equal_approx(df_plated, 0.85), "mitigation: with plating_minor t1 → df 0.85")
+	_check(
+		is_equal_approx(df_plated, 0.925), "mitigation: plating t1 (guard + resilience) → df 0.925"
+	)
 
 
 func _test_affix_uptime_find(content: Content) -> void:
@@ -402,7 +420,7 @@ func _test_affix_control(content: Content) -> void:
 	)
 
 
-func _test_accrue_determinism_with_splice(content: Content) -> void:
+func _test_accrue_determinism_with_splice(_content: Content) -> void:
 	# Two runs of accrue() with the same gap and seed → identical event lists
 	# including splice events (PHASE2.md §2.4 determinism check).
 	var state := GameState.new()
@@ -640,7 +658,7 @@ func _test_option_a_slot_routing(content: Content) -> void:
 	)
 
 
-func _test_soft_cap(content: Content) -> void:
+func _test_soft_cap(_content: Content) -> void:
 	# Below the knee: identity.
 	var below := Resolve.soft_cap(Resolve.SOFT_CAP_KNEE - 1.0)
 	_check(

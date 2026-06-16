@@ -52,6 +52,7 @@ static func validate(content: Content) -> Array[String]:
 	errors.append_array(validate_niches(content))
 	errors.append_array(validate_nodes(content))
 	errors.append_array(validate_skills(content))
+	errors.append_array(validate_affix_feeds(content))
 	return errors
 
 
@@ -280,6 +281,14 @@ static func validate_niches(content: Content) -> Array[String]:
 		for key: Variant in row.get("affix_keys", []):
 			if not ROLES.has(String(key)):
 				errors.append("niche '%s' affix_key '%s' is not a known role" % [id, key])
+		# `signature` (niches-with-teeth): the attribute this niche pays out as throughput.
+		if row.has("signature") and not ATTRIBUTES.has(String(row.get("signature", ""))):
+			errors.append(
+				(
+					"niche '%s' signature '%s' is not a known attribute"
+					% [id, row.get("signature", "")]
+				)
+			)
 	return errors
 
 
@@ -347,6 +356,21 @@ static func validate_skills(content: Content) -> Array[String]:
 			errors.append("skill '%s' boosts must be one of %s" % [id, boosts])
 		if not row.has("source"):
 			errors.append("skill '%s' missing 'source' (gate 2)" % id)
+	return errors
+
+
+## `feeds` on affixes (niches-with-teeth): genes feed attributes like the doll, so a
+## declared `feeds` must be a real attribute. Optional field; absent is fine.
+static func validate_affix_feeds(content: Content) -> Array[String]:
+	var errors: Array[String] = []
+	for row: Dictionary in content.tables.get("affixes", []):
+		if row.has("feeds") and not ATTRIBUTES.has(String(row.get("feeds", ""))):
+			errors.append(
+				(
+					"affix '%s' feeds unknown attribute '%s'"
+					% [row.get("id", ""), row.get("feeds", "")]
+				)
+			)
 	return errors
 
 
